@@ -1,0 +1,44 @@
+# Lefthook configuration for TestRail Playwright Helper
+# https://github.com/evilmartians/lefthook
+
+pre-commit:
+  parallel: true
+  commands:
+    # Format and lint with Biome (faster than separate tools)
+    biome:
+      glob: "*.{js,ts,json}"
+      run: npx biome check --write {staged_files}
+      stage_fixed: true
+      
+    # Type check TypeScript files
+    typecheck:
+      glob: "*.{ts}"
+      run: npx tsc --noEmit
+      
+    # Run unit tests for changed files
+    test:
+      glob: "*.{js,ts}"
+      run: npm run test:changed {staged_files}
+      
+  scripts:
+    "echo":
+      runner: bash
+      
+pre-push:
+  parallel: false
+  commands:
+    # Check code quality with Biome
+    biome-check:
+      run: npm run check
+      
+    # Run full test suite before push
+    test-all:
+      run: npm test
+      
+    # Check test coverage
+    coverage:
+      run: npm run test:coverage
+      
+    # Build check
+    build:
+      run: npm run build
