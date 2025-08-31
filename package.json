@@ -1,0 +1,66 @@
+{
+  "name": "@nxz-group/playwright-testrail-helper",
+  "version": "1.0.0",
+  "description": "TestRail integration helper for Playwright tests",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "testrail-helper": "dist/cli/ProductionCLI.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:changed": "jest --bail --findRelatedTests --passWithNoTests",
+    "lint": "biome lint .",
+    "lint:fix": "biome lint --apply .",
+    "format": "biome format --write .",
+    "format:check": "biome format .",
+    "check": "biome check .",
+    "check:fix": "biome check --apply .",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "npm run clean && npm run build",
+    "prepare": "lefthook install",
+    "audit:security": "node dist/cli/ProductionCLI.js audit",
+    "benchmark": "node dist/cli/ProductionCLI.js benchmark",
+    "migrate": "node dist/cli/ProductionCLI.js migrate",
+    "validate:production": "node dist/cli/ProductionCLI.js validate",
+    "health:check": "node dist/cli/ProductionCLI.js health"
+  },
+  "keywords": [
+    "testrail",
+    "playwright",
+    "testing",
+    "automation"
+  ],
+  "author": "NXZ Group",
+  "license": "MIT",
+  "peerDependencies": {
+    "@playwright/test": "^1.40.0"
+  },
+  "dependencies": {
+    "dayjs": "^1.11.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.2.2",
+    "@types/jest": "^29.5.0",
+    "@types/node": "^20.0.0",
+    "jest": "^29.5.0",
+    "lefthook": "^1.12.3",
+    "ts-jest": "^29.1.0",
+    "typescript": "^5.0.0"
+  },
+  "files": [
+    "dist/**/*",
+    "README.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nxz-group/playwright-testrail-helper.git"
+  },
+  "bugs": {
+    "url": "https://github.com/nxz-group/playwright-testrail-helper/issues"
+  },
+  "homepage": "https://github.com/nxz-group/playwright-testrail-helper#readme"
+}
