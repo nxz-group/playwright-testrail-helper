@@ -38,21 +38,18 @@ export class BatchProcessor<T, R> {
   private processing = false;
   private activeBatches = 0;
 
-  constructor(
-    processorFn: (items: T[]) => Promise<R[]>,
-    config?: Partial<BatchConfig>
-  ) {
+  constructor(processorFn: (items: T[]) => Promise<R[]>, config?: Partial<BatchConfig>) {
     this.logger = new Logger('BatchProcessor');
     this.performanceMonitor = PerformanceMonitor.getInstance();
     this.processorFn = processorFn;
-    
+
     this.config = {
       maxBatchSize: 50,
       maxWaitTime: 1000, // 1 second
       maxConcurrency: 3,
       retryAttempts: 3,
       retryDelay: 1000, // 1 second
-      ...config
+      ...config,
     };
 
     this.logger.debug('BatchProcessor initialized', { config: this.config });
@@ -68,13 +65,13 @@ export class BatchProcessor<T, R> {
         data,
         resolve,
         reject,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
 
       this.pendingItems.push(item);
-      this.logger.debug('Item added to batch', { 
-        itemId: item.id, 
-        pendingCount: this.pendingItems.length 
+      this.logger.debug('Item added to batch', {
+        itemId: item.id,
+        pendingCount: this.pendingItems.length,
       });
 
       // Check if we should process immediately
@@ -103,8 +100,8 @@ export class BatchProcessor<T, R> {
       return;
     }
 
-    this.logger.info('Flushing batch processor', { 
-      pendingItems: this.pendingItems.length 
+    this.logger.info('Flushing batch processor', {
+      pendingItems: this.pendingItems.length,
     });
 
     await this.processBatch();
@@ -123,7 +120,7 @@ export class BatchProcessor<T, R> {
       pendingItems: this.pendingItems.length,
       activeBatches: this.activeBatches,
       processing: this.processing,
-      config: { ...this.config }
+      config: { ...this.config },
     };
   }
 
@@ -177,7 +174,7 @@ export class BatchProcessor<T, R> {
     if (this.activeBatches >= this.config.maxConcurrency) {
       this.logger.debug('Batch processing delayed due to concurrency limit', {
         activeBatches: this.activeBatches,
-        maxConcurrency: this.config.maxConcurrency
+        maxConcurrency: this.config.maxConcurrency,
       });
       return;
     }
@@ -196,9 +193,9 @@ export class BatchProcessor<T, R> {
     const batchItems = this.pendingItems.splice(0, batchSize);
     const batchData = batchItems.map(item => item.data);
 
-    this.logger.info('Processing batch', { 
+    this.logger.info('Processing batch', {
       batchSize: batchItems.length,
-      remainingItems: this.pendingItems.length 
+      remainingItems: this.pendingItems.length,
     });
 
     try {
@@ -218,15 +215,14 @@ export class BatchProcessor<T, R> {
         }
       }
 
-      this.logger.info('Batch processed successfully', { 
+      this.logger.info('Batch processed successfully', {
         batchSize: batchItems.length,
-        resultCount: result.length 
+        resultCount: result.length,
       });
-
     } catch (error) {
-      this.logger.error('Batch processing failed', { 
+      this.logger.error('Batch processing failed', {
         error,
-        batchSize: batchItems.length 
+        batchSize: batchItems.length,
       });
 
       // Reject all items in batch
@@ -250,35 +246,34 @@ export class BatchProcessor<T, R> {
 
     for (let attempt = 1; attempt <= this.config.retryAttempts; attempt++) {
       try {
-        this.logger.debug('Batch processing attempt', { 
-          attempt, 
+        this.logger.debug('Batch processing attempt', {
+          attempt,
           maxAttempts: this.config.retryAttempts,
-          batchSize: batchData.length 
+          batchSize: batchData.length,
         });
 
         const result = await this.processorFn(batchData);
-        
+
         if (attempt > 1) {
-          this.logger.info('Batch processing succeeded after retry', { 
+          this.logger.info('Batch processing succeeded after retry', {
             attempt,
-            batchSize: batchData.length 
+            batchSize: batchData.length,
           });
         }
 
         return result;
-
       } catch (error) {
         lastError = error instanceof Error ? error : new Error(String(error));
-        
-        this.logger.warn('Batch processing attempt failed', { 
+
+        this.logger.warn('Batch processing attempt failed', {
           attempt,
           error: lastError.message,
-          batchSize: batchData.length 
+          batchSize: batchData.length,
         });
 
         // Wait before retry (except for last attempt)
         if (attempt < this.config.retryAttempts) {
-          const delay = this.config.retryDelay * Math.pow(2, attempt - 1); // Exponential backoff
+          const delay = this.config.retryDelay * 2 ** (attempt - 1); // Exponential backoff
           await new Promise(resolve => setTimeout(resolve, delay));
         }
       }
@@ -315,7 +310,7 @@ export class RateLimitedBatchProcessor<T, R> extends BatchProcessor<T, R> {
       // Ensure minimum interval between requests
       const now = Date.now();
       const timeSinceLastRequest = now - this.lastRequestTime;
-      
+
       if (timeSinceLastRequest < minRequestInterval) {
         const waitTime = minRequestInterval - timeSinceLastRequest;
         await new Promise(resolve => setTimeout(resolve, waitTime));
