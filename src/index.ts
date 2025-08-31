@@ -1,11 +1,11 @@
-import { TestRailClient } from "@api/testrail-client";
-import { TestCaseManager } from "@managers/test-case-manager";
-import { TestRunManager } from "@managers/test-run-manager";
-import { WorkerManager } from "@managers/worker-manager";
-import type { TestCaseInfo, TestResult } from "@types";
-import { Platform } from "@utils/constants";
-import { ConfigurationError } from "@utils/errors";
-import { ValidationUtils } from "@utils/validation";
+import { TestRailClient } from "./api/testrail-client";
+import { TestCaseManager } from "./managers/test-case-manager";
+import { TestRunManager } from "./managers/test-run-manager";
+import { WorkerManager } from "./managers/worker-manager";
+import type { TestCaseInfo, TestResult } from "./types";
+import { Platform } from "./utils/constants";
+import { ConfigurationError } from "./utils/errors";
+import { ValidationUtils } from "./utils/validation";
 
 /**
  * Main TestRail integration helper class
@@ -119,8 +119,11 @@ class TestRailHelper {
         const matchingCase = casesInSection.find((c) => c.title === testCase.title);
         if (matchingCase) {
           const testResult = this.testCaseManager.createTestResult(testCase, matchingCase.id, userId);
-          testResults.push(testResult);
-          allCaseIds.push(matchingCase.id);
+          // Only add to results if not null (skip untested/skipped tests)
+          if (testResult !== null) {
+            testResults.push(testResult);
+            allCaseIds.push(matchingCase.id);
+          }
         }
       }
 
@@ -140,6 +143,7 @@ export const onTestRailHelper: TestRailHelper = new TestRailHelper();
 export default TestRailHelper;
 
 // Export types and constants for library users
-export * from "@types";
-export * from "@utils/constants";
-export * from "@utils/errors";
+export * from "./types";
+export * from "./utils/constants";
+export * from "./utils/errors";
+export * from "./utils/playwright-converter";

@@ -1,6 +1,6 @@
-import type { TestRailClient } from "@api/testrail-client";
-import { TestStatus } from "@utils/constants";
+import type { TestRailClient } from "../api/testrail-client";
 import type { TestCaseInfo, TestResult } from "../types/index.js";
+import { TestStatus } from "../utils/constants";
 /**
  * Manages test case synchronization and creation logic
  */
@@ -29,9 +29,9 @@ export declare class TestCaseManager {
     /**
      * Maps test status string to TestRail status ID
      * @param status - Test status string
-     * @returns TestRail status enum value
+     * @returns TestRail status enum value or null for skipped tests
      */
-    getStatusId(status: string): TestStatus;
+    getStatusId(status: string): TestStatus | null;
     /**
      * Formats test duration from milliseconds to human readable format
      * @param ms - Duration in milliseconds
@@ -62,7 +62,7 @@ export declare class TestCaseManager {
      * @param testCase - Test case information
      * @param testCaseId - TestRail test case ID
      * @param userId - User ID for assignment
-     * @returns Test result object
+     * @returns Test result object or null for skipped tests
      */
-    createTestResult(testCase: TestCaseInfo, testCaseId: number, userId: number): TestResult;
+    createTestResult(testCase: TestCaseInfo, testCaseId: number, userId: number): TestResult | null;
 }

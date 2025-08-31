@@ -1,8 +1,8 @@
 import fs from "node:fs";
-import type { TestRailClient } from "@api/testrail-client";
-import { TestRailError } from "@utils/errors";
 import dayjs from "dayjs";
+import type { TestRailClient } from "../api/testrail-client";
 import type { TestResult } from "../types/index.js";
+import { TestRailError } from "../utils/errors";
 
 /**
  * Manages TestRail test run operations and file persistence
@@ -224,12 +224,9 @@ export class TestRunManager {
       // Re-load after acquiring lock
       await this.loadTestRunFromJson();
 
-      const getRunResult = await this.client.getRun(this.existingTestRunId);
-      if (
-        this.existingTestRunId === 0 ||
-        getRunResult.statusCode !== 200 ||
-        (getRunResult.statusCode === 200 && getRunResult.is_completed)
-      ) {
+      // If run ID is 0, create new run. Otherwise check if existing run is valid
+      if (this.existingTestRunId === 0) {
+        // Create new test run
         const testRunName = process.env.RUN_NAME ?? runName;
         const newRun = await this.client.addRun(this.projectId, {
           name: `${testRunName.trim()} - ${dayjs().format("DD/MM/YYYY HH:mm:ss")}`,
@@ -239,11 +236,26 @@ export class TestRunManager {
         this.newTestRunId = (newRun as any).id;
         this.newCaseIds = caseIds;
       } else {
-        this.newTestRunId = this.existingTestRunId;
-        if (this.existingCaseIds.length === 0) {
+        // Check if existing run is still valid
+        const getRunResult = await this.client.getRun(this.existingTestRunId);
+        if (getRunResult.statusCode !== 200 || (getRunResult.statusCode === 200 && getRunResult.is_completed)) {
+          // Existing run is invalid or completed, create new one
+          const testRunName = process.env.RUN_NAME ?? runName;
+          const newRun = await this.client.addRun(this.projectId, {
+            name: `${testRunName.trim()} - ${dayjs().format("DD/MM/YYYY HH:mm:ss")}`,
+            assignedto_id: userId,
+            include_all: false
+          });
+          this.newTestRunId = (newRun as any).id;
           this.newCaseIds = caseIds;
         } else {
-          this.newCaseIds = [...new Set([...this.existingCaseIds, ...caseIds])];
+          // Existing run is valid, use it
+          this.newTestRunId = this.existingTestRunId;
+          if (this.existingCaseIds.length === 0) {
+            this.newCaseIds = caseIds;
+          } else {
+            this.newCaseIds = [...new Set([...this.existingCaseIds, ...caseIds])];
+          }
         }
       }
     } finally {

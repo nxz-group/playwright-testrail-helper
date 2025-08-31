@@ -10,8 +10,8 @@ exports.validateCaseId = validateCaseId;
 exports.validateTestList = validateTestList;
 exports.validateTestCase = validateTestCase;
 exports.validateTestCaseData = validateTestCaseData;
-const constants_1 = require("@utils/constants");
-const errors_1 = require("@utils/errors");
+const constants_1 = require("./constants");
+const errors_1 = require("./errors");
 /**
  * Validates email address format
  * @param email - Email address to validate
