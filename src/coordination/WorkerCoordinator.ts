@@ -1,9 +1,9 @@
-import { Logger } from '../utils/Logger';
-import { ConfigManager } from '../config/TestRailConfig';
-import { TestResult } from '../types';
+import * as crypto from 'node:crypto';
+import * as path from 'node:path';
+import type { ConfigManager } from '../config/TestRailConfig';
+import type { TestResult } from '../types';
 import { FileUtils } from '../utils/FileUtils';
-import * as path from 'path';
-import * as crypto from 'crypto';
+import { Logger } from '../utils/Logger';
 
 export interface WorkerInfo {
   id: string;
@@ -39,29 +39,26 @@ export class WorkerCoordinator {
   private readonly config: CoordinationConfig;
   private readonly workerId: string;
   private readonly coordinationDir: string;
-  private heartbeatTimer?: NodeJS.Timeout;
+  private heartbeatTimer?: NodeJS.Timeout | undefined;
   private isShuttingDown = false;
 
-  constructor(
-    testRailConfig: ConfigManager,
-    coordinationConfig?: Partial<CoordinationConfig>
-  ) {
+  constructor(_testRailConfig: ConfigManager, coordinationConfig?: Partial<CoordinationConfig>) {
     this.logger = new Logger('WorkerCoordinator');
     this.workerId = this.generateWorkerId();
-    
+
     this.config = {
       lockTimeout: 30000, // 30 seconds
       heartbeatInterval: 5000, // 5 seconds
       workerTimeout: 60000, // 1 minute
       maxRetries: 3,
       coordinationDir: path.join(process.cwd(), '.testrail-coordination'),
-      ...coordinationConfig
+      ...coordinationConfig,
     };
 
     this.coordinationDir = this.config.coordinationDir;
     this.logger.info('WorkerCoordinator initialized', {
       workerId: this.workerId,
-      config: this.config
+      config: this.config,
     });
   }
 
@@ -86,7 +83,7 @@ export class WorkerCoordinator {
       await this.cleanupStaleResources();
 
       this.logger.info('WorkerCoordinator initialized successfully', {
-        workerId: this.workerId
+        workerId: this.workerId,
       });
     } catch (error) {
       this.logger.error('Failed to initialize WorkerCoordinator', { error });
@@ -104,7 +101,7 @@ export class WorkerCoordinator {
       // Stop heartbeat
       if (this.heartbeatTimer) {
         clearInterval(this.heartbeatTimer);
-        this.heartbeatTimer = undefined as any;
+        this.heartbeatTimer = undefined;
       }
 
       // Release all locks held by this worker
@@ -114,7 +111,7 @@ export class WorkerCoordinator {
       await this.unregisterWorker();
 
       this.logger.info('WorkerCoordinator shutdown completed', {
-        workerId: this.workerId
+        workerId: this.workerId,
       });
     } catch (error) {
       this.logger.error('Error during WorkerCoordinator shutdown', { error });
@@ -134,13 +131,13 @@ export class WorkerCoordinator {
       workerId: this.workerId,
       resource,
       acquiredAt: new Date(),
-      expiresAt
+      expiresAt,
     };
 
     try {
       // Try to acquire lock atomically
       const acquired = await this.tryAcquireLock(lockFile, lock);
-      
+
       if (acquired) {
         this.logger.debug('Lock acquired', { resource, workerId: this.workerId });
         return true;
@@ -167,7 +164,7 @@ export class WorkerCoordinator {
         this.logger.warn('Attempted to release lock not owned by this worker', {
           resource,
           workerId: this.workerId,
-          lockOwner: currentLock?.workerId
+          lockOwner: currentLock?.workerId,
         });
         return false;
       }
@@ -191,13 +188,13 @@ export class WorkerCoordinator {
 
     try {
       const workerFiles = await FileUtils.listFiles(workersDir);
-      
+
       for (const file of workerFiles) {
         if (file.endsWith('.worker')) {
           try {
             const workerPath = path.join(workersDir, file);
             const workerData = await FileUtils.readJsonFile<WorkerInfo>(workerPath);
-            
+
             // Check if worker is still alive
             if (this.isWorkerAlive(workerData)) {
               workers.push(workerData);
@@ -224,7 +221,7 @@ export class WorkerCoordinator {
 
     try {
       const resultFiles = await FileUtils.listFiles(resultsDir);
-      
+
       for (const file of resultFiles) {
         if (file.endsWith('.results')) {
           try {
@@ -239,7 +236,7 @@ export class WorkerCoordinator {
 
       this.logger.info('Results aggregated', {
         totalResults: allResults.length,
-        fileCount: resultFiles.length
+        fileCount: resultFiles.length,
       });
 
       return allResults;
@@ -253,21 +250,17 @@ export class WorkerCoordinator {
    * Store results for this worker
    */
   async storeResults(results: TestResult[]): Promise<void> {
-    const resultsFile = path.join(
-      this.coordinationDir,
-      'results',
-      `${this.workerId}.results`
-    );
+    const resultsFile = path.join(this.coordinationDir, 'results', `${this.workerId}.results`);
 
     try {
       await FileUtils.writeJsonFile(resultsFile, results);
-      
+
       // Update worker info
       await this.updateWorkerInfo({ resultsProcessed: results.length });
-      
+
       this.logger.info('Results stored', {
         workerId: this.workerId,
-        resultCount: results.length
+        resultCount: results.length,
       });
     } catch (error) {
       this.logger.error('Error storing results', { error });
@@ -280,11 +273,11 @@ export class WorkerCoordinator {
    */
   async waitForAllWorkers(timeout: number = 300000): Promise<boolean> {
     const startTime = Date.now();
-    
+
     while (Date.now() - startTime < timeout) {
       const workers = await this.getActiveWorkers();
       const activeWorkers = workers.filter(w => w.status === 'active');
-      
+
       if (activeWorkers.length === 0) {
         this.logger.info('All workers completed');
         return true;
@@ -292,7 +285,7 @@ export class WorkerCoordinator {
 
       this.logger.debug('Waiting for workers to complete', {
         activeWorkers: activeWorkers.length,
-        totalWorkers: workers.length
+        totalWorkers: workers.length,
       });
 
       // Wait before checking again
@@ -313,11 +306,7 @@ export class WorkerCoordinator {
   }
 
   private async registerWorker(): Promise<void> {
-    const workerFile = path.join(
-      this.coordinationDir,
-      'workers',
-      `${this.workerId}.worker`
-    );
+    const workerFile = path.join(this.coordinationDir, 'workers', `${this.workerId}.worker`);
 
     const workerInfo: WorkerInfo = {
       id: this.workerId,
@@ -326,18 +315,14 @@ export class WorkerCoordinator {
       lastHeartbeat: new Date(),
       status: 'active',
       testCount: 0,
-      resultsProcessed: 0
+      resultsProcessed: 0,
     };
 
     await FileUtils.writeJsonFile(workerFile, workerInfo);
   }
 
   private async unregisterWorker(): Promise<void> {
-    const workerFile = path.join(
-      this.coordinationDir,
-      'workers',
-      `${this.workerId}.worker`
-    );
+    const workerFile = path.join(this.coordinationDir, 'workers', `${this.workerId}.worker`);
 
     try {
       await FileUtils.deleteFile(workerFile);
@@ -359,11 +344,7 @@ export class WorkerCoordinator {
   }
 
   private async updateWorkerInfo(updates: Partial<WorkerInfo>): Promise<void> {
-    const workerFile = path.join(
-      this.coordinationDir,
-      'workers',
-      `${this.workerId}.worker`
-    );
+    const workerFile = path.join(this.coordinationDir, 'workers', `${this.workerId}.worker`);
 
     try {
       const currentInfo = await FileUtils.readJsonFile<WorkerInfo>(workerFile);
@@ -378,7 +359,7 @@ export class WorkerCoordinator {
     try {
       // Check if lock file exists and is still valid
       const existingLock = await this.getCurrentLock(lockFile);
-      
+
       if (existingLock) {
         // Check if lock has expired
         if (new Date() > existingLock.expiresAt) {
@@ -393,8 +374,8 @@ export class WorkerCoordinator {
       // Try to create lock file atomically
       await FileUtils.writeJsonFile(lockFile, lock, { flag: 'wx' });
       return true;
-    } catch (error: any) {
-      if (error.code === 'EEXIST') {
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'code' in error && error.code === 'EEXIST') {
         // Lock file was created by another process
         return false;
       }
@@ -405,22 +386,22 @@ export class WorkerCoordinator {
   private async getCurrentLock(lockFile: string): Promise<WorkerLock | null> {
     try {
       return await FileUtils.readJsonFile<WorkerLock>(lockFile);
-    } catch (error) {
+    } catch (_error) {
       return null;
     }
   }
 
   private async releaseAllLocks(): Promise<void> {
     const locksDir = path.join(this.coordinationDir, 'locks');
-    
+
     try {
       const lockFiles = await FileUtils.listFiles(locksDir);
-      
+
       for (const file of lockFiles) {
         if (file.endsWith('.lock')) {
           const lockFile = path.join(locksDir, file);
           const lock = await this.getCurrentLock(lockFile);
-          
+
           if (lock && lock.workerId === this.workerId) {
             await FileUtils.deleteFile(lockFile);
           }
@@ -438,15 +419,15 @@ export class WorkerCoordinator {
 
   private async cleanupStaleWorkers(): Promise<void> {
     const workersDir = path.join(this.coordinationDir, 'workers');
-    
+
     try {
       const workerFiles = await FileUtils.listFiles(workersDir);
-      
+
       for (const file of workerFiles) {
         if (file.endsWith('.worker')) {
           const workerPath = path.join(workersDir, file);
           const worker = await FileUtils.readJsonFile<WorkerInfo>(workerPath);
-          
+
           if (!this.isWorkerAlive(worker)) {
             await FileUtils.deleteFile(workerPath);
             this.logger.info('Cleaned up stale worker', { workerId: worker.id });
@@ -460,15 +441,15 @@ export class WorkerCoordinator {
 
   private async cleanupExpiredLocks(): Promise<void> {
     const locksDir = path.join(this.coordinationDir, 'locks');
-    
+
     try {
       const lockFiles = await FileUtils.listFiles(locksDir);
-      
+
       for (const file of lockFiles) {
         if (file.endsWith('.lock')) {
           const lockFile = path.join(locksDir, file);
           const lock = await this.getCurrentLock(lockFile);
-          
+
           if (lock && new Date() > lock.expiresAt) {
             await FileUtils.deleteFile(lockFile);
             this.logger.info('Cleaned up expired lock', { resource: lock.resource });
@@ -484,7 +465,7 @@ export class WorkerCoordinator {
     const now = Date.now();
     const lastHeartbeat = new Date(worker.lastHeartbeat).getTime();
     const timeSinceHeartbeat = now - lastHeartbeat;
-    
+
     return timeSinceHeartbeat < this.config.workerTimeout;
   }
 }
