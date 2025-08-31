@@ -1,5 +1,5 @@
 import { promises as fs } from 'fs';
-import { join, dirname } from 'path';
+import { dirname, join } from 'path';
 
 /**
  * Utility class for async file operations
@@ -21,7 +21,7 @@ export class FileUtils {
    */
   static async writeFile(filePath: string, data: string): Promise<void> {
     const dir = dirname(filePath);
-    await this.ensureDir(dir);
+    await FileUtils.ensureDir(dir);
     await fs.writeFile(filePath, data, 'utf8');
   }
 
@@ -69,14 +69,14 @@ export class FileUtils {
    */
   static async writeJson(filePath: string, data: unknown): Promise<void> {
     const jsonString = JSON.stringify(data, null, 2);
-    await this.writeFile(filePath, jsonString);
+    await FileUtils.writeFile(filePath, jsonString);
   }
 
   /**
    * Read and parse JSON file
    */
   static async readJson<T = unknown>(filePath: string): Promise<T> {
-    const content = await this.readFile(filePath);
+    const content = await FileUtils.readFile(filePath);
     try {
       return JSON.parse(content) as T;
     } catch (error) {
@@ -89,27 +89,27 @@ export class FileUtils {
    */
   static async createLockFile(lockPath: string, data?: string): Promise<void> {
     const lockData = data || new Date().toISOString();
-    await this.writeFile(lockPath, lockData);
+    await FileUtils.writeFile(lockPath, lockData);
   }
 
   /**
    * Remove lock file
    */
   static async removeLockFile(lockPath: string): Promise<void> {
-    await this.deleteFile(lockPath);
+    await FileUtils.deleteFile(lockPath);
   }
 
   /**
    * Wait for lock file to be removed (with timeout)
    */
   static async waitForLockRelease(
-    lockPath: string, 
+    lockPath: string,
     timeoutMs: number = 30000,
     checkIntervalMs: number = 100
   ): Promise<void> {
     const startTime = Date.now();
-    
-    while (await this.fileExists(lockPath)) {
+
+    while (await FileUtils.fileExists(lockPath)) {
       if (Date.now() - startTime > timeoutMs) {
         throw new Error(`Lock file timeout: ${lockPath}`);
       }
@@ -121,15 +121,19 @@ export class FileUtils {
    * Alias for ensureDir for compatibility
    */
   static async ensureDirectoryExists(dirPath: string): Promise<void> {
-    return this.ensureDir(dirPath);
+    return FileUtils.ensureDir(dirPath);
   }
 
   /**
    * Alias for writeJson with options support
    */
-  static async writeJsonFile<T>(filePath: string, data: T, options?: { flag?: string }): Promise<void> {
+  static async writeJsonFile<T>(
+    filePath: string,
+    data: T,
+    options?: { flag?: string }
+  ): Promise<void> {
     const dir = dirname(filePath);
-    await this.ensureDir(dir);
+    await FileUtils.ensureDir(dir);
     const jsonString = JSON.stringify(data, null, 2);
     await fs.writeFile(filePath, jsonString, { encoding: 'utf8', ...options });
   }
@@ -138,7 +142,7 @@ export class FileUtils {
    * Alias for readJson
    */
   static async readJsonFile<T>(filePath: string): Promise<T> {
-    return this.readJson<T>(filePath);
+    return FileUtils.readJson<T>(filePath);
   }
 
   /**
