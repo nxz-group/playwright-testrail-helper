@@ -1,0 +1,40 @@
+# Source files
+src/
+tsconfig.json
+biome.json
+lefthook.yml
+
+# Development files
+.git/
+.github/
+node_modules/
+*.log
+*.tgz
+
+# Test files
+test/
+tests/
+__tests__/
+*.test.*
+*.spec.*
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+*.tsbuildinfo
+
+# Examples (keep in repo but not in package)
+examples/
+docs/
+
+# Environment files
+.env*
+!.env.example

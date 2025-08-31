@@ -1,0 +1,61 @@
+{
+  "name": "@nxz-group/playwright-testrail-helper",
+  "version": "1.0.0",
+  "description": "A TypeScript library for seamless TestRail integration with Playwright test automation",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist/**/*",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "npm run clean && npm run build",
+    "lint": "npx @biomejs/biome check --write",
+    "lint:ci": "npx @biomejs/biome ci",
+    "test": "echo \"No tests specified\" && exit 0"
+  },
+  "keywords": [
+    "playwright",
+    "testrail",
+    "test-automation",
+    "testing",
+    "typescript",
+    "test-reporting",
+    "nxz-group",
+    "qackskills"
+  ],
+  "author": "Qackskills (NXZ-GROUP)",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nxz-group/playwright-testrail-helper.git"
+  },
+  "bugs": {
+    "url": "https://github.com/nxz-group/playwright-testrail-helper/issues"
+  },
+  "homepage": "https://github.com/nxz-group/playwright-testrail-helper#readme",
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "dependencies": {
+    "axios": "^1.6.0",
+    "dayjs": "^1.11.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.4.0",
+    "@types/node": "^20.0.0",
+    "lefthook": "^1.5.0",
+    "typescript": "^5.0.0"
+  },
+  "peerDependencies": {
+    "@playwright/test": ">=1.40.0"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com",
+    "access": "restricted"
+  }
+}
