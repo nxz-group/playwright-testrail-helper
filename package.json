@@ -2,6 +2,27 @@
   "name": "@nxz-group/playwright-testrail-helper",
   "version": "1.0.0",
   "description": "A TypeScript library for seamless TestRail integration with Playwright test automation",
+  "keywords": [
+    "playwright",
+    "testrail",
+    "test-automation",
+    "testing",
+    "typescript",
+    "test-reporting",
+    "nxz-group",
+    "qackskills"
+  ],
+  "homepage": "https://github.com/nxz-group/playwright-testrail-helper#readme",
+  "bugs": {
+    "url": "https://github.com/nxz-group/playwright-testrail-helper/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nxz-group/playwright-testrail-helper.git"
+  },
+  "license": "MIT",
+  "author": "Qackskills (NXZ-GROUP)",
+  "type": "commonjs",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
@@ -18,29 +39,6 @@
     "lint:ci": "npx @biomejs/biome ci",
     "test": "echo \"No tests specified\" && exit 0"
   },
-  "keywords": [
-    "playwright",
-    "testrail",
-    "test-automation",
-    "testing",
-    "typescript",
-    "test-reporting",
-    "nxz-group",
-    "qackskills"
-  ],
-  "author": "Qackskills (NXZ-GROUP)",
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/nxz-group/playwright-testrail-helper.git"
-  },
-  "bugs": {
-    "url": "https://github.com/nxz-group/playwright-testrail-helper/issues"
-  },
-  "homepage": "https://github.com/nxz-group/playwright-testrail-helper#readme",
-  "engines": {
-    "node": ">=16.0.0"
-  },
   "dependencies": {
     "axios": "^1.6.0",
     "dayjs": "^1.11.0"
@@ -54,8 +52,10 @@
   "peerDependencies": {
     "@playwright/test": ">=1.40.0"
   },
+  "engines": {
+    "node": ">=16.0.0"
+  },
   "publishConfig": {
-    "registry": "https://npm.pkg.github.com",
-    "access": "restricted"
+    "access": "public"
   }
 }
