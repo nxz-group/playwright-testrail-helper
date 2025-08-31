@@ -3,7 +3,7 @@ import { TestCaseManager } from "./managers/test-case-manager";
 import { TestRunManager } from "./managers/test-run-manager";
 import { WorkerManager } from "./managers/worker-manager";
 import type { TestCaseInfo, TestResult } from "./types";
-import { Platform } from "./utils/constants";
+import { AutomationType, Platform, Priority, TestStatus, TestTemplate, TestType } from "./utils/constants";
 import { ConfigurationError } from "./utils/errors";
 import { ValidationUtils } from "./utils/validation";
 
@@ -12,21 +12,38 @@ import { ValidationUtils } from "./utils/validation";
  * Orchestrates test case synchronization and result reporting
  */
 class TestRailHelper {
-  private readonly testRailDir: string;
-  private readonly projectId: number;
-  private readonly client: TestRailClient;
-  private readonly testCaseManager: TestCaseManager;
-  private readonly testRunManager: TestRunManager;
-  private readonly workerManager: WorkerManager;
+  private testRailDir?: string;
+  private projectId?: number;
+  private client?: TestRailClient;
+  private testCaseManager?: TestCaseManager;
+  private testRunManager?: TestRunManager;
+  private workerManager?: WorkerManager;
+  private initialized = false;
 
   public readonly platform = Platform;
+  public readonly testStatus = TestStatus;
+  public readonly testTemplate = TestTemplate;
+  public readonly testType = TestType;
+  public readonly automationType = AutomationType;
+  public readonly priority = Priority;
 
   /**
    * Creates a new TestRailHelper instance
-   * Initializes all managers and clients with TestRail credentials from environment variables
-   * @throws {ConfigurationError} When required environment variables are missing
+   * Initialization is deferred until first method call to avoid environment variable errors at import time
    */
   constructor() {
+    // Initialization is now lazy - happens on first method call
+  }
+
+  /**
+   * Initializes the TestRail helper with environment variables
+   * @throws {ConfigurationError} When required environment variables are missing
+   */
+  private initialize(): void {
+    if (this.initialized) {
+      return;
+    }
+
     const testRailHost = process.env.TEST_RAIL_HOST;
     const testRailUsername = process.env.TEST_RAIL_USERNAME;
     const testRailPassword = process.env.TEST_RAIL_PASSWORD;
@@ -51,6 +68,8 @@ class TestRailHelper {
     this.testCaseManager = new TestCaseManager(this.client, executedByText);
     this.testRunManager = new TestRunManager(this.client, this.projectId, this.testRailDir);
     this.workerManager = new WorkerManager(this.testRailDir);
+
+    this.initialized = true;
   }
 
   /**
@@ -69,6 +88,9 @@ class TestRailHelper {
     testList: TestCaseInfo[],
     isReset = false
   ): Promise<void> {
+    // Initialize if not already done
+    this.initialize();
+
     // Validate input parameters
     ValidationUtils.validateRunName(runName);
     ValidationUtils.validateSectionId(sectionId);
@@ -79,9 +101,9 @@ class TestRailHelper {
     const caseIdsInListFile: number[] = [];
     const testCaseInfos: TestCaseInfo[] = [];
 
-    await this.testRunManager.ensureTestRailSetup();
+    await this.testRunManager!.ensureTestRailSetup();
     if (isReset) {
-      await this.testRunManager.resetTestRunJson();
+      await this.testRunManager!.resetTestRunJson();
     }
 
     // Skip if no tests to process
@@ -89,14 +111,14 @@ class TestRailHelper {
       return;
     }
 
-    const userId = await this.client.getUserIdByEmail(process.env.TEST_RAIL_USERNAME as string);
-    const casesInSection = await this.client.getCases(this.projectId, sectionId);
+    const userId = await this.client!.getUserIdByEmail(process.env.TEST_RAIL_USERNAME as string);
+    const casesInSection = await this.client!.getCases(this.projectId!, sectionId);
 
     // Process test cases and create results
     for (const testCase of testList) {
       ValidationUtils.validateTestCase(testCase);
 
-      const testCaseId = await this.testCaseManager.syncTestCase(
+      const testCaseId = await this.testCaseManager!.syncTestCase(
         sectionId,
         platformId,
         testCase,
@@ -109,7 +131,7 @@ class TestRailHelper {
     }
 
     // Use WorkerManager for coordination
-    await this.workerManager.coordinateWorkers(workerId, testCaseInfos, async (allResults) => {
+    await this.workerManager!.coordinateWorkers(workerId, testCaseInfos, async (allResults) => {
       // Convert TestCaseInfo to TestResult for TestRail API
       const testResults: TestResult[] = [];
       const allCaseIds: number[] = [];
@@ -118,7 +140,7 @@ class TestRailHelper {
         // Find the corresponding case ID from our processed cases
         const matchingCase = casesInSection.find((c) => c.title === testCase.title);
         if (matchingCase) {
-          const testResult = this.testCaseManager.createTestResult(testCase, matchingCase.id, userId);
+          const testResult = this.testCaseManager!.createTestResult(testCase, matchingCase.id, userId);
           // Only add to results if not null (skip untested/skipped tests)
           if (testResult !== null) {
             testResults.push(testResult);
@@ -128,13 +150,13 @@ class TestRailHelper {
       }
 
       // Set test run ID and case IDs
-      await this.testRunManager.setTestRunIdAndCaseId(runName, userId, allCaseIds);
+      await this.testRunManager!.setTestRunIdAndCaseId(runName, userId, allCaseIds);
 
       // Write JSON
-      await this.testRunManager.writeTestRunJson();
+      await this.testRunManager!.writeTestRunJson();
 
       // Update run and add results
-      await this.testRunManager.updateRunAndAddResults(testResults);
+      await this.testRunManager!.updateRunAndAddResults(testResults);
     });
   }
 }

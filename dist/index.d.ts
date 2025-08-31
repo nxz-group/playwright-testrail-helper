@@ -1,23 +1,33 @@
 import type { TestCaseInfo } from "./types";
-import { Platform } from "./utils/constants";
+import { Platform, TestStatus, TestTemplate, TestType, AutomationType, Priority } from "./utils/constants";
 /**
  * Main TestRail integration helper class
  * Orchestrates test case synchronization and result reporting
  */
 declare class TestRailHelper {
-    private readonly testRailDir;
-    private readonly projectId;
-    private readonly client;
-    private readonly testCaseManager;
-    private readonly testRunManager;
-    private readonly workerManager;
+    private testRailDir?;
+    private projectId?;
+    private client?;
+    private testCaseManager?;
+    private testRunManager?;
+    private workerManager?;
+    private initialized;
     readonly platform: typeof Platform;
+    readonly testStatus: typeof TestStatus;
+    readonly testTemplate: typeof TestTemplate;
+    readonly testType: typeof TestType;
+    readonly automationType: typeof AutomationType;
+    readonly priority: typeof Priority;
     /**
      * Creates a new TestRailHelper instance
-     * Initializes all managers and clients with TestRail credentials from environment variables
-     * @throws {ConfigurationError} When required environment variables are missing
+     * Initialization is deferred until first method call to avoid environment variable errors at import time
      */
     constructor();
+    /**
+     * Initializes the TestRail helper with environment variables
+     * @throws {ConfigurationError} When required environment variables are missing
+     */
+    private initialize;
     /**
      * Updates test results in TestRail by syncing test cases and creating/updating test runs
      * @param runName - Name of the test run

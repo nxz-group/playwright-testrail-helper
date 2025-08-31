@@ -29,11 +29,26 @@ const validation_1 = require("./utils/validation");
 class TestRailHelper {
     /**
      * Creates a new TestRailHelper instance
-     * Initializes all managers and clients with TestRail credentials from environment variables
-     * @throws {ConfigurationError} When required environment variables are missing
+     * Initialization is deferred until first method call to avoid environment variable errors at import time
      */
     constructor() {
+        this.initialized = false;
         this.platform = constants_1.Platform;
+        this.testStatus = constants_1.TestStatus;
+        this.testTemplate = constants_1.TestTemplate;
+        this.testType = constants_1.TestType;
+        this.automationType = constants_1.AutomationType;
+        this.priority = constants_1.Priority;
+        // Initialization is now lazy - happens on first method call
+    }
+    /**
+     * Initializes the TestRail helper with environment variables
+     * @throws {ConfigurationError} When required environment variables are missing
+     */
+    initialize() {
+        if (this.initialized) {
+            return;
+        }
         const testRailHost = process.env.TEST_RAIL_HOST;
         const testRailUsername = process.env.TEST_RAIL_USERNAME;
         const testRailPassword = process.env.TEST_RAIL_PASSWORD;
@@ -52,6 +67,7 @@ class TestRailHelper {
         this.testCaseManager = new test_case_manager_1.TestCaseManager(this.client, executedByText);
         this.testRunManager = new test_run_manager_1.TestRunManager(this.client, this.projectId, this.testRailDir);
         this.workerManager = new worker_manager_1.WorkerManager(this.testRailDir);
+        this.initialized = true;
     }
     /**
      * Updates test results in TestRail by syncing test cases and creating/updating test runs
@@ -63,6 +79,8 @@ class TestRailHelper {
      * @throws {TestRailError} When validation fails or TestRail operations fail
      */
     async updateTestResult(runName, sectionId, platformId, testList, isReset = false) {
+        // Initialize if not already done
+        this.initialize();
         // Validate input parameters
         validation_1.ValidationUtils.validateRunName(runName);
         validation_1.ValidationUtils.validateSectionId(sectionId);
