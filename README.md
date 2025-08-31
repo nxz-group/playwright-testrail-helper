@@ -1,4 +1,4 @@
-# @nxz-group/playwright-testrail-helper
+# playwright-testrail-helper
 
 A TypeScript library for seamless TestRail integration with Playwright test automation, designed for parallel execution and enterprise use.
 
@@ -14,7 +14,7 @@ A TypeScript library for seamless TestRail integration with Playwright test auto
 ## Installation
 
 ```bash
-npm install @nxz-group/playwright-testrail-helper
+npm install playwright-testrail-helper
 ```
 
 ## Quick Start
@@ -36,7 +36,7 @@ TEST_WORKER_INDEX=0
 
 ### 2. Basic Usage
 ```typescript
-import { onTestRailHelper, Platform } from '@nxz-group/playwright-testrail-helper';
+import { onTestRailHelper, Platform } from 'playwright-testrail-helper';
 
 // Define your section IDs
 const SECTION_IDS = {
@@ -113,7 +113,7 @@ TEST_WORKER_INDEX=1  # Worker 2
 
 ### Platform Types
 ```typescript
-import { Platform } from '@nxz-group/playwright-testrail-helper';
+import { Platform } from 'playwright-testrail-helper';
 
 Platform.API                           // 1
 Platform.WEB_DESKTOP                   // 2  
@@ -131,7 +131,7 @@ import {
   TestRailError, 
   APIError, 
   ConfigurationError 
-} from '@nxz-group/playwright-testrail-helper';
+} from 'playwright-testrail-helper';
 
 try {
   await onTestRailHelper.updateTestResult(runName, sectionId, platform, results);

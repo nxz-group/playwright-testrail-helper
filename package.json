@@ -1,5 +1,5 @@
 {
-  "name": "@nxz-group/playwright-testrail-helper",
+  "name": "playwright-testrail-helper",
   "version": "1.0.0",
   "description": "A TypeScript library for seamless TestRail integration with Playwright test automation",
   "keywords": [
