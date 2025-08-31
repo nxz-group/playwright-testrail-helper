@@ -185,7 +185,7 @@ describe('SecurityAuditor', () => {
         normalField: 'normal-value',
       };
 
-      const sanitized = auditor.sanitizeForLogging(sensitiveData);
+      const sanitized = auditor.sanitizeForLogging(sensitiveData) as Record<string, any>;
 
       expect(sanitized.username).toBe('user@example.com'); // Username is not sensitive
       expect(sanitized.password).toBe('[REDACTED]');
@@ -206,7 +206,7 @@ describe('SecurityAuditor', () => {
         },
       };
 
-      const sanitized = auditor.sanitizeForLogging(nestedData);
+      const sanitized = auditor.sanitizeForLogging(nestedData) as Record<string, any>;
 
       expect(sanitized.config.password).toBe('[REDACTED]');
       expect(sanitized.config.host).toBe('https://testrail.io');
@@ -230,7 +230,7 @@ describe('SecurityAuditor', () => {
         { password: 'secret2', name: 'item2' },
       ];
 
-      const sanitized = auditor.sanitizeForLogging(arrayData);
+      const sanitized = auditor.sanitizeForLogging(arrayData) as any[];
 
       expect(Array.isArray(sanitized)).toBe(true);
       expect(sanitized[0].password).toBe('[REDACTED]');

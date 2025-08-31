@@ -1,4 +1,4 @@
-import { TestRailConfig, ApiResponse, TestRailError } from '../types';
+import { type ApiResponse, type TestRailConfig, TestRailError } from '../types';
 import { Logger } from '../utils/Logger';
 
 /**
@@ -9,28 +9,29 @@ class RateLimiter {
   private maxRequests: number;
   private windowMs: number;
 
-  constructor(maxRequests = 100, windowMs = 60000) { // 100 requests per minute by default
+  constructor(maxRequests = 100, windowMs = 60000) {
+    // 100 requests per minute by default
     this.maxRequests = maxRequests;
     this.windowMs = windowMs;
   }
 
   async waitForSlot(): Promise<void> {
     const now = Date.now();
-    
+
     // Remove old requests outside the window
     this.requests = this.requests.filter(time => now - time < this.windowMs);
-    
+
     if (this.requests.length >= this.maxRequests) {
       // Wait until the oldest request is outside the window
       const oldestRequest = Math.min(...this.requests);
       const waitTime = this.windowMs - (now - oldestRequest) + 100; // Add 100ms buffer
-      
+
       if (waitTime > 0) {
         await new Promise(resolve => setTimeout(resolve, waitTime));
         return this.waitForSlot(); // Recursive call to check again
       }
     }
-    
+
     this.requests.push(now);
   }
 }
@@ -54,14 +55,14 @@ class ConnectionPool {
     }
 
     // Wait for a connection to be released
-    return new Promise<void>((resolve) => {
+    return new Promise<void>(resolve => {
       this.waitingQueue.push(resolve);
     });
   }
 
   release(): void {
     this.activeConnections--;
-    
+
     if (this.waitingQueue.length > 0) {
       const next = this.waitingQueue.shift();
       if (next) {
@@ -75,7 +76,7 @@ class ConnectionPool {
     return {
       active: this.activeConnections,
       waiting: this.waitingQueue.length,
-      max: this.maxConnections
+      max: this.maxConnections,
     };
   }
 }
@@ -97,7 +98,7 @@ export class TestRailApiClient {
     this.baseURL = config.host.replace(/\/$/, ''); // Remove trailing slash
     this.headers = {
       'Content-Type': 'application/json',
-      'Authorization': `Basic ${Buffer.from(`${config.username}:${config.password}`).toString('base64')}`
+      Authorization: `Basic ${Buffer.from(`${config.username}:${config.password}`).toString('base64')}`,
     };
     this.logger = new Logger('TestRailApiClient');
     this.timeout = config.timeout || 30000;
@@ -119,37 +120,38 @@ export class TestRailApiClient {
     const url = `${this.baseURL}/index.php?${endpoint}`;
     const retryCount = customRetries ?? this.retries;
     const cacheKey = `${method}:${endpoint}:${JSON.stringify(data)}`;
-    
+
     // Check cache for GET requests
     if (method === 'GET' && useCache) {
       const cached = this.requestCache.get(cacheKey);
-      if (cached && Date.now() - cached.timestamp < 300000) { // 5 minute cache
+      if (cached && Date.now() - cached.timestamp < 300000) {
+        // 5 minute cache
         this.logger.debug('Returning cached response', { endpoint });
         return cached.data as ApiResponse<T>;
       }
     }
-    
+
     for (let attempt = 1; attempt <= retryCount; attempt++) {
       try {
         // Wait for rate limiter
         await this.rateLimiter.waitForSlot();
-        
+
         // Acquire connection from pool
         await this.connectionPool.acquire();
-        
-        this.logger.debug(`${method} ${endpoint}`, { 
-          attempt, 
+
+        this.logger.debug(`${method} ${endpoint}`, {
+          attempt,
           data,
-          connectionStats: this.connectionPool.getStats()
+          connectionStats: this.connectionPool.getStats(),
         });
-        
+
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), this.timeout);
 
         const requestInit: RequestInit = {
           method,
           headers: this.headers,
-          signal: controller.signal
+          signal: controller.signal,
         };
 
         if (data) {
@@ -163,36 +165,40 @@ export class TestRailApiClient {
 
         let body: T;
         const contentType = response.headers.get('content-type');
-        
-        if (contentType && contentType.includes('application/json')) {
-          body = await response.json() as T;
+
+        if (contentType?.includes('application/json')) {
+          body = (await response.json()) as T;
         } else {
-          body = await response.text() as T;
+          body = (await response.text()) as T;
         }
-        
+
         const result: ApiResponse<T> = {
           statusCode: response.status,
           body,
-          headers: Object.fromEntries(response.headers.entries())
+          headers: Object.fromEntries(response.headers.entries()),
         };
 
         if (response.ok) {
-          this.logger.debug(`${method} ${endpoint} success`, { 
+          this.logger.debug(`${method} ${endpoint} success`, {
             statusCode: response.status,
-            attempt 
+            attempt,
           });
-          
+
           // Cache GET responses
           if (method === 'GET' && useCache) {
             this.requestCache.set(cacheKey, { data: result, timestamp: Date.now() });
           }
-          
+
           return result;
         }
 
         // Handle specific error cases
         if (response.status === 401) {
-          throw new TestRailError('Authentication failed. Check credentials.', response.status, body);
+          throw new TestRailError(
+            'Authentication failed. Check credentials.',
+            response.status,
+            body
+          );
         }
 
         if (response.status === 403) {
@@ -206,31 +212,30 @@ export class TestRailApiClient {
         // Retry on server errors (5xx) and rate limiting (429)
         if ((response.status >= 500 || response.status === 429) && attempt < retryCount) {
           const delay = this.calculateBackoffDelay(attempt);
-          this.logger.warn(`${method} ${endpoint} failed, retrying in ${delay}ms`, { 
-            statusCode: response.status, 
+          this.logger.warn(`${method} ${endpoint} failed, retrying in ${delay}ms`, {
+            statusCode: response.status,
             attempt,
-            body 
+            body,
           });
           await this.delay(delay);
           continue;
         }
 
         // Non-retryable error
-        this.logger.error(`${method} ${endpoint} failed`, { 
-          statusCode: response.status, 
+        this.logger.error(`${method} ${endpoint} failed`, {
+          statusCode: response.status,
           body,
-          attempt 
+          attempt,
         });
-        
+
         throw new TestRailError(
           `API request failed with status ${response.status}`,
           response.status,
           body
         );
-
       } catch (error) {
         this.connectionPool.release(); // Always release connection on error
-        
+
         if (error instanceof TestRailError) {
           throw error;
         }
@@ -244,11 +249,11 @@ export class TestRailApiClient {
             error
           );
         }
-        
+
         const delay = this.calculateBackoffDelay(attempt);
-        this.logger.warn(`${method} ${endpoint} error, retrying in ${delay}ms`, { 
-          error: (error as Error).message, 
-          attempt 
+        this.logger.warn(`${method} ${endpoint} error, retrying in ${delay}ms`, {
+          error: (error as Error).message,
+          attempt,
         });
         await this.delay(delay);
       }
@@ -263,8 +268,8 @@ export class TestRailApiClient {
   private calculateBackoffDelay(attempt: number): number {
     const baseDelay = 1000; // 1 second
     const maxDelay = 30000; // 30 seconds
-    const delay = Math.min(baseDelay * Math.pow(2, attempt - 1), maxDelay);
-    
+    const delay = Math.min(baseDelay * 2 ** (attempt - 1), maxDelay);
+
     // Add jitter to prevent thundering herd
     const jitter = Math.random() * 0.1 * delay;
     return Math.floor(delay + jitter);
@@ -300,7 +305,7 @@ export class TestRailApiClient {
   getCacheStats(): { size: number; entries: string[] } {
     return {
       size: this.requestCache.size,
-      entries: Array.from(this.requestCache.keys())
+      entries: Array.from(this.requestCache.keys()),
     };
   }
 
@@ -310,7 +315,13 @@ export class TestRailApiClient {
    * Get test cases in a section (with caching)
    */
   async getCases(projectId: number, sectionId: number, useCache = true): Promise<ApiResponse> {
-    return this.request('GET', `/api/v2/get_cases/${projectId}&section_id=${sectionId}`, undefined, undefined, useCache);
+    return this.request(
+      'GET',
+      `/api/v2/get_cases/${projectId}&section_id=${sectionId}`,
+      undefined,
+      undefined,
+      useCache
+    );
   }
 
   /**
@@ -331,7 +342,13 @@ export class TestRailApiClient {
    * Get user by email (with caching)
    */
   async getUserByEmail(email: string, useCache = true): Promise<ApiResponse> {
-    return this.request('GET', `/api/v2/get_user_by_email&email=${encodeURIComponent(email)}`, undefined, undefined, useCache);
+    return this.request(
+      'GET',
+      `/api/v2/get_user_by_email&email=${encodeURIComponent(email)}`,
+      undefined,
+      undefined,
+      useCache
+    );
   }
 
   /**

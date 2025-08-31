@@ -1,5 +1,5 @@
 import { TestRailApiClient } from '../../../src/client/TestRailApiClient';
-import { TestRailConfig, TestRailError } from '../../../src/types';
+import { type TestRailConfig, TestRailError } from '../../../src/types';
 
 // Mock fetch globally
 const originalFetch = global.fetch;
@@ -11,7 +11,7 @@ describe('TestRailApiClient', () => {
     password: 'test-password',
     projectId: 1,
     timeout: 5000,
-    retries: 2
+    retries: 2,
   };
 
   let client: TestRailApiClient;
@@ -46,7 +46,7 @@ describe('TestRailApiClient', () => {
         statusText: 'OK',
         json: () => Promise.resolve(mockBody),
         text: () => Promise.resolve(JSON.stringify(mockBody)),
-        headers: new Map([['content-type', 'application/json']])
+        headers: new Map([['content-type', 'application/json']]),
       });
 
       const result = await client.request('GET', '/api/v2/get_cases/1&section_id=100');
@@ -58,14 +58,14 @@ describe('TestRailApiClient', () => {
     it('should make successful POST request', async () => {
       const mockBody = { id: 123, title: 'New Test Case' };
       const testData = { title: 'New Test Case' };
-      
+
       global.fetch = jest.fn().mockResolvedValue({
         ok: true,
         status: 200,
         statusText: 'OK',
         json: () => Promise.resolve(mockBody),
         text: () => Promise.resolve(JSON.stringify(mockBody)),
-        headers: new Map([['content-type', 'application/json']])
+        headers: new Map([['content-type', 'application/json']]),
       });
 
       const result = await client.request('POST', '/api/v2/add_case/100', testData);
@@ -82,20 +82,20 @@ describe('TestRailApiClient', () => {
         statusText: 'Unauthorized',
         json: () => Promise.resolve(errorBody),
         text: () => Promise.resolve(JSON.stringify(errorBody)),
-        headers: new Map([['content-type', 'application/json']])
+        headers: new Map([['content-type', 'application/json']]),
       });
 
-      await expect(
-        client.request('GET', '/api/v2/get_cases/1&section_id=100')
-      ).rejects.toThrow(TestRailError);
+      await expect(client.request('GET', '/api/v2/get_cases/1&section_id=100')).rejects.toThrow(
+        TestRailError
+      );
     });
 
     it('should handle network errors with retries', async () => {
       global.fetch = jest.fn().mockRejectedValue(new Error('Network error'));
 
-      await expect(
-        client.request('GET', '/api/v2/get_cases/1&section_id=100')
-      ).rejects.toThrow('Network error after 2 attempts');
+      await expect(client.request('GET', '/api/v2/get_cases/1&section_id=100')).rejects.toThrow(
+        'Network error after 2 attempts'
+      );
 
       expect(global.fetch).toHaveBeenCalledTimes(2); // Initial + retries
     });
@@ -107,7 +107,7 @@ describe('TestRailApiClient', () => {
         statusText: 'OK',
         headers: new Map([['content-type', 'text/plain']]),
         json: () => Promise.resolve({}),
-        text: () => Promise.resolve('Plain text response')
+        text: () => Promise.resolve('Plain text response'),
       });
 
       const result = await client.request('GET', '/api/v2/some_endpoint');
@@ -125,7 +125,7 @@ describe('TestRailApiClient', () => {
         statusText: 'OK',
         json: () => Promise.resolve({ success: true }),
         text: () => Promise.resolve(JSON.stringify({ success: true })),
-        headers: new Map([['content-type', 'application/json']])
+        headers: new Map([['content-type', 'application/json']]),
       });
     });
 
@@ -138,8 +138,8 @@ describe('TestRailApiClient', () => {
           method: 'GET',
           headers: expect.objectContaining({
             'Content-Type': 'application/json',
-            'Authorization': expect.stringContaining('Basic ')
-          })
+            Authorization: expect.stringContaining('Basic '),
+          }),
         })
       );
     });
@@ -152,7 +152,7 @@ describe('TestRailApiClient', () => {
         'https://test.testrail.io/index.php?/api/v2/add_case/100',
         expect.objectContaining({
           method: 'POST',
-          body: JSON.stringify(testCase)
+          body: JSON.stringify(testCase),
         })
       );
     });
@@ -165,7 +165,7 @@ describe('TestRailApiClient', () => {
         'https://test.testrail.io/index.php?/api/v2/update_case/123',
         expect.objectContaining({
           method: 'POST',
-          body: JSON.stringify(testCase)
+          body: JSON.stringify(testCase),
         })
       );
     });
@@ -176,7 +176,7 @@ describe('TestRailApiClient', () => {
       expect(global.fetch).toHaveBeenCalledWith(
         'https://test.testrail.io/index.php?/api/v2/get_user_by_email&email=test%40example.com',
         expect.objectContaining({
-          method: 'GET'
+          method: 'GET',
         })
       );
     });
@@ -189,7 +189,7 @@ describe('TestRailApiClient', () => {
         'https://test.testrail.io/index.php?/api/v2/add_run/1',
         expect.objectContaining({
           method: 'POST',
-          body: JSON.stringify(runInfo)
+          body: JSON.stringify(runInfo),
         })
       );
     });
@@ -204,7 +204,7 @@ describe('TestRailApiClient', () => {
         statusText: 'Unauthorized',
         json: () => Promise.resolve(errorBody),
         text: () => Promise.resolve(JSON.stringify(errorBody)),
-        headers: new Map([['content-type', 'application/json']])
+        headers: new Map([['content-type', 'application/json']]),
       });
 
       try {
@@ -229,11 +229,16 @@ describe('TestRailApiClient', () => {
           statusText: 'OK',
           json: () => Promise.resolve({ success: true }),
           text: () => Promise.resolve(JSON.stringify({ success: true })),
-          headers: new Map([['content-type', 'application/json']])
+          headers: new Map([['content-type', 'application/json']]),
         });
       });
 
-      const result = await client.request('GET', '/api/v2/get_cases/1&section_id=100', undefined, 3);
+      const result = await client.request(
+        'GET',
+        '/api/v2/get_cases/1&section_id=100',
+        undefined,
+        3
+      );
 
       expect(result.statusCode).toBe(200);
       expect(global.fetch).toHaveBeenCalledTimes(3); // Initial call + 2 retries

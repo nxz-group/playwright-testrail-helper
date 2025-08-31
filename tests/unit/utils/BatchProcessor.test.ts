@@ -9,7 +9,7 @@ jest.mock('../../../src/utils/Logger');
 jest.mock('../../../src/utils/PerformanceMonitor', () => ({
   PerformanceMonitor: {
     getInstance: jest.fn(() => ({
-      timeOperation: jest.fn((name, operation) => operation()),
+      timeOperation: jest.fn((_name, operation) => operation()),
     })),
   },
 }));

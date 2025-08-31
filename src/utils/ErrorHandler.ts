@@ -1,6 +1,6 @@
-import { TestRailError, ConfigurationError, ValidationError } from '../types';
-import { Logger } from './Logger';
+import { ConfigurationError, TestRailError, ValidationError } from '../types';
 import { CircuitBreaker } from './CircuitBreaker';
+import { Logger } from './Logger';
 
 /**
  * Error severity levels
@@ -9,7 +9,7 @@ export enum ErrorSeverity {
   LOW = 'LOW',
   MEDIUM = 'MEDIUM',
   HIGH = 'HIGH',
-  CRITICAL = 'CRITICAL'
+  CRITICAL = 'CRITICAL',
 }
 
 /**
@@ -24,7 +24,7 @@ export enum ErrorCategory {
   API = 'API',
   TIMEOUT = 'TIMEOUT',
   RATE_LIMIT = 'RATE_LIMIT',
-  UNKNOWN = 'UNKNOWN'
+  UNKNOWN = 'UNKNOWN',
 }
 
 /**
@@ -77,7 +77,7 @@ export class ErrorHandler {
       context,
       timestamp: Date.now(),
       retryable: this.isRetryable(error),
-      suggestedAction: this.getSuggestedAction(error)
+      suggestedAction: this.getSuggestedAction(error),
     };
 
     // Add to error history
@@ -102,8 +102,8 @@ export class ErrorHandler {
       backoffMultiplier: strategy.backoffMultiplier || 2,
       baseDelay: strategy.baseDelay || 1000,
       maxDelay: strategy.maxDelay || 30000,
-      retryCondition: strategy.retryCondition || ((errorInfo) => errorInfo.retryable),
-      ...strategy
+      retryCondition: strategy.retryCondition || (errorInfo => errorInfo.retryable),
+      ...strategy,
     };
 
     let lastError: ErrorInfo | null = null;
@@ -112,10 +112,10 @@ export class ErrorHandler {
       try {
         return await fn();
       } catch (error) {
-        lastError = this.processError(error as Error, { 
-          ...context, 
-          attempt, 
-          maxRetries: recoveryStrategy.maxRetries 
+        lastError = this.processError(error as Error, {
+          ...context,
+          attempt,
+          maxRetries: recoveryStrategy.maxRetries,
         });
 
         // Don't retry on last attempt or if not retryable
@@ -125,7 +125,7 @@ export class ErrorHandler {
 
         // Calculate delay for next attempt
         const delay = Math.min(
-          recoveryStrategy.baseDelay * Math.pow(recoveryStrategy.backoffMultiplier, attempt - 1),
+          recoveryStrategy.baseDelay * recoveryStrategy.backoffMultiplier ** (attempt - 1),
           recoveryStrategy.maxDelay
         );
 
@@ -133,7 +133,7 @@ export class ErrorHandler {
           attempt,
           delay,
           error: lastError.message,
-          category: lastError.category
+          category: lastError.category,
         });
 
         await this.delay(delay);
@@ -153,7 +153,7 @@ export class ErrorHandler {
     context?: Record<string, unknown>
   ): Promise<T> {
     let circuitBreaker = this.circuitBreakers.get(name);
-    
+
     if (!circuitBreaker) {
       circuitBreaker = new CircuitBreaker(name);
       this.circuitBreakers.set(name, circuitBreaker);
@@ -162,10 +162,10 @@ export class ErrorHandler {
     try {
       return await circuitBreaker.execute(fn);
     } catch (error) {
-      const errorInfo = this.processError(error as Error, { 
-        ...context, 
+      const errorInfo = this.processError(error as Error, {
+        ...context,
         circuitBreaker: name,
-        circuitState: circuitBreaker.getStatus().state
+        circuitState: circuitBreaker.getStatus().state,
       });
       throw errorInfo.originalError;
     }
@@ -185,34 +185,38 @@ export class ErrorHandler {
 
     if (error instanceof TestRailError) {
       const statusCode = error.statusCode;
-      
+
       if (statusCode === 401) {
         return ErrorCategory.AUTHENTICATION;
       }
-      
+
       if (statusCode === 403) {
         return ErrorCategory.AUTHORIZATION;
       }
-      
+
       if (statusCode === 429) {
         return ErrorCategory.RATE_LIMIT;
       }
-      
+
       if (statusCode && statusCode >= 500) {
         return ErrorCategory.API;
       }
-      
+
       return ErrorCategory.API;
     }
 
     // Check error message for common patterns
     const message = error.message.toLowerCase();
-    
+
     if (message.includes('timeout') || message.includes('timed out')) {
       return ErrorCategory.TIMEOUT;
     }
-    
-    if (message.includes('network') || message.includes('connection') || message.includes('fetch')) {
+
+    if (
+      message.includes('network') ||
+      message.includes('connection') ||
+      message.includes('fetch')
+    ) {
       return ErrorCategory.NETWORK;
     }
 
@@ -229,26 +233,26 @@ export class ErrorHandler {
 
     if (error instanceof TestRailError) {
       const statusCode = error.statusCode;
-      
+
       if (statusCode === 401 || statusCode === 403) {
         return ErrorSeverity.HIGH;
       }
-      
+
       if (statusCode && statusCode >= 500) {
         return ErrorSeverity.MEDIUM;
       }
-      
+
       if (statusCode === 429) {
         return ErrorSeverity.LOW;
       }
     }
 
     const message = error.message.toLowerCase();
-    
+
     if (message.includes('critical') || message.includes('fatal')) {
       return ErrorSeverity.CRITICAL;
     }
-    
+
     if (message.includes('timeout') || message.includes('timed out')) {
       return ErrorSeverity.MEDIUM;
     }
@@ -266,28 +270,30 @@ export class ErrorHandler {
 
     if (error instanceof TestRailError) {
       const statusCode = error.statusCode;
-      
+
       // Don't retry authentication/authorization errors
       if (statusCode === 401 || statusCode === 403) {
         return false;
       }
-      
+
       // Don't retry client errors (4xx except 429)
       if (statusCode && statusCode >= 400 && statusCode < 500 && statusCode !== 429) {
         return false;
       }
-      
+
       // Retry server errors and rate limiting
       return true;
     }
 
     // Retry network and timeout errors
     const message = error.message.toLowerCase();
-    return message.includes('network') || 
-           message.includes('timeout') || 
-           message.includes('timed out') ||
-           message.includes('connection') ||
-           message.includes('fetch');
+    return (
+      message.includes('network') ||
+      message.includes('timeout') ||
+      message.includes('timed out') ||
+      message.includes('connection') ||
+      message.includes('fetch')
+    );
   }
 
   /**
@@ -304,34 +310,34 @@ export class ErrorHandler {
 
     if (error instanceof TestRailError) {
       const statusCode = error.statusCode;
-      
+
       if (statusCode === 401) {
         return 'Check TestRail credentials and API key';
       }
-      
+
       if (statusCode === 403) {
         return 'Check user permissions in TestRail';
       }
-      
+
       if (statusCode === 404) {
         return 'Verify resource exists in TestRail';
       }
-      
+
       if (statusCode === 429) {
         return 'Reduce request rate or wait before retrying';
       }
-      
+
       if (statusCode && statusCode >= 500) {
         return 'TestRail server error - retry or contact support';
       }
     }
 
     const message = error.message.toLowerCase();
-    
+
     if (message.includes('timeout') || message.includes('timed out')) {
       return 'Increase timeout value or check network connectivity';
     }
-    
+
     if (message.includes('network') || message.includes('connection')) {
       return 'Check network connectivity and TestRail server status';
     }
@@ -344,7 +350,7 @@ export class ErrorHandler {
    */
   private addToHistory(errorInfo: ErrorInfo): void {
     this.errorHistory.push(errorInfo);
-    
+
     // Maintain history size limit
     if (this.errorHistory.length > this.maxHistorySize) {
       this.errorHistory = this.errorHistory.slice(-this.maxHistorySize);
@@ -361,7 +367,7 @@ export class ErrorHandler {
       message: errorInfo.message,
       context: errorInfo.context,
       retryable: errorInfo.retryable,
-      suggestedAction: errorInfo.suggestedAction
+      suggestedAction: errorInfo.suggestedAction,
     };
 
     switch (errorInfo.severity) {
@@ -383,7 +389,8 @@ export class ErrorHandler {
   /**
    * Get error statistics
    */
-  getErrorStats(timeWindowMs = 3600000): { // 1 hour default
+  getErrorStats(timeWindowMs = 3600000): {
+    // 1 hour default
     total: number;
     byCategory: Record<ErrorCategory, number>;
     bySeverity: Record<ErrorSeverity, number>;
@@ -396,14 +403,14 @@ export class ErrorHandler {
       total: recentErrors.length,
       byCategory: {} as Record<ErrorCategory, number>,
       bySeverity: {} as Record<ErrorSeverity, number>,
-      retryableCount: 0
+      retryableCount: 0,
     };
 
     // Initialize counters
     Object.values(ErrorCategory).forEach(category => {
       stats.byCategory[category] = 0;
     });
-    
+
     Object.values(ErrorSeverity).forEach(severity => {
       stats.bySeverity[severity] = 0;
     });
@@ -425,7 +432,7 @@ export class ErrorHandler {
    */
   getCircuitBreakerStatus(): Record<string, ReturnType<CircuitBreaker['getStatus']>> {
     const status: Record<string, ReturnType<CircuitBreaker['getStatus']>> = {};
-    
+
     this.circuitBreakers.forEach((breaker, name) => {
       status[name] = breaker.getStatus();
     });
@@ -437,7 +444,9 @@ export class ErrorHandler {
    * Reset all circuit breakers
    */
   resetAllCircuitBreakers(): void {
-    this.circuitBreakers.forEach(breaker => breaker.reset());
+    this.circuitBreakers.forEach(breaker => {
+      breaker.reset();
+    });
     this.logger.info('All circuit breakers reset');
   }
 

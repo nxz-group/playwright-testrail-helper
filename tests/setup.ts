@@ -24,7 +24,7 @@ afterAll(() => {
 // Custom Jest matchers
 expect.extend({
   toBeValidTimestamp(received: string) {
-    const isValid = !isNaN(Date.parse(received));
+    const isValid = !Number.isNaN(Date.parse(received));
     return {
       message: () => `expected ${received} to be a valid timestamp`,
       pass: isValid,

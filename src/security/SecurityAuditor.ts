@@ -285,7 +285,7 @@ export class SecurityAuditor {
       return data.map(item => this.sanitizeForLogging(item));
     }
 
-    const sanitized = { ...data };
+    const sanitized = { ...data } as Record<string, any>;
     const sensitiveKeys = ['password', 'token', 'secret', 'credential'];
     const sensitiveKeyPatterns = ['apikey', 'api_key']; // Exact patterns
 

@@ -1,4 +1,4 @@
-import { ApiResponse } from '../../src/types';
+import type { ApiResponse } from '../../src/types';
 
 /**
  * Mock responses for TestRail API calls
@@ -12,15 +12,15 @@ export const mockApiResponses = {
         id: 1,
         name: 'Test User',
         email: 'test@example.com',
-        is_active: true
-      }
+        is_active: true,
+      },
     } as ApiResponse,
     notFound: {
       statusCode: 400,
       body: {
-        error: 'Field :email is not a valid email address.'
-      }
-    } as ApiResponse
+        error: 'Field :email is not a valid email address.',
+      },
+    } as ApiResponse,
   },
 
   // Test case responses
@@ -34,21 +34,21 @@ export const mockApiResponses = {
             title: 'Test Case 1',
             section_id: 100,
             type_id: 1,
-            priority_id: 2
+            priority_id: 2,
           },
           {
             id: 2,
             title: 'Test Case 2',
             section_id: 100,
             type_id: 2,
-            priority_id: 3
-          }
+            priority_id: 3,
+          },
         ],
         _links: {
           next: null,
-          prev: null
-        }
-      }
+          prev: null,
+        },
+      },
     } as ApiResponse,
     empty: {
       statusCode: 200,
@@ -56,10 +56,10 @@ export const mockApiResponses = {
         cases: [],
         _links: {
           next: null,
-          prev: null
-        }
-      }
-    } as ApiResponse
+          prev: null,
+        },
+      },
+    } as ApiResponse,
   },
 
   addCase: {
@@ -72,9 +72,9 @@ export const mockApiResponses = {
         type_id: 1,
         priority_id: 2,
         created_on: 1640995200,
-        created_by: 1
-      }
-    } as ApiResponse
+        created_by: 1,
+      },
+    } as ApiResponse,
   },
 
   updateCase: {
@@ -87,9 +87,9 @@ export const mockApiResponses = {
         type_id: 1,
         priority_id: 2,
         updated_on: 1640995200,
-        updated_by: 1
-      }
-    } as ApiResponse
+        updated_by: 1,
+      },
+    } as ApiResponse,
   },
 
   // Test run responses
@@ -104,9 +104,9 @@ export const mockApiResponses = {
         case_ids: [1, 2, 3],
         is_completed: false,
         created_on: 1640995200,
-        created_by: 1
-      }
-    } as ApiResponse
+        created_by: 1,
+      },
+    } as ApiResponse,
   },
 
   getRun: {
@@ -120,8 +120,8 @@ export const mockApiResponses = {
         case_ids: [1, 2, 3],
         is_completed: false,
         created_on: 1640995200,
-        created_by: 1
-      }
+        created_by: 1,
+      },
     } as ApiResponse,
     completed: {
       statusCode: 200,
@@ -134,9 +134,9 @@ export const mockApiResponses = {
         is_completed: true,
         completed_on: 1640995300,
         created_on: 1640995200,
-        created_by: 1
-      }
-    } as ApiResponse
+        created_by: 1,
+      },
+    } as ApiResponse,
   },
 
   updateRun: {
@@ -151,9 +151,9 @@ export const mockApiResponses = {
         is_completed: false,
         updated_on: 1640995250,
         created_on: 1640995200,
-        created_by: 1
-      }
-    } as ApiResponse
+        created_by: 1,
+      },
+    } as ApiResponse,
   },
 
   closeRun: {
@@ -168,9 +168,9 @@ export const mockApiResponses = {
         is_completed: true,
         completed_on: 1640995300,
         created_on: 1640995200,
-        created_by: 1
-      }
-    } as ApiResponse
+        created_by: 1,
+      },
+    } as ApiResponse,
   },
 
   // Test result responses
@@ -184,7 +184,7 @@ export const mockApiResponses = {
           status_id: 1,
           comment: 'Test passed',
           created_on: 1640995200,
-          created_by: 1
+          created_by: 1,
         },
         {
           id: 1002,
@@ -192,10 +192,10 @@ export const mockApiResponses = {
           status_id: 5,
           comment: 'Test failed',
           created_on: 1640995200,
-          created_by: 1
-        }
-      ]
-    } as ApiResponse
+          created_by: 1,
+        },
+      ],
+    } as ApiResponse,
   },
 
   // Project responses
@@ -210,9 +210,9 @@ export const mockApiResponses = {
         is_completed: false,
         completed_on: null,
         suite_mode: 1,
-        default_role_id: 7
-      }
-    } as ApiResponse
+        default_role_id: 7,
+      },
+    } as ApiResponse,
   },
 
   // Section responses
@@ -226,18 +226,18 @@ export const mockApiResponses = {
             name: 'Test Section 1',
             parent_id: null,
             depth: 0,
-            display_order: 1
+            display_order: 1,
           },
           {
             id: 101,
             name: 'Test Section 2',
             parent_id: 100,
             depth: 1,
-            display_order: 2
-          }
-        ]
-      }
-    } as ApiResponse
+            display_order: 2,
+          },
+        ],
+      },
+    } as ApiResponse,
   },
 
   // Error responses
@@ -245,34 +245,34 @@ export const mockApiResponses = {
     unauthorized: {
       statusCode: 401,
       body: {
-        error: 'Authentication failed: invalid or missing user/password or session cookie.'
-      }
+        error: 'Authentication failed: invalid or missing user/password or session cookie.',
+      },
     } as ApiResponse,
     forbidden: {
       statusCode: 403,
       body: {
-        error: 'Forbidden: You are not allowed to access this resource.'
-      }
+        error: 'Forbidden: You are not allowed to access this resource.',
+      },
     } as ApiResponse,
     notFound: {
       statusCode: 404,
       body: {
-        error: 'Not Found: The requested resource does not exist or has been deleted.'
-      }
+        error: 'Not Found: The requested resource does not exist or has been deleted.',
+      },
     } as ApiResponse,
     serverError: {
       statusCode: 500,
       body: {
-        error: 'Internal Server Error: An error occurred while processing the request.'
-      }
+        error: 'Internal Server Error: An error occurred while processing the request.',
+      },
     } as ApiResponse,
     rateLimited: {
       statusCode: 429,
       body: {
-        error: 'Too Many Requests: Rate limit exceeded.'
-      }
-    } as ApiResponse
-  }
+        error: 'Too Many Requests: Rate limit exceeded.',
+      },
+    } as ApiResponse,
+  },
 };
 
 /**
@@ -292,7 +292,7 @@ export const createMockFetch = (responses: Record<string, ApiResponse>) => {
         statusText: 'Not Found',
         json: () => Promise.resolve({ error: 'Mock endpoint not found' }),
         text: () => Promise.resolve(JSON.stringify({ error: 'Mock endpoint not found' })),
-        headers: new Map([['content-type', 'application/json']])
+        headers: new Map([['content-type', 'application/json']]),
       });
     }
 
@@ -304,8 +304,8 @@ export const createMockFetch = (responses: Record<string, ApiResponse>) => {
       text: () => Promise.resolve(JSON.stringify(response.body)),
       headers: new Map([
         ['content-type', 'application/json'],
-        ...Object.entries(response.headers || {})
-      ])
+        ...Object.entries(response.headers || {}),
+      ]),
     });
   });
 };
@@ -315,7 +315,7 @@ export const createMockFetch = (responses: Record<string, ApiResponse>) => {
  */
 export const createDelayedMockFetch = (delay: number, response: ApiResponse) => {
   return jest.fn().mockImplementation(() => {
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       setTimeout(() => {
         resolve({
           ok: response.statusCode >= 200 && response.statusCode < 300,
@@ -323,7 +323,7 @@ export const createDelayedMockFetch = (delay: number, response: ApiResponse) => 
           statusText: response.statusCode === 200 ? 'OK' : 'Error',
           json: () => Promise.resolve(response.body),
           text: () => Promise.resolve(JSON.stringify(response.body)),
-          headers: new Map()
+          headers: new Map(),
         });
       }, delay);
     });
@@ -349,7 +349,7 @@ export const createRetryMockFetch = (failAttempts: number, finalResponse: ApiRes
       statusText: finalResponse.statusCode === 200 ? 'OK' : 'Error',
       json: () => Promise.resolve(finalResponse.body),
       text: () => Promise.resolve(JSON.stringify(finalResponse.body)),
-      headers: new Map()
+      headers: new Map(),
     });
   });
 };

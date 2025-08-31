@@ -1,6 +1,6 @@
-import { TestCaseManager } from '../../../src/managers/TestCaseManager';
 import { TestRailApiClient } from '../../../src/client/TestRailApiClient';
-import { TestCaseInfo, TestCase, TestRailError } from '../../../src/types';
+import { TestCaseManager } from '../../../src/managers/TestCaseManager';
+import { type TestCase, type TestCaseInfo, TestRailError } from '../../../src/types';
 
 // Mock the API client
 jest.mock('../../../src/client/TestRailApiClient');
@@ -27,15 +27,15 @@ describe('TestCaseManager', () => {
         title: 'Test Case 1',
         tags: ['smoke', 'high'],
         status: 'passed',
-        duration: 5000
+        duration: 5000,
       },
       {
         title: 'Test Case 2',
         tags: ['regression', 'medium'],
         status: 'failed',
         duration: 3000,
-        error: { message: 'Test failed' }
-      }
+        error: { message: 'Test failed' },
+      },
     ];
 
     const mockExistingCases: TestCase[] = [
@@ -49,24 +49,24 @@ describe('TestCaseManager', () => {
         custom_case_custom_automation_type: 1,
         custom_case_custom_platform: 1,
         custom_steps_separated: [],
-        assignedto_id: 0
-      }
+        assignedto_id: 0,
+      },
     ];
 
     it('should synchronize test cases successfully', async () => {
       mockClient.getCases.mockResolvedValue({
         statusCode: 200,
-        body: mockExistingCases
+        body: mockExistingCases,
       });
 
       mockClient.updateCase.mockResolvedValue({
         statusCode: 200,
-        body: mockExistingCases[0]
+        body: mockExistingCases[0],
       });
 
       mockClient.addCase.mockResolvedValue({
         statusCode: 200,
-        body: { id: 2, title: 'Test Case 2' } as TestCase
+        body: { id: 2, title: 'Test Case 2' } as TestCase,
       });
 
       const result = await testCaseManager.synchronizeTestCases(sectionId, mockTestCases);
@@ -82,7 +82,7 @@ describe('TestCaseManager', () => {
     it('should handle API errors gracefully', async () => {
       mockClient.getCases.mockResolvedValue({
         statusCode: 200,
-        body: []
+        body: [],
       });
 
       mockClient.addCase.mockRejectedValue(new TestRailError('API Error', 500));
@@ -99,7 +99,7 @@ describe('TestCaseManager', () => {
     it('should handle empty test case list', async () => {
       mockClient.getCases.mockResolvedValue({
         statusCode: 200,
-        body: []
+        body: [],
       });
 
       const result = await testCaseManager.synchronizeTestCases(sectionId, []);
@@ -123,14 +123,14 @@ describe('TestCaseManager', () => {
         custom_case_custom_automation_type: 1,
         custom_case_custom_platform: 1,
         custom_steps_separated: [],
-        assignedto_id: 0
-      }
+        assignedto_id: 0,
+      },
     ];
 
     it('should find test case by title', async () => {
       mockClient.getCases.mockResolvedValue({
         statusCode: 200,
-        body: mockCases
+        body: mockCases,
       });
 
       const result = await testCaseManager.getTestCaseByTitle(sectionId, 'Test Case 1');
@@ -142,7 +142,7 @@ describe('TestCaseManager', () => {
     it('should return null for non-existent test case', async () => {
       mockClient.getCases.mockResolvedValue({
         statusCode: 200,
-        body: mockCases
+        body: mockCases,
       });
 
       const result = await testCaseManager.getTestCaseByTitle(sectionId, 'Non-existent Case');
@@ -153,9 +153,9 @@ describe('TestCaseManager', () => {
     it('should handle API errors', async () => {
       mockClient.getCases.mockRejectedValue(new TestRailError('API Error', 500));
 
-      await expect(
-        testCaseManager.getTestCaseByTitle(sectionId, 'Test Case 1')
-      ).rejects.toThrow('API Error');
+      await expect(testCaseManager.getTestCaseByTitle(sectionId, 'Test Case 1')).rejects.toThrow(
+        'API Error'
+      );
     });
   });
 
@@ -163,9 +163,7 @@ describe('TestCaseManager', () => {
     it('should return true for valid section', async () => {
       mockClient.getSections.mockResolvedValue({
         statusCode: 200,
-        body: [
-          { id: sectionId, name: 'Test Section', depth: 0, display_order: 1 }
-        ]
+        body: [{ id: sectionId, name: 'Test Section', depth: 0, display_order: 1 }],
       });
 
       const result = await testCaseManager.validateSection(sectionId);
@@ -177,9 +175,7 @@ describe('TestCaseManager', () => {
     it('should return false for invalid section', async () => {
       mockClient.getSections.mockResolvedValue({
         statusCode: 200,
-        body: [
-          { id: 999, name: 'Other Section', depth: 0, display_order: 1 }
-        ]
+        body: [{ id: 999, name: 'Other Section', depth: 0, display_order: 1 }],
       });
 
       const result = await testCaseManager.validateSection(sectionId);
@@ -202,20 +198,20 @@ describe('TestCaseManager', () => {
         title: 'Bulk Test 1',
         tags: ['smoke'],
         status: 'passed',
-        duration: 1000
+        duration: 1000,
       },
       {
         title: 'Bulk Test 2',
         tags: ['regression'],
         status: 'passed',
-        duration: 2000
-      }
+        duration: 2000,
+      },
     ];
 
     it('should create test cases in bulk', async () => {
       mockClient.addCase.mockResolvedValue({
         statusCode: 200,
-        body: { id: 1, title: 'Created Case' } as TestCase
+        body: { id: 1, title: 'Created Case' } as TestCase,
       });
 
       const result = await testCaseManager.bulkCreateTestCases(sectionId, mockTestCases, 1);
@@ -229,7 +225,7 @@ describe('TestCaseManager', () => {
       mockClient.addCase
         .mockResolvedValueOnce({
           statusCode: 200,
-          body: { id: 1, title: 'Created Case' } as TestCase
+          body: { id: 1, title: 'Created Case' } as TestCase,
         })
         .mockRejectedValueOnce(new TestRailError('Creation failed', 400));
 
@@ -247,21 +243,21 @@ describe('TestCaseManager', () => {
         title: 'Smoke Test',
         tags: ['smoke', 'high', 'web'],
         status: 'passed',
-        duration: 1000
+        duration: 1000,
       };
 
       mockClient.getCases.mockResolvedValue({
         statusCode: 200,
-        body: []
+        body: [],
       });
 
-      mockClient.addCase.mockImplementation((sectionId, caseData: any) => {
+      mockClient.addCase.mockImplementation((_sectionId, caseData: any) => {
         expect(caseData.type_id).toBeDefined();
         expect(caseData.priority_id).toBeDefined();
         expect(caseData.custom_case_custom_platform).toBeDefined();
         return Promise.resolve({
           statusCode: 200,
-          body: { id: 1, title: testCase.title } as TestCase
+          body: { id: 1, title: testCase.title } as TestCase,
         });
       });
 
@@ -278,21 +274,21 @@ describe('TestCaseManager', () => {
         duration: 1000,
         _steps: [
           { category: 'test.step', title: 'Step 1' },
-          { category: 'test.step', title: 'Step 2' }
-        ]
+          { category: 'test.step', title: 'Step 2' },
+        ],
       };
 
       mockClient.getCases.mockResolvedValue({
         statusCode: 200,
-        body: []
+        body: [],
       });
 
-      mockClient.addCase.mockImplementation((sectionId, caseData: any) => {
+      mockClient.addCase.mockImplementation((_sectionId, caseData: any) => {
         expect(caseData.template_id).toBe(2); // Steps template
         expect(caseData.custom_steps_separated).toHaveLength(2);
         return Promise.resolve({
           statusCode: 200,
-          body: { id: 1, title: testCase.title } as TestCase
+          body: { id: 1, title: testCase.title } as TestCase,
         });
       });
 

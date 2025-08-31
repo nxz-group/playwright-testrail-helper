@@ -1,5 +1,5 @@
-import { ErrorHandler, ErrorSeverity, ErrorCategory } from '../../../src/utils/ErrorHandler';
-import { TestRailError, ConfigurationError, ValidationError } from '../../../src/types';
+import { ConfigurationError, TestRailError, ValidationError } from '../../../src/types';
+import { ErrorCategory, ErrorHandler, ErrorSeverity } from '../../../src/utils/ErrorHandler';
 
 describe('ErrorHandler', () => {
   let errorHandler: ErrorHandler;
@@ -109,14 +109,15 @@ describe('ErrorHandler', () => {
     });
 
     it('should retry on retryable errors', async () => {
-      const mockFn = jest.fn()
+      const mockFn = jest
+        .fn()
         .mockRejectedValueOnce(new Error('Network error'))
         .mockRejectedValueOnce(new Error('Network error'))
         .mockResolvedValueOnce('success');
 
       const result = await errorHandler.executeWithRecovery(mockFn, {
         maxRetries: 3,
-        baseDelay: 10 // Short delay for testing
+        baseDelay: 10, // Short delay for testing
       });
 
       expect(result).toBe('success');
@@ -126,9 +127,9 @@ describe('ErrorHandler', () => {
     it('should not retry on non-retryable errors', async () => {
       const mockFn = jest.fn().mockRejectedValue(new ConfigurationError('Config error'));
 
-      await expect(
-        errorHandler.executeWithRecovery(mockFn, { maxRetries: 3 })
-      ).rejects.toThrow('Config error');
+      await expect(errorHandler.executeWithRecovery(mockFn, { maxRetries: 3 })).rejects.toThrow(
+        'Config error'
+      );
 
       expect(mockFn).toHaveBeenCalledTimes(1);
     });
@@ -137,9 +138,9 @@ describe('ErrorHandler', () => {
       const mockFn = jest.fn().mockRejectedValue(new Error('Network error'));
 
       await expect(
-        errorHandler.executeWithRecovery(mockFn, { 
+        errorHandler.executeWithRecovery(mockFn, {
           maxRetries: 2,
-          baseDelay: 10
+          baseDelay: 10,
         })
       ).rejects.toThrow('Network error');
 
@@ -152,7 +153,7 @@ describe('ErrorHandler', () => {
       await expect(
         errorHandler.executeWithRecovery(mockFn, {
           maxRetries: 2,
-          retryCondition: () => false // Never retry
+          retryCondition: () => false, // Never retry
         })
       ).rejects.toThrow('Custom error');
 
@@ -167,7 +168,7 @@ describe('ErrorHandler', () => {
         errorHandler.executeWithRecovery(mockFn, {
           maxRetries: 2,
           baseDelay: 100,
-          backoffMultiplier: 2
+          backoffMultiplier: 2,
         })
       ).rejects.toThrow('Network error');
 
@@ -187,7 +188,7 @@ describe('ErrorHandler', () => {
           maxRetries: 1,
           baseDelay: 1000,
           backoffMultiplier: 10,
-          maxDelay: 500 // Should cap the delay
+          maxDelay: 500, // Should cap the delay
         })
       ).rejects.toThrow('Network error');
 
@@ -199,10 +200,7 @@ describe('ErrorHandler', () => {
     it('should execute function with circuit breaker', async () => {
       const mockFn = jest.fn().mockResolvedValue('success');
 
-      const result = await errorHandler.executeWithCircuitBreaker(
-        'test-service',
-        mockFn
-      );
+      const result = await errorHandler.executeWithCircuitBreaker('test-service', mockFn);
 
       expect(result).toBe('success');
       expect(mockFn).toHaveBeenCalledTimes(1);
@@ -223,9 +221,9 @@ describe('ErrorHandler', () => {
     it('should handle circuit breaker failures', async () => {
       const mockFn = jest.fn().mockRejectedValue(new Error('Service error'));
 
-      await expect(
-        errorHandler.executeWithCircuitBreaker('test-service', mockFn)
-      ).rejects.toThrow('Service error');
+      await expect(errorHandler.executeWithCircuitBreaker('test-service', mockFn)).rejects.toThrow(
+        'Service error'
+      );
 
       const status = errorHandler.getCircuitBreakerStatus();
       expect(status['test-service']?.failureCount).toBe(1);
@@ -243,10 +241,9 @@ describe('ErrorHandler', () => {
       ).rejects.toThrow();
 
       await expect(
-        errorHandler.executeWithRecovery(
-          () => Promise.reject(new Error('Network error')),
-          { maxRetries: 0 }
-        )
+        errorHandler.executeWithRecovery(() => Promise.reject(new Error('Network error')), {
+          maxRetries: 0,
+        })
       ).rejects.toThrow();
 
       await expect(
@@ -279,22 +276,16 @@ describe('ErrorHandler', () => {
   describe('circuit breaker management', () => {
     beforeEach(async () => {
       // Create some circuit breakers
-      await errorHandler.executeWithCircuitBreaker(
-        'service1',
-        () => Promise.resolve('ok')
-      );
-      await errorHandler.executeWithCircuitBreaker(
-        'service2',
-        () => Promise.resolve('ok')
-      );
+      await errorHandler.executeWithCircuitBreaker('service1', () => Promise.resolve('ok'));
+      await errorHandler.executeWithCircuitBreaker('service2', () => Promise.resolve('ok'));
     });
 
     it('should get circuit breaker status', () => {
       const status = errorHandler.getCircuitBreakerStatus();
 
       expect(Object.keys(status)).toHaveLength(2);
-      expect(status['service1']).toBeDefined();
-      expect(status['service2']).toBeDefined();
+      expect(status.service1).toBeDefined();
+      expect(status.service2).toBeDefined();
     });
 
     it('should reset all circuit breakers', () => {
@@ -311,10 +302,9 @@ describe('ErrorHandler', () => {
   describe('error history management', () => {
     it('should maintain error history', async () => {
       await expect(
-        errorHandler.executeWithRecovery(
-          () => Promise.reject(new Error('Test error')),
-          { maxRetries: 0 }
-        )
+        errorHandler.executeWithRecovery(() => Promise.reject(new Error('Test error')), {
+          maxRetries: 0,
+        })
       ).rejects.toThrow();
 
       const stats = errorHandler.getErrorStats();
@@ -323,10 +313,9 @@ describe('ErrorHandler', () => {
 
     it('should clear error history', async () => {
       await expect(
-        errorHandler.executeWithRecovery(
-          () => Promise.reject(new Error('Test error')),
-          { maxRetries: 0 }
-        )
+        errorHandler.executeWithRecovery(() => Promise.reject(new Error('Test error')), {
+          maxRetries: 0,
+        })
       ).rejects.toThrow();
 
       errorHandler.clearErrorHistory();

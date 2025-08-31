@@ -1,5 +1,5 @@
-import { promises as fs } from 'fs';
-import { dirname, join } from 'path';
+import { promises as fs } from 'node:fs';
+import { dirname } from 'node:path';
 
 /**
  * Utility class for async file operations
@@ -156,6 +156,19 @@ export class FileUtils {
         return [];
       }
       throw new Error(`Failed to list files in ${dirPath}: ${error.message}`);
+    }
+  }
+
+  /**
+   * Copy file from source to destination
+   */
+  static async copyFile(sourcePath: string, destPath: string): Promise<void> {
+    try {
+      const dir = dirname(destPath);
+      await FileUtils.ensureDir(dir);
+      await fs.copyFile(sourcePath, destPath);
+    } catch (error: any) {
+      throw new Error(`Failed to copy file from ${sourcePath} to ${destPath}: ${error.message}`);
     }
   }
 }

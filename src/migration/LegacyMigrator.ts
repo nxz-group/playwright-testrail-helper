@@ -1,6 +1,6 @@
-import { Logger } from '../utils/Logger';
-import { FileUtils } from '../utils/FileUtils';
 import type { TestRailConfig } from '../types';
+import { FileUtils } from '../utils/FileUtils';
+import { Logger } from '../utils/Logger';
 
 export interface MigrationResult {
   success: boolean;
@@ -16,7 +16,6 @@ export interface LegacyConfig {
 
 export class LegacyMigrator {
   private logger: Logger;
-  private fileUtils: FileUtils;
 
   constructor() {
     this.logger = new Logger('LegacyMigrator');
@@ -32,12 +31,12 @@ export class LegacyMigrator {
     createBackup = true
   ): Promise<MigrationResult> {
     this.logger.info('Starting legacy migration', { legacyConfigPath, outputPath });
-    
+
     const result: MigrationResult = {
       success: false,
       migratedFiles: [],
       warnings: [],
-      errors: []
+      errors: [],
     };
 
     try {
@@ -49,25 +48,24 @@ export class LegacyMigrator {
 
       // Read legacy configuration
       const legacyConfig = await this.readLegacyConfig(legacyConfigPath);
-      
+
       // Convert to new configuration format
       const newConfig = this.convertConfiguration(legacyConfig, result);
-      
+
       // Generate new implementation files
       await this.generateNewImplementation(newConfig, outputPath, result);
-      
+
       // Generate migration guide
       await this.generateMigrationGuide(outputPath, result);
-      
+
       result.success = result.errors.length === 0;
-      
-      this.logger.info('Legacy migration completed', { 
+
+      this.logger.info('Legacy migration completed', {
         success: result.success,
         migratedFiles: result.migratedFiles.length,
         warnings: result.warnings.length,
-        errors: result.errors.length
+        errors: result.errors.length,
       });
-      
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       result.errors.push(`Migration failed: ${errorMessage}`);
@@ -80,15 +78,15 @@ export class LegacyMigrator {
   private async createBackup(configPath: string): Promise<string> {
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     const backupPath = `${configPath}.backup.${timestamp}`;
-    
-    await this.fileUtils.copyFile(configPath, backupPath);
+
+    await FileUtils.copyFile(configPath, backupPath);
     return backupPath;
   }
 
   private async readLegacyConfig(configPath: string): Promise<LegacyConfig> {
     try {
-      const content = await this.fileUtils.readFile(configPath);
-      
+      const content = await FileUtils.readFile(configPath);
+
       // Try to parse as JSON first
       try {
         return JSON.parse(content);
@@ -97,13 +95,15 @@ export class LegacyMigrator {
         return this.extractConfigFromCode(content);
       }
     } catch (error) {
-      throw new Error(`Failed to read legacy config: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to read legacy config: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 
   private extractConfigFromCode(content: string): LegacyConfig {
     const config: LegacyConfig = {};
-    
+
     // Extract common configuration patterns
     const patterns = [
       { key: 'host', regex: /host[:\s]*['"](https?:\/\/[^'"]+)['"]/i },
@@ -111,22 +111,28 @@ export class LegacyMigrator {
       { key: 'password', regex: /password[:\s]*['"]([^'"]+)['"]/i },
       { key: 'projectId', regex: /project[_-]?id[:\s]*(\d+)/i },
       { key: 'timeout', regex: /timeout[:\s]*(\d+)/i },
-      { key: 'retryAttempts', regex: /retry[_-]?attempts[:\s]*(\d+)/i }
+      { key: 'retryAttempts', regex: /retry[_-]?attempts[:\s]*(\d+)/i },
     ];
 
     for (const pattern of patterns) {
       const match = content.match(pattern.regex);
       if (match) {
-        config[pattern.key] = pattern.key === 'projectId' || pattern.key === 'timeout' || pattern.key === 'retryAttempts'
-          ? parseInt(match[1], 10)
-          : match[1];
+        config[pattern.key] =
+          pattern.key === 'projectId' ||
+          pattern.key === 'timeout' ||
+          pattern.key === 'retryAttempts'
+            ? parseInt(match[1] || '0', 10)
+            : match[1];
       }
     }
 
     return config;
   }
 
-  private convertConfiguration(legacyConfig: LegacyConfig, result: MigrationResult): TestRailConfig {
+  private convertConfiguration(
+    legacyConfig: LegacyConfig,
+    result: MigrationResult
+  ): TestRailConfig {
     const newConfig: Partial<TestRailConfig> = {};
 
     // Map legacy configuration to new format
@@ -137,7 +143,7 @@ export class LegacyMigrator {
       { legacy: 'projectId', new: 'projectId' },
       { legacy: 'timeout', new: 'timeout' },
       { legacy: 'retryAttempts', new: 'retryAttempts' },
-      { legacy: 'debug', new: 'debug' }
+      { legacy: 'debug', new: 'debug' },
     ];
 
     for (const mapping of mappings) {
@@ -152,8 +158,8 @@ export class LegacyMigrator {
       result.warnings.push('Added default timeout value (30000ms)');
     }
 
-    if (!newConfig.retryAttempts) {
-      newConfig.retryAttempts = 3;
+    if (!newConfig.retries) {
+      newConfig.retries = 3;
       result.warnings.push('Added default retry attempts (3)');
     }
 
@@ -184,25 +190,25 @@ export class LegacyMigrator {
   ): Promise<void> {
     // Generate configuration file
     const configFile = `${outputPath}/testrail.config.json`;
-    await this.fileUtils.writeFile(configFile, JSON.stringify(config, null, 2));
+    await FileUtils.writeFile(configFile, JSON.stringify(config, null, 2));
     result.migratedFiles.push(configFile);
 
     // Generate environment variables template
     const envFile = `${outputPath}/.env.example`;
     const envContent = this.generateEnvTemplate(config);
-    await this.fileUtils.writeFile(envFile, envContent);
+    await FileUtils.writeFile(envFile, envContent);
     result.migratedFiles.push(envFile);
 
     // Generate new implementation example
     const exampleFile = `${outputPath}/testrail-helper.example.ts`;
     const exampleContent = this.generateImplementationExample(config);
-    await this.fileUtils.writeFile(exampleFile, exampleContent);
+    await FileUtils.writeFile(exampleFile, exampleContent);
     result.migratedFiles.push(exampleFile);
 
     // Generate package.json updates
     const packageFile = `${outputPath}/package.json.updates`;
     const packageContent = this.generatePackageUpdates();
-    await this.fileUtils.writeFile(packageFile, packageContent);
+    await FileUtils.writeFile(packageFile, packageContent);
     result.migratedFiles.push(packageFile);
   }
 
@@ -215,12 +221,12 @@ TESTRAIL_USERNAME=${config.username || 'your-email@company.com'}
 TESTRAIL_PASSWORD=${config.password || 'your-api-key'}
 TESTRAIL_PROJECT_ID=${config.projectId || '1'}
 TESTRAIL_TIMEOUT=${config.timeout || '30000'}
-TESTRAIL_RETRY_ATTEMPTS=${config.retryAttempts || '3'}
-TESTRAIL_DEBUG=${config.debug || 'false'}
+TESTRAIL_RETRY_ATTEMPTS=${config.retries || '3'}
+TESTRAIL_DEBUG=${config.enableLogging || 'false'}
 `;
   }
 
-  private generateImplementationExample(config: TestRailConfig): string {
+  private generateImplementationExample(_config: TestRailConfig): string {
     return `import { TestRailHelper } from '@nxz-group/playwright-testrail-helper';
 import { test } from '@playwright/test';
 
@@ -396,7 +402,7 @@ If you encounter issues during migration, please check:
 For additional help, refer to the package documentation or create an issue.
 `;
 
-    await this.fileUtils.writeFile(guideFile, guideContent);
+    await FileUtils.writeFile(guideFile, guideContent);
     result.migratedFiles.push(guideFile);
   }
 
@@ -407,7 +413,7 @@ For additional help, refer to the package documentation or create an issue.
     const issues: string[] = [];
 
     try {
-      const content = await this.fileUtils.readFile(configPath);
+      const content = await FileUtils.readFile(configPath);
       const config = JSON.parse(content);
 
       // Validate required fields
@@ -432,14 +438,15 @@ For additional help, refer to the package documentation or create an issue.
       if (config.timeout && (typeof config.timeout !== 'number' || config.timeout <= 0)) {
         issues.push('Timeout should be a positive number');
       }
-
     } catch (error) {
-      issues.push(`Failed to validate configuration: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      issues.push(
+        `Failed to validate configuration: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
 
     return {
       valid: issues.length === 0,
-      issues
+      issues,
     };
   }
 }

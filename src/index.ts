@@ -12,9 +12,6 @@
 
 // HTTP Client
 export { TestRailApiClient } from './client/TestRailApiClient';
-
-// Configuration management
-export { ConfigManager } from './config/TestRailConfig';
 export * from './config/constants';
 // Re-export commonly used constants for convenience
 export {
@@ -26,43 +23,37 @@ export {
   TEST_RAIL_TYPE,
   TYPE_MAPPING,
 } from './config/constants';
-
+// Configuration management
+export { ConfigManager } from './config/TestRailConfig';
+// Worker Coordination
+export { WorkerCoordinator } from './coordination/WorkerCoordinator';
+export type { ValidationCheck, ValidationResult } from './deployment/ProductionValidator';
+// Week 4 Production Features - Deployment Validation
+export { ProductionValidator } from './deployment/ProductionValidator';
+export { ResultManager } from './managers/ResultManager';
 // Manager classes
 export { TestCaseManager } from './managers/TestCaseManager';
 export { TestRunManager } from './managers/TestRunManager';
-export { ResultManager } from './managers/ResultManager';
-
-// Worker Coordination
-export { WorkerCoordinator } from './coordination/WorkerCoordinator';
-
-// Week 4 Production Features - Security
-export { SecurityAuditor } from './security/SecurityAuditor';
-export type { SecurityAuditResult, SecurityIssue } from './security/SecurityAuditor';
-
-// Week 4 Production Features - Performance Benchmarking
-export { PerformanceBenchmark } from './performance/PerformanceBenchmark';
-export type { BenchmarkResult, BenchmarkSuite } from './performance/PerformanceBenchmark';
-
+export type { LegacyConfig, MigrationResult } from './migration/LegacyMigrator';
 // Week 4 Production Features - Migration Tools
 export { LegacyMigrator } from './migration/LegacyMigrator';
-export type { MigrationResult, LegacyConfig } from './migration/LegacyMigrator';
-
-// Week 4 Production Features - Deployment Validation
-export { ProductionValidator } from './deployment/ProductionValidator';
-export type { ValidationResult, ValidationCheck } from './deployment/ProductionValidator';
-
-// Utilities
-export { FileUtils } from './utils/FileUtils';
-export { Logger } from './utils/Logger';
-export { PerformanceMonitor } from './utils/PerformanceMonitor';
-export { CacheManager, globalCache } from './utils/CacheManager';
-export { CircuitBreaker, CircuitBreakerState } from './utils/CircuitBreaker';
-export { ErrorCategory, ErrorHandler, ErrorSeverity } from './utils/ErrorHandler';
+export type { BenchmarkResult, BenchmarkSuite } from './performance/PerformanceBenchmark';
+// Week 4 Production Features - Performance Benchmarking
+export { PerformanceBenchmark } from './performance/PerformanceBenchmark';
+export type { SecurityAuditResult, SecurityIssue } from './security/SecurityAuditor';
+// Week 4 Production Features - Security
+export { SecurityAuditor } from './security/SecurityAuditor';
+// Type definitions
+export * from './types';
 export {
   BatchProcessor,
   createBatchProcessor,
   RateLimitedBatchProcessor,
 } from './utils/BatchProcessor';
-
-// Type definitions
-export * from './types';
+export { CacheManager, globalCache } from './utils/CacheManager';
+export { CircuitBreaker, CircuitBreakerState } from './utils/CircuitBreaker';
+export { ErrorCategory, ErrorHandler, ErrorSeverity } from './utils/ErrorHandler';
+// Utilities
+export { FileUtils } from './utils/FileUtils';
+export { Logger } from './utils/Logger';
+export { PerformanceMonitor } from './utils/PerformanceMonitor';

@@ -1,8 +1,4 @@
-import {
-  PerformanceMetrics,
-  PerformanceMonitor,
-  PerformanceStats,
-} from '../../../src/utils/PerformanceMonitor';
+import { PerformanceMonitor } from '../../../src/utils/PerformanceMonitor';
 
 // Mock Logger
 jest.mock('../../../src/utils/Logger');
@@ -45,10 +41,10 @@ describe('PerformanceMonitor', () => {
       const metric = monitor.endOperation(operationId, operationName, true, { result: 'success' });
 
       expect(metric).toBeDefined();
-      expect(metric!.operationName).toBe(operationName);
-      expect(metric!.success).toBe(true);
-      expect(metric!.duration).toBeGreaterThan(0);
-      expect(metric!.metadata).toEqual({ result: 'success' });
+      expect(metric?.operationName).toBe(operationName);
+      expect(metric?.success).toBe(true);
+      expect(metric?.duration).toBeGreaterThan(0);
+      expect(metric?.metadata).toEqual({ result: 'success' });
     });
 
     it('should handle end operation without start', () => {
@@ -67,8 +63,8 @@ describe('PerformanceMonitor', () => {
       });
 
       expect(metric).toBeDefined();
-      expect(metric!.success).toBe(false);
-      expect(metric!.metadata).toEqual({ error: 'Test error' });
+      expect(metric?.success).toBe(false);
+      expect(metric?.metadata).toEqual({ error: 'Test error' });
     });
   });
 
@@ -90,9 +86,9 @@ describe('PerformanceMonitor', () => {
 
       const stats = monitor.getStats(operationName);
       expect(stats).toBeDefined();
-      expect(stats!.totalOperations).toBe(1);
-      expect(stats!.successfulOperations).toBe(1);
-      expect(stats!.failedOperations).toBe(0);
+      expect(stats?.totalOperations).toBe(1);
+      expect(stats?.successfulOperations).toBe(1);
+      expect(stats?.failedOperations).toBe(0);
     });
 
     it('should handle async operation failures', async () => {
@@ -107,9 +103,9 @@ describe('PerformanceMonitor', () => {
 
       const stats = monitor.getStats(operationName);
       expect(stats).toBeDefined();
-      expect(stats!.totalOperations).toBe(1);
-      expect(stats!.successfulOperations).toBe(0);
-      expect(stats!.failedOperations).toBe(1);
+      expect(stats?.totalOperations).toBe(1);
+      expect(stats?.successfulOperations).toBe(0);
+      expect(stats?.failedOperations).toBe(1);
     });
   });
 
@@ -122,9 +118,9 @@ describe('PerformanceMonitor', () => {
         operationName,
         () => {
           // Simulate some work
-          let sum = 0;
+          let _sum = 0;
           for (let i = 0; i < 1000; i++) {
-            sum += i;
+            _sum += i;
           }
           return expectedResult;
         },
@@ -135,8 +131,8 @@ describe('PerformanceMonitor', () => {
 
       const stats = monitor.getStats(operationName);
       expect(stats).toBeDefined();
-      expect(stats!.totalOperations).toBe(1);
-      expect(stats!.successfulOperations).toBe(1);
+      expect(stats?.totalOperations).toBe(1);
+      expect(stats?.successfulOperations).toBe(1);
     });
 
     it('should handle sync operation failures', () => {
@@ -151,7 +147,7 @@ describe('PerformanceMonitor', () => {
 
       const stats = monitor.getStats(operationName);
       expect(stats).toBeDefined();
-      expect(stats!.failedOperations).toBe(1);
+      expect(stats?.failedOperations).toBe(1);
     });
   });
 
@@ -177,14 +173,14 @@ describe('PerformanceMonitor', () => {
       const stats = monitor.getStats('test-stats');
 
       expect(stats).toBeDefined();
-      expect(stats!.totalOperations).toBe(3);
-      expect(stats!.successfulOperations).toBe(2);
-      expect(stats!.failedOperations).toBe(1);
-      expect(stats!.averageDuration).toBeGreaterThanOrEqual(0);
-      expect(stats!.minDuration).toBeGreaterThanOrEqual(0);
-      expect(stats!.maxDuration).toBeGreaterThanOrEqual(stats!.minDuration);
-      expect(stats!.totalDuration).toBeGreaterThanOrEqual(0);
-      expect(stats!.operationsPerSecond).toBeGreaterThanOrEqual(0);
+      expect(stats?.totalOperations).toBe(3);
+      expect(stats?.successfulOperations).toBe(2);
+      expect(stats?.failedOperations).toBe(1);
+      expect(stats?.averageDuration).toBeGreaterThanOrEqual(0);
+      expect(stats?.minDuration).toBeGreaterThanOrEqual(0);
+      expect(stats?.maxDuration).toBeGreaterThanOrEqual(stats?.minDuration);
+      expect(stats?.totalDuration).toBeGreaterThanOrEqual(0);
+      expect(stats?.operationsPerSecond).toBeGreaterThanOrEqual(0);
     });
 
     it('should return null for non-existent operation', () => {
@@ -246,7 +242,7 @@ describe('PerformanceMonitor', () => {
 
           const stats = monitor.getMemoryStats();
           expect(stats).toBeDefined();
-          expect(stats!.snapshots).toBeGreaterThan(0);
+          expect(stats?.snapshots).toBeGreaterThan(0);
 
           resolve();
         }, 250);
@@ -262,11 +258,11 @@ describe('PerformanceMonitor', () => {
       const stats = monitor.getMemoryStats();
 
       expect(stats).toBeDefined();
-      expect(stats!.snapshots).toBe(3);
-      expect(stats!.current).toBeDefined();
-      expect(stats!.peak).toBeDefined();
-      expect(stats!.average).toBeDefined();
-      expect(stats!.average.heapUsed).toBeGreaterThan(0);
+      expect(stats?.snapshots).toBe(3);
+      expect(stats?.current).toBeDefined();
+      expect(stats?.peak).toBeDefined();
+      expect(stats?.average).toBeDefined();
+      expect(stats?.average.heapUsed).toBeGreaterThan(0);
     });
 
     it('should return null memory stats when no snapshots', () => {
@@ -281,7 +277,7 @@ describe('PerformanceMonitor', () => {
       }
 
       const stats = monitor.getMemoryStats();
-      expect(stats!.snapshots).toBe(1000); // Should be limited to 1000
+      expect(stats?.snapshots).toBe(1000); // Should be limited to 1000
     });
   });
 
@@ -375,7 +371,7 @@ describe('PerformanceMonitor', () => {
       const metric = monitor.endOperation(operationId, operationName, true);
 
       expect(metric).toBeDefined();
-      expect(metric!.duration).toBeGreaterThanOrEqual(0);
+      expect(metric?.duration).toBeGreaterThanOrEqual(0);
     });
 
     it('should handle operations with metadata', () => {

@@ -1,15 +1,13 @@
-import { TestRailApiClient } from '../client/TestRailApiClient';
-import { 
-  TestResult, 
-  TestCaseInfo, 
-  TestCase,
-  TestStatus,
-  TestRailError, 
-  ValidationError,
-  ApiResponse 
+import type { TestRailApiClient } from '../client/TestRailApiClient';
+import { STATUS_MAPPING, TEST_RAIL_STATUS } from '../config/constants';
+import {
+  type TestCase,
+  type TestCaseInfo,
+  TestRailError,
+  type TestResult,
+  type TestStatus,
 } from '../types';
 import { Logger } from '../utils/Logger';
-import { STATUS_MAPPING, TEST_RAIL_STATUS } from '../config/constants';
 
 /**
  * Manages TestRail test result processing and submission
@@ -37,12 +35,12 @@ export class ResultManager {
     this.logger.info('Starting test result submission', {
       runId,
       testCaseCount: testCases.length,
-      sectionId
+      sectionId,
     });
 
     const results = {
       submitted: 0,
-      errors: [] as string[]
+      errors: [] as string[],
     };
 
     try {
@@ -54,15 +52,11 @@ export class ResultManager {
 
       // Convert test cases to TestRail results
       const testRailResults: TestResult[] = [];
-      
+
       for (const testCase of testCases) {
         try {
-          const result = await this.convertToTestRailResult(
-            testCase, 
-            caseMap, 
-            assignedToId
-          );
-          
+          const result = await this.convertToTestRailResult(testCase, caseMap, assignedToId);
+
           if (result) {
             testRailResults.push(result);
           } else {
@@ -71,9 +65,9 @@ export class ResultManager {
         } catch (error) {
           const errorMessage = `Failed to convert test case "${testCase.title}": ${(error as Error).message}`;
           results.errors.push(errorMessage);
-          this.logger.error('Test case conversion error', { 
-            title: testCase.title, 
-            error: (error as Error).message 
+          this.logger.error('Test case conversion error', {
+            title: testCase.title,
+            error: (error as Error).message,
           });
         }
       }
@@ -83,20 +77,20 @@ export class ResultManager {
         const batchSize = 50; // TestRail API limit
         for (let i = 0; i < testRailResults.length; i += batchSize) {
           const batch = testRailResults.slice(i, i + batchSize);
-          
+
           try {
             await this.submitResultBatch(runId, batch);
             results.submitted += batch.length;
-            this.logger.debug('Submitted result batch', { 
-              batchSize: batch.length, 
-              totalSubmitted: results.submitted 
+            this.logger.debug('Submitted result batch', {
+              batchSize: batch.length,
+              totalSubmitted: results.submitted,
             });
           } catch (error) {
             const errorMessage = `Failed to submit batch ${Math.floor(i / batchSize) + 1}: ${(error as Error).message}`;
             results.errors.push(errorMessage);
-            this.logger.error('Batch submission error', { 
-              batchIndex: Math.floor(i / batchSize) + 1, 
-              error: (error as Error).message 
+            this.logger.error('Batch submission error', {
+              batchIndex: Math.floor(i / batchSize) + 1,
+              error: (error as Error).message,
             });
           }
         }
@@ -104,11 +98,10 @@ export class ResultManager {
 
       this.logger.info('Test result submission completed', results);
       return results;
-
     } catch (error) {
-      this.logger.error('Failed to submit test results', { 
-        runId, 
-        error: (error as Error).message 
+      this.logger.error('Failed to submit test results', {
+        runId,
+        error: (error as Error).message,
       });
       throw error;
     }
@@ -120,7 +113,7 @@ export class ResultManager {
   private async submitResultBatch(runId: number, results: TestResult[]): Promise<void> {
     try {
       const response = await this.client.addResultsForCases(runId, results);
-      
+
       if (response.statusCode !== 200) {
         throw new TestRailError(
           `Failed to submit results: ${response.statusCode}`,
@@ -129,10 +122,10 @@ export class ResultManager {
         );
       }
     } catch (error) {
-      this.logger.error('Failed to submit result batch', { 
-        runId, 
-        resultCount: results.length, 
-        error: (error as Error).message 
+      this.logger.error('Failed to submit result batch', {
+        runId,
+        resultCount: results.length,
+        error: (error as Error).message,
       });
       throw error;
     }
@@ -148,7 +141,7 @@ export class ResultManager {
   ): Promise<TestResult | null> {
     const normalizedTitle = testCase.title.toLowerCase().trim();
     const existingCase = caseMap.get(normalizedTitle);
-    
+
     if (!existingCase) {
       return null;
     }
@@ -162,7 +155,7 @@ export class ResultManager {
       status_id: statusId,
       assignedto_id: assignedToId || 0,
       comment,
-      elapsed
+      elapsed,
     };
   }
 
@@ -178,31 +171,31 @@ export class ResultManager {
    */
   private generateResultComment(testCase: TestCaseInfo): string {
     const parts: string[] = [];
-    
+
     // Add status information
     parts.push(`Test Status: ${testCase.status.toUpperCase()}`);
-    
+
     // Add duration
     parts.push(`Execution Time: ${this.formatDuration(testCase.duration)}`);
-    
+
     // Add error information if test failed
     if (testCase.error) {
       parts.push('');
       parts.push('Error Details:');
       parts.push(testCase.error.message);
-      
+
       if (testCase.error.stack) {
         parts.push('');
         parts.push('Stack Trace:');
         parts.push(testCase.error.stack);
       }
     }
-    
+
     // Add step information if available
     if (testCase._steps && testCase._steps.length > 0) {
       parts.push('');
       parts.push('Test Steps:');
-      
+
       testCase._steps.forEach((step, index) => {
         parts.push(`${index + 1}. ${step.title}`);
         if (step.error) {
@@ -210,7 +203,7 @@ export class ResultManager {
         }
       });
     }
-    
+
     return parts.join('\n');
   }
 
@@ -228,7 +221,7 @@ export class ResultManager {
     const seconds = Math.floor(durationMs / 1000);
     const minutes = Math.floor(seconds / 60);
     const hours = Math.floor(minutes / 60);
-    
+
     if (hours > 0) {
       return `${hours}h ${minutes % 60}m ${seconds % 60}s`;
     } else if (minutes > 0) {
@@ -244,7 +237,7 @@ export class ResultManager {
   private async getExistingCases(sectionId: number): Promise<TestCase[]> {
     try {
       const response = await this.client.getCases(this.projectId, sectionId);
-      
+
       if (response.statusCode !== 200) {
         throw new TestRailError(
           `Failed to get test cases: ${response.statusCode}`,
@@ -253,11 +246,11 @@ export class ResultManager {
         );
       }
 
-      return Array.isArray(response.body) ? response.body as TestCase[] : [];
+      return Array.isArray(response.body) ? (response.body as TestCase[]) : [];
     } catch (error) {
-      this.logger.error('Failed to get existing test cases', { 
-        sectionId, 
-        error: (error as Error).message 
+      this.logger.error('Failed to get existing test cases', {
+        sectionId,
+        error: (error as Error).message,
       });
       throw error;
     }
@@ -315,7 +308,7 @@ export class ResultManager {
       // This would typically require getting all test results for the run
       // For now, we'll use the run statistics from TestRunManager
       const response = await this.client.getRun(runId);
-      
+
       if (response.statusCode !== 200) {
         throw new TestRailError(
           `Failed to get test run: ${response.statusCode}`,
@@ -346,12 +339,12 @@ export class ResultManager {
         blocked,
         untested,
         retest,
-        passRate: total > 0 ? Math.round((passed / total) * 100) : 0
+        passRate: total > 0 ? Math.round((passed / total) * 100) : 0,
       };
     } catch (error) {
-      this.logger.error('Failed to get result statistics', { 
-        runId, 
-        error: (error as Error).message 
+      this.logger.error('Failed to get result statistics', {
+        runId,
+        error: (error as Error).message,
       });
       throw error;
     }
@@ -373,22 +366,22 @@ export class ResultManager {
       status_id: this.mapTestStatus(status),
       assignedto_id: assignedToId || 0,
       comment: comment || `Test ${status}`,
-      elapsed: elapsed || 0
+      elapsed: elapsed || 0,
     };
 
     try {
       await this.submitResultBatch(runId, [result]);
-      this.logger.info('Updated individual test result', { 
-        runId, 
-        caseId, 
-        status 
+      this.logger.info('Updated individual test result', {
+        runId,
+        caseId,
+        status,
       });
     } catch (error) {
-      this.logger.error('Failed to update test result', { 
-        runId, 
-        caseId, 
-        status, 
-        error: (error as Error).message 
+      this.logger.error('Failed to update test result', {
+        runId,
+        caseId,
+        status,
+        error: (error as Error).message,
       });
       throw error;
     }
@@ -411,12 +404,12 @@ export class ResultManager {
     this.logger.info('Starting bulk result update', {
       runId,
       resultCount: results.length,
-      batchSize
+      batchSize,
     });
 
     const updateResults = {
       updated: 0,
-      errors: [] as string[]
+      errors: [] as string[],
     };
 
     // Convert to TestRail format
@@ -425,17 +418,17 @@ export class ResultManager {
       status_id: this.mapTestStatus(result.status),
       assignedto_id: result.assignedToId || 0,
       comment: result.comment || `Test ${result.status}`,
-      elapsed: result.elapsed || 0
+      elapsed: result.elapsed || 0,
     }));
 
     // Process in batches
     for (let i = 0; i < testRailResults.length; i += batchSize) {
       const batch = testRailResults.slice(i, i + batchSize);
-      
+
       try {
         await this.submitResultBatch(runId, batch);
         updateResults.updated += batch.length;
-        
+
         // Add delay between batches to respect rate limits
         if (i + batchSize < testRailResults.length) {
           await new Promise(resolve => setTimeout(resolve, 1000));

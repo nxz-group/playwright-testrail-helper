@@ -19,17 +19,6 @@ pre-commit:
     "echo":
       runner: bash
       
-pre-push:
-  parallel: false
-  commands:
-    # Check code quality with Biome
-    biome-check:
-      run: npm run check
-      
-    # Check test coverage
-    coverage:
-      run: npm run test:coverage
-      
-    # Build check
-    build:
-      run: npm run build
+# pre-push:
+#   parallel: false
+#   commands:

@@ -1,10 +1,10 @@
 import { ConfigManager } from '../../../src/config/TestRailConfig';
-import { TestRailConfig, ConfigurationError } from '../../../src/types';
+import { ConfigurationError, type TestRailConfig } from '../../../src/types';
 
 describe('ConfigManager', () => {
   // Reset singleton before each test
   beforeEach(() => {
-    // @ts-ignore - Access private static property for testing
+    // @ts-expect-error - Access private static property for testing
     ConfigManager.instance = undefined;
   });
 
@@ -15,7 +15,7 @@ describe('ConfigManager', () => {
     projectId: 1,
     timeout: 30000,
     retries: 3,
-    enableLogging: true
+    enableLogging: true,
   };
 
   describe('getInstance', () => {
@@ -78,7 +78,7 @@ describe('ConfigManager', () => {
     it('should return copy of config', () => {
       const manager = ConfigManager.getInstance(validConfig);
       const config = manager.getConfig();
-      
+
       expect(config).toEqual(validConfig);
       expect(config).not.toBe(validConfig); // Should be a copy
     });
@@ -88,10 +88,10 @@ describe('ConfigManager', () => {
     it('should update config with valid changes', () => {
       const manager = ConfigManager.getInstance(validConfig);
       const updates = { timeout: 60000, retries: 5 };
-      
+
       manager.updateConfig(updates);
       const updatedConfig = manager.getConfig();
-      
+
       expect(updatedConfig.timeout).toBe(60000);
       expect(updatedConfig.retries).toBe(5);
       expect(updatedConfig.host).toBe(validConfig.host); // Other values unchanged
@@ -100,20 +100,20 @@ describe('ConfigManager', () => {
     it('should validate updated config', () => {
       const manager = ConfigManager.getInstance(validConfig);
       const invalidUpdates = { projectId: -1 };
-      
+
       expect(() => manager.updateConfig(invalidUpdates)).toThrow(ConfigurationError);
     });
 
     it('should not update config if validation fails', () => {
       const manager = ConfigManager.getInstance(validConfig);
       const originalConfig = manager.getConfig();
-      
+
       try {
         manager.updateConfig({ host: 'invalid-url' });
       } catch {
         // Expected to throw
       }
-      
+
       const currentConfig = manager.getConfig();
       expect(currentConfig).toEqual(originalConfig);
     });
@@ -125,12 +125,12 @@ describe('ConfigManager', () => {
         host: 'https://test.testrail.io',
         username: 'test@example.com',
         password: 'test-password',
-        projectId: 1
+        projectId: 1,
       };
-      
+
       const manager = ConfigManager.getInstance(minimalConfig);
       const config = manager.getConfig();
-      
+
       expect(config.timeout).toBeUndefined();
       expect(config.retries).toBeUndefined();
       expect(config.enableLogging).toBeUndefined();
@@ -141,7 +141,7 @@ describe('ConfigManager', () => {
     it('should reset singleton instance', () => {
       ConfigManager.getInstance(validConfig);
       ConfigManager.resetInstance();
-      
+
       expect(() => ConfigManager.getInstance()).toThrow(
         'Configuration required for first initialization'
       );

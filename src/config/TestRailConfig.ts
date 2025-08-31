@@ -1,4 +1,4 @@
-import { TestRailConfig, ConfigurationError } from '../types';
+import { ConfigurationError, type TestRailConfig } from '../types';
 
 // Node.js globals
 declare const process: {
@@ -6,7 +6,9 @@ declare const process: {
 };
 
 declare const URL: {
-  new (url: string): {
+  new (
+    url: string
+  ): {
     protocol: string;
   };
 };
@@ -100,7 +102,7 @@ export class ConfigManager {
       host: this.config.host,
       username: this.config.username,
       password: this.config.password,
-      projectId: this.config.projectId
+      projectId: this.config.projectId,
     };
 
     // Only include optional fields if they are defined
@@ -134,18 +136,16 @@ export class ConfigManager {
       'TESTRAIL_HOST',
       'TESTRAIL_USERNAME',
       'TESTRAIL_PASSWORD',
-      'TESTRAIL_PROJECT_ID'
+      'TESTRAIL_PROJECT_ID',
     ];
 
     const missing = requiredEnvVars.filter(envVar => !process.env[envVar]);
     if (missing.length > 0) {
-      throw new ConfigurationError(
-        `Missing required environment variables: ${missing.join(', ')}`
-      );
+      throw new ConfigurationError(`Missing required environment variables: ${missing.join(', ')}`);
     }
 
     const projectId = parseInt(process.env.TESTRAIL_PROJECT_ID!, 10);
-    if (isNaN(projectId)) {
+    if (Number.isNaN(projectId)) {
       throw new ConfigurationError('TESTRAIL_PROJECT_ID must be a valid number');
     }
 
@@ -153,20 +153,20 @@ export class ConfigManager {
       host: process.env.TESTRAIL_HOST!,
       username: process.env.TESTRAIL_USERNAME!,
       password: process.env.TESTRAIL_PASSWORD!,
-      projectId
+      projectId,
     };
 
     // Only add optional fields if they are defined
     if (process.env.TESTRAIL_TIMEOUT) {
       const timeout = parseInt(process.env.TESTRAIL_TIMEOUT, 10);
-      if (!isNaN(timeout)) {
+      if (!Number.isNaN(timeout)) {
         config.timeout = timeout;
       }
     }
 
     if (process.env.TESTRAIL_RETRIES) {
       const retries = parseInt(process.env.TESTRAIL_RETRIES, 10);
-      if (!isNaN(retries)) {
+      if (!Number.isNaN(retries)) {
         config.retries = retries;
       }
     }

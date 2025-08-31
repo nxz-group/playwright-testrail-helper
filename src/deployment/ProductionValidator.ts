@@ -1,8 +1,8 @@
-import { Logger } from '../utils/Logger';
-import { SecurityAuditor } from '../security/SecurityAuditor';
-import { PerformanceBenchmark } from '../performance/PerformanceBenchmark';
-import type { TestRailConfig } from '../types';
 import type { TestRailApiClient } from '../client/TestRailApiClient';
+import { PerformanceBenchmark } from '../performance/PerformanceBenchmark';
+import { SecurityAuditor } from '../security/SecurityAuditor';
+import type { TestRailConfig } from '../types';
+import { Logger } from '../utils/Logger';
 
 export interface ValidationResult {
   ready: boolean;
@@ -23,7 +23,6 @@ export interface ValidationCheck {
 export class ProductionValidator {
   private logger: Logger;
   private securityAuditor: SecurityAuditor;
-  private performanceBenchmark: PerformanceBenchmark;
 
   constructor() {
     this.logger = new Logger('ProductionValidator');
@@ -39,26 +38,26 @@ export class ProductionValidator {
     apiClient: TestRailApiClient
   ): Promise<ValidationResult> {
     this.logger.info('Starting production readiness validation');
-    
+
     const checks: ValidationCheck[] = [];
     const recommendations: string[] = [];
     const blockers: string[] = [];
 
     // Security validation
     await this.validateSecurity(config, checks, recommendations, blockers);
-    
+
     // Configuration validation
     await this.validateConfiguration(config, checks, recommendations, blockers);
-    
+
     // Connectivity validation
     await this.validateConnectivity(apiClient, checks, recommendations, blockers);
-    
+
     // Performance validation
     await this.validatePerformance(apiClient, checks, recommendations, blockers);
-    
+
     // Compatibility validation
     await this.validateCompatibility(checks, recommendations, blockers);
-    
+
     // Environment validation
     await this.validateEnvironment(checks, recommendations, blockers);
 
@@ -70,14 +69,14 @@ export class ProductionValidator {
       score,
       checks,
       recommendations,
-      blockers
+      blockers,
     };
 
     this.logger.info('Production validation completed', {
       ready,
       score,
       totalChecks: checks.length,
-      blockers: blockers.length
+      blockers: blockers.length,
     });
 
     return result;
@@ -91,13 +90,13 @@ export class ProductionValidator {
   ): Promise<void> {
     try {
       const auditResult = await this.securityAuditor.auditConfiguration(config);
-      
+
       checks.push({
         name: 'Security Audit',
         category: 'security',
         status: auditResult.passed ? 'pass' : 'fail',
         message: `Security score: ${auditResult.score}/100`,
-        details: auditResult
+        details: auditResult,
       });
 
       if (!auditResult.passed) {
@@ -112,13 +111,12 @@ export class ProductionValidator {
       }
 
       recommendations.push(...auditResult.recommendations);
-
     } catch (error) {
       checks.push({
         name: 'Security Audit',
         category: 'security',
         status: 'fail',
-        message: `Security audit failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+        message: `Security audit failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
       });
       blockers.push('Security audit could not be completed');
     }
@@ -132,14 +130,16 @@ export class ProductionValidator {
   ): Promise<void> {
     // Validate required configuration
     const requiredFields = ['host', 'username', 'password', 'projectId'];
-    const missingFields = requiredFields.filter(field => !(field in config) || !config[field as keyof TestRailConfig]);
-    
+    const missingFields = requiredFields.filter(
+      field => !(field in config) || !config[field as keyof TestRailConfig]
+    );
+
     if (missingFields.length > 0) {
       checks.push({
         name: 'Required Configuration',
         category: 'configuration',
         status: 'fail',
-        message: `Missing required fields: ${missingFields.join(', ')}`
+        message: `Missing required fields: ${missingFields.join(', ')}`,
       });
       blockers.push('Missing required configuration fields');
     } else {
@@ -147,7 +147,7 @@ export class ProductionValidator {
         name: 'Required Configuration',
         category: 'configuration',
         status: 'pass',
-        message: 'All required configuration fields present'
+        message: 'All required configuration fields present',
       });
     }
 
@@ -158,7 +158,7 @@ export class ProductionValidator {
           name: 'HTTPS Configuration',
           category: 'configuration',
           status: 'fail',
-          message: 'Host must use HTTPS protocol'
+          message: 'Host must use HTTPS protocol',
         });
         blockers.push('Insecure HTTP connection not allowed in production');
       } else {
@@ -166,7 +166,7 @@ export class ProductionValidator {
           name: 'HTTPS Configuration',
           category: 'configuration',
           status: 'pass',
-          message: 'Using secure HTTPS connection'
+          message: 'Using secure HTTPS connection',
         });
       }
     }
@@ -177,7 +177,7 @@ export class ProductionValidator {
         name: 'Timeout Configuration',
         category: 'configuration',
         status: 'warn',
-        message: 'Timeout is set very high (>60s)'
+        message: 'Timeout is set very high (>60s)',
       });
       recommendations.push('Consider reducing timeout for better responsiveness');
     } else {
@@ -185,17 +185,17 @@ export class ProductionValidator {
         name: 'Timeout Configuration',
         category: 'configuration',
         status: 'pass',
-        message: 'Timeout configuration is reasonable'
+        message: 'Timeout configuration is reasonable',
       });
     }
 
     // Validate retry settings
-    if (config.retryAttempts && config.retryAttempts > 5) {
+    if (config.retries && config.retries > 5) {
       checks.push({
         name: 'Retry Configuration',
         category: 'configuration',
         status: 'warn',
-        message: 'Retry attempts set very high (>5)'
+        message: 'Retry attempts set very high (>5)',
       });
       recommendations.push('Limit retry attempts to prevent excessive API calls');
     } else {
@@ -203,7 +203,7 @@ export class ProductionValidator {
         name: 'Retry Configuration',
         category: 'configuration',
         status: 'pass',
-        message: 'Retry configuration is reasonable'
+        message: 'Retry configuration is reasonable',
       });
     }
   }
@@ -217,7 +217,7 @@ export class ProductionValidator {
     try {
       // Test basic connectivity
       const startTime = Date.now();
-      await apiClient.get('/get_projects');
+      await apiClient.request('GET', '/api/v2/get_projects');
       const responseTime = Date.now() - startTime;
 
       if (responseTime > 5000) {
@@ -225,7 +225,7 @@ export class ProductionValidator {
           name: 'API Connectivity',
           category: 'connectivity',
           status: 'warn',
-          message: `API response time is slow: ${responseTime}ms`
+          message: `API response time is slow: ${responseTime}ms`,
         });
         recommendations.push('Check network connectivity and TestRail instance performance');
       } else {
@@ -233,18 +233,18 @@ export class ProductionValidator {
           name: 'API Connectivity',
           category: 'connectivity',
           status: 'pass',
-          message: `API connectivity successful (${responseTime}ms)`
+          message: `API connectivity successful (${responseTime}ms)`,
         });
       }
 
       // Test authentication
       try {
-        await apiClient.get('/get_user_by_email/test@example.com');
+        await apiClient.getUserByEmail('test@example.com');
         checks.push({
           name: 'Authentication',
           category: 'connectivity',
           status: 'pass',
-          message: 'Authentication successful'
+          message: 'Authentication successful',
         });
       } catch (error) {
         if (error instanceof Error && error.message.includes('401')) {
@@ -252,7 +252,7 @@ export class ProductionValidator {
             name: 'Authentication',
             category: 'connectivity',
             status: 'fail',
-            message: 'Authentication failed - invalid credentials'
+            message: 'Authentication failed - invalid credentials',
           });
           blockers.push('Invalid TestRail credentials');
         } else {
@@ -260,17 +260,16 @@ export class ProductionValidator {
             name: 'Authentication',
             category: 'connectivity',
             status: 'pass',
-            message: 'Authentication appears valid'
+            message: 'Authentication appears valid',
           });
         }
       }
-
     } catch (error) {
       checks.push({
         name: 'API Connectivity',
         category: 'connectivity',
         status: 'fail',
-        message: `Cannot connect to TestRail API: ${error instanceof Error ? error.message : 'Unknown error'}`
+        message: `Cannot connect to TestRail API: ${error instanceof Error ? error.message : 'Unknown error'}`,
       });
       blockers.push('Cannot establish connection to TestRail API');
     }
@@ -280,18 +279,18 @@ export class ProductionValidator {
     apiClient: TestRailApiClient,
     checks: ValidationCheck[],
     recommendations: string[],
-    blockers: string[]
+    _blockers: string[]
   ): Promise<void> {
     try {
       // Run lightweight performance test
       const startTime = Date.now();
       const promises = [];
-      
+
       // Test concurrent requests
       for (let i = 0; i < 3; i++) {
-        promises.push(apiClient.get('/get_projects'));
+        promises.push(apiClient.request('GET', '/api/v2/get_projects'));
       }
-      
+
       await Promise.all(promises);
       const totalTime = Date.now() - startTime;
       const avgTime = totalTime / 3;
@@ -301,7 +300,7 @@ export class ProductionValidator {
           name: 'Performance Test',
           category: 'performance',
           status: 'warn',
-          message: `Average response time is slow: ${avgTime.toFixed(0)}ms`
+          message: `Average response time is slow: ${avgTime.toFixed(0)}ms`,
         });
         recommendations.push('Performance may be impacted by slow API responses');
       } else {
@@ -309,39 +308,38 @@ export class ProductionValidator {
           name: 'Performance Test',
           category: 'performance',
           status: 'pass',
-          message: `Performance acceptable: ${avgTime.toFixed(0)}ms average`
+          message: `Performance acceptable: ${avgTime.toFixed(0)}ms average`,
         });
       }
 
       // Test memory usage
       const memoryBefore = process.memoryUsage().heapUsed;
-      
+
       // Create some test data
-      const testData = new Array(1000).fill(null).map((_, i) => ({
+      const _testData = new Array(1000).fill(null).map((_, i) => ({
         id: i,
-        data: 'test'.repeat(100)
+        data: 'test'.repeat(100),
       }));
-      
+
       const memoryAfter = process.memoryUsage().heapUsed;
       const memoryUsed = (memoryAfter - memoryBefore) / 1024 / 1024;
-      
+
       checks.push({
         name: 'Memory Usage',
         category: 'performance',
         status: memoryUsed > 50 ? 'warn' : 'pass',
-        message: `Memory usage test: ${memoryUsed.toFixed(2)}MB`
+        message: `Memory usage test: ${memoryUsed.toFixed(2)}MB`,
       });
 
       if (memoryUsed > 50) {
         recommendations.push('Monitor memory usage in production environment');
       }
-
     } catch (error) {
       checks.push({
         name: 'Performance Test',
         category: 'performance',
         status: 'fail',
-        message: `Performance test failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+        message: `Performance test failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
       });
       recommendations.push('Unable to validate performance - monitor closely in production');
     }
@@ -354,14 +352,14 @@ export class ProductionValidator {
   ): Promise<void> {
     // Check Node.js version
     const nodeVersion = process.version;
-    const majorVersion = parseInt(nodeVersion.slice(1).split('.')[0]);
-    
+    const majorVersion = parseInt(nodeVersion.slice(1).split('.')[0] || '0', 10);
+
     if (majorVersion < 16) {
       checks.push({
         name: 'Node.js Version',
         category: 'compatibility',
         status: 'fail',
-        message: `Node.js version ${nodeVersion} is not supported (requires >=16)`
+        message: `Node.js version ${nodeVersion} is not supported (requires >=16)`,
       });
       blockers.push('Node.js version is too old - upgrade to Node.js 16 or higher');
     } else {
@@ -369,7 +367,7 @@ export class ProductionValidator {
         name: 'Node.js Version',
         category: 'compatibility',
         status: 'pass',
-        message: `Node.js version ${nodeVersion} is supported`
+        message: `Node.js version ${nodeVersion} is supported`,
       });
     }
 
@@ -380,14 +378,14 @@ export class ProductionValidator {
         name: 'TypeScript Support',
         category: 'compatibility',
         status: 'pass',
-        message: 'TypeScript is available'
+        message: 'TypeScript is available',
       });
     } catch {
       checks.push({
         name: 'TypeScript Support',
         category: 'compatibility',
         status: 'warn',
-        message: 'TypeScript not found - may impact development experience'
+        message: 'TypeScript not found - may impact development experience',
       });
       recommendations.push('Install TypeScript for better development experience');
     }
@@ -399,14 +397,14 @@ export class ProductionValidator {
         name: 'Playwright Integration',
         category: 'compatibility',
         status: 'pass',
-        message: 'Playwright is available'
+        message: 'Playwright is available',
       });
     } catch {
       checks.push({
         name: 'Playwright Integration',
         category: 'compatibility',
         status: 'warn',
-        message: 'Playwright not found - ensure it is installed for test integration'
+        message: 'Playwright not found - ensure it is installed for test integration',
       });
       recommendations.push('Install @playwright/test for full integration support');
     }
@@ -418,15 +416,20 @@ export class ProductionValidator {
     blockers: string[]
   ): Promise<void> {
     // Check environment variables
-    const requiredEnvVars = ['TESTRAIL_HOST', 'TESTRAIL_USERNAME', 'TESTRAIL_PASSWORD', 'TESTRAIL_PROJECT_ID'];
+    const requiredEnvVars = [
+      'TESTRAIL_HOST',
+      'TESTRAIL_USERNAME',
+      'TESTRAIL_PASSWORD',
+      'TESTRAIL_PROJECT_ID',
+    ];
     const missingEnvVars = requiredEnvVars.filter(envVar => !process.env[envVar]);
-    
+
     if (missingEnvVars.length > 0) {
       checks.push({
         name: 'Environment Variables',
         category: 'configuration',
         status: 'warn',
-        message: `Missing environment variables: ${missingEnvVars.join(', ')}`
+        message: `Missing environment variables: ${missingEnvVars.join(', ')}`,
       });
       recommendations.push('Set up environment variables for production deployment');
     } else {
@@ -434,7 +437,7 @@ export class ProductionValidator {
         name: 'Environment Variables',
         category: 'configuration',
         status: 'pass',
-        message: 'All recommended environment variables are set'
+        message: 'All recommended environment variables are set',
       });
     }
 
@@ -444,35 +447,35 @@ export class ProductionValidator {
         name: 'Production Environment',
         category: 'configuration',
         status: 'pass',
-        message: 'Running in production environment'
+        message: 'Running in production environment',
       });
     } else {
       checks.push({
         name: 'Production Environment',
         category: 'configuration',
         status: 'warn',
-        message: `Running in ${process.env.NODE_ENV || 'development'} environment`
+        message: `Running in ${process.env.NODE_ENV || 'development'} environment`,
       });
       recommendations.push('Set NODE_ENV=production for production deployment');
     }
 
     // Check available disk space (simplified check)
     try {
-      const fs = require('fs');
-      const stats = fs.statSync('.');
-      
+      const fs = require('node:fs');
+      const _stats = fs.statSync('.');
+
       checks.push({
         name: 'File System Access',
         category: 'configuration',
         status: 'pass',
-        message: 'File system access is available'
+        message: 'File system access is available',
       });
-    } catch (error) {
+    } catch (_error) {
       checks.push({
         name: 'File System Access',
         category: 'configuration',
         status: 'fail',
-        message: 'File system access issues detected'
+        message: 'File system access issues detected',
       });
       blockers.push('File system access is required for coordination features');
     }
@@ -480,7 +483,7 @@ export class ProductionValidator {
 
   private calculateReadinessScore(checks: ValidationCheck[]): number {
     let score = 100;
-    
+
     for (const check of checks) {
       switch (check.status) {
         case 'fail':
@@ -494,7 +497,7 @@ export class ProductionValidator {
           break;
       }
     }
-    
+
     return Math.max(0, score);
   }
 
@@ -516,9 +519,15 @@ export class ProductionValidator {
     }
 
     report += `## 📋 Validation Results\n\n`;
-    
-    const categories = ['security', 'configuration', 'connectivity', 'performance', 'compatibility'];
-    
+
+    const categories = [
+      'security',
+      'configuration',
+      'connectivity',
+      'performance',
+      'compatibility',
+    ];
+
     for (const category of categories) {
       const categoryChecks = result.checks.filter(check => check.category === category);
       if (categoryChecks.length > 0) {

@@ -1,10 +1,8 @@
-import * as fs from 'fs/promises';
-import * as path from 'path';
+import * as path from 'node:path';
 import type { ConfigManager } from '../../../src/config/TestRailConfig';
 import {
   type CoordinationConfig,
   WorkerCoordinator,
-  WorkerInfo,
 } from '../../../src/coordination/WorkerCoordinator';
 import type { TestResult } from '../../../src/types';
 import { FileUtils } from '../../../src/utils/FileUtils';

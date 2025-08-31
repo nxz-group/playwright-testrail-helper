@@ -6,7 +6,7 @@ export const TEST_RAIL_STATUS = {
   BLOCKED: 2,
   UNTESTED: 3,
   RETEST: 4,
-  FAILED: 5
+  FAILED: 5,
 } as const;
 
 /**
@@ -16,7 +16,7 @@ export const TEST_RAIL_TEMPLATE = {
   TEST_CASE_TEXT: 1,
   TEST_CASE_STEP: 2,
   EXPLORATORY: 3,
-  BDD: 4
+  BDD: 4,
 } as const;
 
 /**
@@ -35,7 +35,7 @@ export const TEST_RAIL_TYPE = {
   SECURITY: 10,
   SMOKE_AND_SANITY: 11,
   USABILITY: 12,
-  EXPLORATORY: 13
+  EXPLORATORY: 13,
 } as const;
 
 /**
@@ -44,7 +44,7 @@ export const TEST_RAIL_TYPE = {
 export const TEST_RAIL_AUTOMATION = {
   MANUAL: 1,
   AUTOMATABLE: 2,
-  AUTOMATED: 3
+  AUTOMATED: 3,
 } as const;
 
 /**
@@ -54,7 +54,7 @@ export const TEST_RAIL_PRIORITY = {
   LOW: 1,
   MEDIUM: 2,
   HIGH: 3,
-  CRITICAL: 4
+  CRITICAL: 4,
 } as const;
 
 /**
@@ -67,7 +67,7 @@ export const TEST_RAIL_PLATFORM = {
   WEB_DESKTOP_AND_RESPONSIVE: 4,
   MOBILE_APPLICATION: 5,
   MIGRATION: 6,
-  OTHER: 7
+  OTHER: 7,
 } as const;
 
 /**
@@ -78,7 +78,7 @@ export const STATUS_MAPPING: Record<string, number> = {
   interrupted: TEST_RAIL_STATUS.BLOCKED,
   skipped: TEST_RAIL_STATUS.UNTESTED,
   timeOut: TEST_RAIL_STATUS.RETEST,
-  failed: TEST_RAIL_STATUS.FAILED
+  failed: TEST_RAIL_STATUS.FAILED,
 } as const;
 
 /**
@@ -97,7 +97,7 @@ export const TYPE_MAPPING: Record<string, number> = {
   security: TEST_RAIL_TYPE.SECURITY,
   smokeAndSanity: TEST_RAIL_TYPE.SMOKE_AND_SANITY,
   usability: TEST_RAIL_TYPE.USABILITY,
-  exploratory: TEST_RAIL_TYPE.EXPLORATORY
+  exploratory: TEST_RAIL_TYPE.EXPLORATORY,
 } as const;
 
 /**
@@ -107,7 +107,7 @@ export const PRIORITY_MAPPING: Record<string, number> = {
   low: TEST_RAIL_PRIORITY.LOW,
   medium: TEST_RAIL_PRIORITY.MEDIUM,
   high: TEST_RAIL_PRIORITY.HIGH,
-  critical: TEST_RAIL_PRIORITY.CRITICAL
+  critical: TEST_RAIL_PRIORITY.CRITICAL,
 } as const;
 
 /**
@@ -121,7 +121,7 @@ export const DEFAULTS = {
   PLATFORM_ID: TEST_RAIL_PLATFORM.OTHER,
   REQUEST_TIMEOUT: 30000,
   MAX_RETRIES: 3,
-  RETRY_DELAY_BASE: 1000
+  RETRY_DELAY_BASE: 1000,
 } as const;
 
 /**
@@ -139,7 +139,7 @@ export const API_ENDPOINTS = {
   CLOSE_RUN: '/api/v2/close_run/{run_id}',
   GET_PROJECT: '/api/v2/get_project/{project_id}',
   GET_SECTIONS: '/api/v2/get_sections/{project_id}',
-  GET_MILESTONES: '/api/v2/get_milestones/{project_id}'
+  GET_MILESTONES: '/api/v2/get_milestones/{project_id}',
 } as const;
 
 /**
@@ -156,7 +156,7 @@ export const HTTP_STATUS = {
   INTERNAL_SERVER_ERROR: 500,
   BAD_GATEWAY: 502,
   SERVICE_UNAVAILABLE: 503,
-  GATEWAY_TIMEOUT: 504
+  GATEWAY_TIMEOUT: 504,
 } as const;
 
 /**
@@ -168,11 +168,11 @@ export const RETRY_CONFIG = {
     HTTP_STATUS.INTERNAL_SERVER_ERROR,
     HTTP_STATUS.BAD_GATEWAY,
     HTTP_STATUS.SERVICE_UNAVAILABLE,
-    HTTP_STATUS.GATEWAY_TIMEOUT
+    HTTP_STATUS.GATEWAY_TIMEOUT,
   ],
   EXPONENTIAL_BASE: 2,
   MAX_DELAY: 30000,
-  JITTER_FACTOR: 0.1
+  JITTER_FACTOR: 0.1,
 } as const;
 
 /**
@@ -183,5 +183,5 @@ export const VALIDATION = {
   URL_PATTERN: /^https?:\/\/.+/,
   MAX_TITLE_LENGTH: 250,
   MAX_COMMENT_LENGTH: 1000000,
-  MAX_STEP_CONTENT_LENGTH: 1000000
+  MAX_STEP_CONTENT_LENGTH: 1000000,
 } as const;

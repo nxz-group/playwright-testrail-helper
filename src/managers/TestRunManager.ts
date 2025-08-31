@@ -1,11 +1,5 @@
-import { TestRailApiClient } from '../client/TestRailApiClient';
-import { 
-  TestRun, 
-  TestCase,
-  TestRailError, 
-  ValidationError,
-  ApiResponse 
-} from '../types';
+import type { TestRailApiClient } from '../client/TestRailApiClient';
+import { type TestCase, TestRailError, type TestRun, ValidationError } from '../types';
 import { Logger } from '../utils/Logger';
 
 /**
@@ -38,7 +32,7 @@ export class TestRunManager {
 
     const runData: Partial<TestRun> = {
       name: options.name,
-      include_all: options.includeAll ?? false
+      include_all: options.includeAll ?? false,
     };
 
     if (options.description !== undefined) {
@@ -61,13 +55,13 @@ export class TestRunManager {
     }
 
     try {
-      this.logger.info('Creating test run', { 
-        name: options.name, 
-        caseCount: runData.case_ids?.length || 'all' 
+      this.logger.info('Creating test run', {
+        name: options.name,
+        caseCount: runData.case_ids?.length || 'all',
       });
 
       const response = await this.client.addRun(this.projectId, runData);
-      
+
       if (response.statusCode !== 200) {
         throw new TestRailError(
           `Failed to create test run: ${response.statusCode}`,
@@ -77,16 +71,16 @@ export class TestRunManager {
       }
 
       const testRun = response.body as TestRun;
-      this.logger.info('Test run created successfully', { 
-        runId: testRun.id, 
-        name: testRun.name 
+      this.logger.info('Test run created successfully', {
+        runId: testRun.id,
+        name: testRun.name,
       });
 
       return testRun;
     } catch (error) {
-      this.logger.error('Failed to create test run', { 
-        name: options.name, 
-        error: (error as Error).message 
+      this.logger.error('Failed to create test run', {
+        name: options.name,
+        error: (error as Error).message,
       });
       throw error;
     }
@@ -98,11 +92,11 @@ export class TestRunManager {
   async getTestRun(runId: number): Promise<TestRun> {
     try {
       const response = await this.client.getRun(runId);
-      
+
       if (response.statusCode === 404) {
         throw new TestRailError(`Test run ${runId} not found`, 404);
       }
-      
+
       if (response.statusCode !== 200) {
         throw new TestRailError(
           `Failed to get test run: ${response.statusCode}`,
@@ -113,9 +107,9 @@ export class TestRunManager {
 
       return response.body as TestRun;
     } catch (error) {
-      this.logger.error('Failed to get test run', { 
-        runId, 
-        error: (error as Error).message 
+      this.logger.error('Failed to get test run', {
+        runId,
+        error: (error as Error).message,
       });
       throw error;
     }
@@ -124,14 +118,17 @@ export class TestRunManager {
   /**
    * Update test run information
    */
-  async updateTestRun(runId: number, updates: {
-    name?: string;
-    description?: string;
-    assignedToId?: number;
-    milestoneId?: number;
-  }): Promise<TestRun> {
+  async updateTestRun(
+    runId: number,
+    updates: {
+      name?: string;
+      description?: string;
+      assignedToId?: number;
+      milestoneId?: number;
+    }
+  ): Promise<TestRun> {
     const updateData: Record<string, unknown> = {};
-    
+
     if (updates.name) updateData.name = updates.name;
     if (updates.description !== undefined) updateData.description = updates.description;
     if (updates.assignedToId) updateData.assignedto_id = updates.assignedToId;
@@ -145,7 +142,7 @@ export class TestRunManager {
       this.logger.info('Updating test run', { runId, updates: Object.keys(updateData) });
 
       const response = await this.client.updateRun(runId, updateData);
-      
+
       if (response.statusCode !== 200) {
         throw new TestRailError(
           `Failed to update test run: ${response.statusCode}`,
@@ -159,9 +156,9 @@ export class TestRunManager {
 
       return testRun;
     } catch (error) {
-      this.logger.error('Failed to update test run', { 
-        runId, 
-        error: (error as Error).message 
+      this.logger.error('Failed to update test run', {
+        runId,
+        error: (error as Error).message,
       });
       throw error;
     }
@@ -175,7 +172,7 @@ export class TestRunManager {
       this.logger.info('Closing test run', { runId });
 
       const response = await this.client.closeRun(runId);
-      
+
       if (response.statusCode !== 200) {
         throw new TestRailError(
           `Failed to close test run: ${response.statusCode}`,
@@ -189,9 +186,9 @@ export class TestRunManager {
 
       return testRun;
     } catch (error) {
-      this.logger.error('Failed to close test run', { 
-        runId, 
-        error: (error as Error).message 
+      this.logger.error('Failed to close test run', {
+        runId,
+        error: (error as Error).message,
       });
       throw error;
     }
@@ -207,7 +204,7 @@ export class TestRunManager {
   }): Promise<TestRun[]> {
     try {
       const response = await this.client.getRuns(this.projectId, options?.isCompleted);
-      
+
       if (response.statusCode !== 200) {
         throw new TestRailError(
           `Failed to get test runs: ${response.statusCode}`,
@@ -227,8 +224,8 @@ export class TestRunManager {
 
       return runs;
     } catch (error) {
-      this.logger.error('Failed to get test runs', { 
-        error: (error as Error).message 
+      this.logger.error('Failed to get test runs', {
+        error: (error as Error).message,
       });
       throw error;
     }
@@ -242,9 +239,9 @@ export class TestRunManager {
       const runs = await this.getTestRuns(isCompleted !== undefined ? { isCompleted } : undefined);
       return runs.find(run => run.name === name) || null;
     } catch (error) {
-      this.logger.error('Failed to find test run by name', { 
-        name, 
-        error: (error as Error).message 
+      this.logger.error('Failed to find test run by name', {
+        name,
+        error: (error as Error).message,
       });
       throw error;
     }
@@ -265,11 +262,11 @@ export class TestRunManager {
   }): Promise<{ run: TestRun; created: boolean }> {
     // First, try to find existing run
     const existingRun = await this.findTestRunByName(options.name, false);
-    
+
     if (existingRun && !options.resetIfExists) {
-      this.logger.info('Using existing test run', { 
-        runId: existingRun.id, 
-        name: existingRun.name 
+      this.logger.info('Using existing test run', {
+        runId: existingRun.id,
+        name: existingRun.name,
       });
       return { run: existingRun, created: false };
     }
@@ -277,9 +274,9 @@ export class TestRunManager {
     if (existingRun && options.resetIfExists) {
       // Close existing run and create new one
       await this.closeTestRun(existingRun.id);
-      this.logger.info('Closed existing test run for reset', { 
-        runId: existingRun.id, 
-        name: existingRun.name 
+      this.logger.info('Closed existing test run for reset', {
+        runId: existingRun.id,
+        name: existingRun.name,
       });
     }
 
@@ -294,7 +291,7 @@ export class TestRunManager {
   private async getCasesInSection(sectionId: number): Promise<TestCase[]> {
     try {
       const response = await this.client.getCases(this.projectId, sectionId);
-      
+
       if (response.statusCode !== 200) {
         throw new TestRailError(
           `Failed to get cases in section: ${response.statusCode}`,
@@ -303,11 +300,11 @@ export class TestRunManager {
         );
       }
 
-      return Array.isArray(response.body) ? response.body as TestCase[] : [];
+      return Array.isArray(response.body) ? (response.body as TestCase[]) : [];
     } catch (error) {
-      this.logger.error('Failed to get cases in section', { 
-        sectionId, 
-        error: (error as Error).message 
+      this.logger.error('Failed to get cases in section', {
+        sectionId,
+        error: (error as Error).message,
       });
       throw error;
     }
@@ -326,13 +323,17 @@ export class TestRunManager {
       throw new ValidationError('Run name is required and cannot be empty');
     }
 
-    if (!options.includeAll && !options.sectionId && (!options.caseIds || options.caseIds.length === 0)) {
+    if (
+      !options.includeAll &&
+      !options.sectionId &&
+      (!options.caseIds || options.caseIds.length === 0)
+    ) {
       throw new ValidationError(
         'Either includeAll must be true, or sectionId or caseIds must be provided'
       );
     }
 
-    if (options.caseIds && options.caseIds.some(id => !Number.isInteger(id) || id <= 0)) {
+    if (options.caseIds?.some(id => !Number.isInteger(id) || id <= 0)) {
       throw new ValidationError('All case IDs must be positive integers');
     }
   }
@@ -346,9 +347,9 @@ export class TestRunManager {
       // TestRail runs have a completed_on field when closed
       return !!(run as unknown as { completed_on?: number }).completed_on;
     } catch (error) {
-      this.logger.error('Failed to check if test run is completed', { 
-        runId, 
-        error: (error as Error).message 
+      this.logger.error('Failed to check if test run is completed', {
+        runId,
+        error: (error as Error).message,
       });
       throw error;
     }
@@ -376,21 +377,22 @@ export class TestRunManager {
       };
 
       return {
-        totalTests: (runWithStats.passed_count || 0) + 
-                   (runWithStats.failed_count || 0) + 
-                   (runWithStats.blocked_count || 0) + 
-                   (runWithStats.untested_count || 0) + 
-                   (runWithStats.retest_count || 0),
+        totalTests:
+          (runWithStats.passed_count || 0) +
+          (runWithStats.failed_count || 0) +
+          (runWithStats.blocked_count || 0) +
+          (runWithStats.untested_count || 0) +
+          (runWithStats.retest_count || 0),
         passedTests: runWithStats.passed_count || 0,
         failedTests: runWithStats.failed_count || 0,
         blockedTests: runWithStats.blocked_count || 0,
         untestedTests: runWithStats.untested_count || 0,
-        retestTests: runWithStats.retest_count || 0
+        retestTests: runWithStats.retest_count || 0,
       };
     } catch (error) {
-      this.logger.error('Failed to get test run statistics', { 
-        runId, 
-        error: (error as Error).message 
+      this.logger.error('Failed to get test run statistics', {
+        runId,
+        error: (error as Error).message,
       });
       throw error;
     }

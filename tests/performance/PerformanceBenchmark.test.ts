@@ -1,4 +1,3 @@
-import type { TestRailApiClient } from '../../src/client/TestRailApiClient';
 import { PerformanceBenchmark } from '../../src/performance/PerformanceBenchmark';
 
 // Mock the TestRailApiClient with minimal interface for benchmarking
@@ -96,10 +95,10 @@ describe('PerformanceBenchmark', () => {
       const apiTest = suite.results.find(r => r.testName === 'API Response Time');
 
       expect(apiTest).toBeDefined();
-      expect(apiTest!.success).toBe(true);
-      expect(apiTest!.duration).toBeGreaterThan(90); // Should be around 300ms (3 calls * 100ms)
-      expect(apiTest!.apiCalls).toBe(3);
-      expect(apiTest!.throughput).toBeGreaterThan(0);
+      expect(apiTest?.success).toBe(true);
+      expect(apiTest?.duration).toBeGreaterThan(90); // Should be around 300ms (3 calls * 100ms)
+      expect(apiTest?.apiCalls).toBe(3);
+      expect(apiTest?.throughput).toBeGreaterThan(0);
     });
 
     it('should measure batch operations performance', async () => {
@@ -111,9 +110,9 @@ describe('PerformanceBenchmark', () => {
       const batchTest = suite.results.find(r => r.testName === 'Batch Operations');
 
       expect(batchTest).toBeDefined();
-      expect(batchTest!.success).toBe(true);
-      expect(batchTest!.apiCalls).toBe(10); // Batch size of 10
-      expect(batchTest!.throughput).toBeGreaterThan(0);
+      expect(batchTest?.success).toBe(true);
+      expect(batchTest?.apiCalls).toBe(10); // Batch size of 10
+      expect(batchTest?.throughput).toBeGreaterThan(0);
     });
 
     it('should measure concurrent requests performance', async () => {
@@ -125,9 +124,9 @@ describe('PerformanceBenchmark', () => {
       const concurrentTest = suite.results.find(r => r.testName === 'Concurrent Requests');
 
       expect(concurrentTest).toBeDefined();
-      expect(concurrentTest!.success).toBe(true);
-      expect(concurrentTest!.apiCalls).toBe(5); // 5 concurrent requests
-      expect(concurrentTest!.duration).toBeLessThan(200); // Should be faster than sequential
+      expect(concurrentTest?.success).toBe(true);
+      expect(concurrentTest?.apiCalls).toBe(5); // 5 concurrent requests
+      expect(concurrentTest?.duration).toBeLessThan(200); // Should be faster than sequential
     });
 
     it('should measure memory usage correctly', async () => {
@@ -135,9 +134,9 @@ describe('PerformanceBenchmark', () => {
       const memoryTest = suite.results.find(r => r.testName === 'Memory Usage');
 
       expect(memoryTest).toBeDefined();
-      expect(memoryTest!.success).toBe(true);
-      expect(memoryTest!.memoryUsage.after).toBeGreaterThanOrEqual(memoryTest!.memoryUsage.before);
-      expect(memoryTest!.memoryUsage.peak).toBeGreaterThanOrEqual(memoryTest!.memoryUsage.after);
+      expect(memoryTest?.success).toBe(true);
+      expect(memoryTest?.memoryUsage.after).toBeGreaterThanOrEqual(memoryTest?.memoryUsage.before);
+      expect(memoryTest?.memoryUsage.peak).toBeGreaterThanOrEqual(memoryTest?.memoryUsage.after);
     });
 
     it('should measure large data processing performance', async () => {
@@ -145,9 +144,9 @@ describe('PerformanceBenchmark', () => {
       const dataTest = suite.results.find(r => r.testName === 'Large Data Processing');
 
       expect(dataTest).toBeDefined();
-      expect(dataTest!.success).toBe(true);
-      expect(dataTest!.throughput).toBeGreaterThan(0);
-      expect(dataTest!.duration).toBeGreaterThan(0);
+      expect(dataTest?.success).toBe(true);
+      expect(dataTest?.throughput).toBeGreaterThan(0);
+      expect(dataTest?.duration).toBeGreaterThan(0);
     });
 
     it('should measure sustained throughput', async () => {
@@ -157,10 +156,10 @@ describe('PerformanceBenchmark', () => {
       const throughputTest = suite.results.find(r => r.testName === 'Throughput Test');
 
       expect(throughputTest).toBeDefined();
-      expect(throughputTest!.success).toBe(true);
-      expect(throughputTest!.duration).toBeGreaterThan(4000); // Should run for ~5 seconds
-      expect(throughputTest!.apiCalls).toBeGreaterThan(0);
-      expect(throughputTest!.throughput).toBeGreaterThan(0);
+      expect(throughputTest?.success).toBe(true);
+      expect(throughputTest?.duration).toBeGreaterThan(4000); // Should run for ~5 seconds
+      expect(throughputTest?.apiCalls).toBeGreaterThan(0);
+      expect(throughputTest?.throughput).toBeGreaterThan(0);
     });
   });
 
@@ -281,7 +280,7 @@ describe('PerformanceBenchmark', () => {
       const memoryTest = suite.results.find(r => r.testName === 'Memory Usage');
 
       expect(memoryTest).toBeDefined();
-      expect(memoryTest!.memoryUsage).toBeDefined();
+      expect(memoryTest?.memoryUsage).toBeDefined();
 
       // Restore original function
       process.memoryUsage = originalMemoryUsage;
@@ -331,7 +330,7 @@ describe('PerformanceBenchmark', () => {
 
       expect(apiTest).toBeDefined();
       // The test should complete, regardless of exact timing
-      expect(apiTest!.duration).toBeGreaterThanOrEqual(0);
+      expect(apiTest?.duration).toBeGreaterThanOrEqual(0);
     }, 15000);
 
     it('should measure performance improvements with caching', async () => {

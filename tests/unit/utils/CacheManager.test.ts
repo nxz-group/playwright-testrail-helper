@@ -1,4 +1,4 @@
-import { CacheEntry, CacheManager, CacheStats } from '../../../src/utils/CacheManager';
+import { CacheManager } from '../../../src/utils/CacheManager';
 
 // Mock Logger
 jest.mock('../../../src/utils/Logger');

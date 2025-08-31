@@ -38,7 +38,6 @@ export interface BenchmarkSuite {
 
 export class PerformanceBenchmark {
   private logger: Logger;
-  private monitor: PerformanceMonitor;
 
   constructor() {
     this.logger = new Logger('PerformanceBenchmark');
@@ -240,7 +239,7 @@ export class PerformanceBenchmark {
   }
 
   private async benchmarkMemoryUsage(
-    apiClient: TestRailApiClient | BenchmarkApiClient
+    _apiClient: TestRailApiClient | BenchmarkApiClient
   ): Promise<BenchmarkResult> {
     const testName = 'Memory Usage';
     let apiCalls = 0;
@@ -303,7 +302,7 @@ export class PerformanceBenchmark {
   }
 
   private async benchmarkLargeDataProcessing(
-    apiClient: TestRailApiClient | BenchmarkApiClient
+    _apiClient: TestRailApiClient | BenchmarkApiClient
   ): Promise<BenchmarkResult> {
     const testName = 'Large Data Processing';
     let apiCalls = 0;
@@ -330,7 +329,7 @@ export class PerformanceBenchmark {
       }
 
       // Simulate batch processing
-      for (const batch of batches) {
+      for (const _batch of batches) {
         await new Promise(resolve => setTimeout(resolve, 10)); // Simulate processing time
         apiCalls++;
       }
@@ -383,7 +382,7 @@ export class PerformanceBenchmark {
         try {
           await apiClient.getProject(1);
           apiCalls++;
-        } catch (error) {
+        } catch (_error) {
           // Continue on individual failures
         }
         await new Promise(resolve => setTimeout(resolve, interval));

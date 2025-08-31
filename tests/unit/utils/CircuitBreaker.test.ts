@@ -8,7 +8,7 @@ describe('CircuitBreaker', () => {
       failureThreshold: 3,
       successThreshold: 2,
       timeout: 1000,
-      monitoringPeriod: 5000
+      monitoringPeriod: 5000,
     });
   });
 
@@ -39,7 +39,8 @@ describe('CircuitBreaker', () => {
     });
 
     it('should reset failure count on success', async () => {
-      const mockFn = jest.fn()
+      const mockFn = jest
+        .fn()
         .mockRejectedValueOnce(new Error('fail'))
         .mockRejectedValueOnce(new Error('fail'))
         .mockResolvedValueOnce('success');
@@ -47,13 +48,13 @@ describe('CircuitBreaker', () => {
       // Two failures
       await expect(circuitBreaker.execute(mockFn)).rejects.toThrow('fail');
       await expect(circuitBreaker.execute(mockFn)).rejects.toThrow('fail');
-      
+
       let status = circuitBreaker.getStatus();
       expect(status.failureCount).toBe(2);
 
       // Success should reset failure count
       await circuitBreaker.execute(mockFn);
-      
+
       status = circuitBreaker.getStatus();
       expect(status.failureCount).toBe(0);
     });
@@ -141,7 +142,8 @@ describe('CircuitBreaker', () => {
     });
 
     it('should reopen circuit on failure in half-open state', async () => {
-      const mockFn = jest.fn()
+      const mockFn = jest
+        .fn()
         .mockResolvedValueOnce('success')
         .mockRejectedValueOnce(new Error('fail again'));
 
@@ -168,7 +170,7 @@ describe('CircuitBreaker', () => {
       // Create circuit breaker with short monitoring period
       const shortPeriodBreaker = new CircuitBreaker('short-period', {
         failureThreshold: 3,
-        monitoringPeriod: 100 // 100ms
+        monitoringPeriod: 100, // 100ms
       });
 
       // Add one failure
@@ -222,7 +224,7 @@ describe('CircuitBreaker', () => {
         failureThreshold: 10,
         successThreshold: 5,
         timeout: 30000,
-        monitoringPeriod: 120000
+        monitoringPeriod: 120000,
       });
 
       const status = customBreaker.getStatus();

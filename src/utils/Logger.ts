@@ -2,7 +2,7 @@ export enum LogLevel {
   DEBUG = 0,
   INFO = 1,
   WARN = 2,
-  ERROR = 3
+  ERROR = 3,
 }
 
 /**
@@ -47,7 +47,7 @@ export class Logger {
       timestamp,
       level,
       context: this.context,
-      message
+      message,
     };
 
     if (data !== undefined) {

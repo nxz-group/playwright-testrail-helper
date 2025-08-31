@@ -2,7 +2,7 @@
 
 /**
  * Production CLI Tool for TestRail Playwright Helper
- * 
+ *
  * Provides command-line utilities for:
  * - Security auditing
  * - Performance benchmarking
@@ -11,14 +11,13 @@
  * - Health checks
  */
 
-import { SecurityAuditor } from '../security/SecurityAuditor';
-import { PerformanceBenchmark } from '../performance/PerformanceBenchmark';
-import { LegacyMigrator } from '../migration/LegacyMigrator';
-import { ProductionValidator } from '../deployment/ProductionValidator';
 import { TestRailApiClient } from '../client/TestRailApiClient';
-import { ConfigManager } from '../config/TestRailConfig';
-import { Logger } from '../utils/Logger';
+import { ProductionValidator } from '../deployment/ProductionValidator';
+import { LegacyMigrator } from '../migration/LegacyMigrator';
+import { PerformanceBenchmark } from '../performance/PerformanceBenchmark';
+import { SecurityAuditor } from '../security/SecurityAuditor';
 import { FileUtils } from '../utils/FileUtils';
+import { Logger } from '../utils/Logger';
 
 interface CLIOptions {
   command: string;
@@ -30,9 +29,6 @@ interface CLIOptions {
 }
 
 class ProductionCLI {
-  private logger: Logger;
-  private fileUtils: FileUtils;
-
   constructor() {
     this.logger = new Logger('ProductionCLI');
     this.fileUtils = new FileUtils();
@@ -77,7 +73,7 @@ class ProductionCLI {
   private parseArgs(args: string[]): CLIOptions {
     const options: CLIOptions = {
       command: args[0] || '',
-      format: 'console'
+      format: 'console',
     };
 
     for (let i = 1; i < args.length; i++) {
@@ -87,12 +83,12 @@ class ProductionCLI {
       switch (arg) {
         case '--config':
         case '-c':
-          options.configPath = nextArg;
+          if (nextArg) options.configPath = nextArg;
           i++;
           break;
         case '--output':
         case '-o':
-          options.outputPath = nextArg;
+          if (nextArg) options.outputPath = nextArg;
           i++;
           break;
         case '--format':
@@ -156,7 +152,7 @@ ENVIRONMENT VARIABLES:
 
     const config = await this.loadConfiguration(options.configPath);
     const auditor = new SecurityAuditor();
-    
+
     const result = await auditor.auditConfiguration(config);
 
     if (options.format === 'json') {
@@ -179,7 +175,7 @@ ENVIRONMENT VARIABLES:
     const config = await this.loadConfiguration(options.configPath);
     const apiClient = new TestRailApiClient(config);
     const benchmark = new PerformanceBenchmark();
-    
+
     const suite = await benchmark.runBenchmarkSuite(apiClient);
 
     if (options.format === 'json') {
@@ -227,7 +223,7 @@ ENVIRONMENT VARIABLES:
     const config = await this.loadConfiguration(options.configPath);
     const apiClient = new TestRailApiClient(config);
     const validator = new ProductionValidator();
-    
+
     const result = await validator.validateProductionReadiness(config, apiClient);
 
     if (options.format === 'json') {
@@ -254,7 +250,7 @@ ENVIRONMENT VARIABLES:
       // Test basic connectivity
       console.log('Testing API connectivity...');
       const startTime = Date.now();
-      await apiClient.get('/get_projects');
+      await apiClient.request('GET', '/api/v2/get_projects');
       const responseTime = Date.now() - startTime;
 
       console.log(`✅ API connectivity: OK (${responseTime}ms)`);
@@ -262,7 +258,7 @@ ENVIRONMENT VARIABLES:
       // Test authentication
       console.log('Testing authentication...');
       try {
-        await apiClient.get('/get_user_by_email/test@example.com');
+        await apiClient.getUserByEmail('test@example.com');
         console.log('✅ Authentication: OK');
       } catch (error) {
         if (error instanceof Error && error.message.includes('401')) {
@@ -276,7 +272,7 @@ ENVIRONMENT VARIABLES:
       console.log('Testing configuration...');
       const auditor = new SecurityAuditor();
       const auditResult = await auditor.auditConfiguration(config);
-      
+
       if (auditResult.passed) {
         console.log('✅ Configuration: OK');
       } else {
@@ -287,7 +283,7 @@ ENVIRONMENT VARIABLES:
       console.log('Testing environment...');
       const requiredEnvVars = ['TESTRAIL_HOST', 'TESTRAIL_USERNAME', 'TESTRAIL_PASSWORD'];
       const missingVars = requiredEnvVars.filter(envVar => !process.env[envVar]);
-      
+
       if (missingVars.length === 0) {
         console.log('✅ Environment variables: OK');
       } else {
@@ -295,16 +291,17 @@ ENVIRONMENT VARIABLES:
       }
 
       console.log('\n🎉 Health check completed');
-
     } catch (error) {
-      console.log(`❌ Health check failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.log(
+        `❌ Health check failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
       process.exit(1);
     }
   }
 
   private async loadConfiguration(configPath?: string): Promise<any> {
     if (configPath) {
-      const content = await this.fileUtils.readFile(configPath);
+      const content = await FileUtils.readFile(configPath);
       return JSON.parse(content);
     }
 
@@ -313,29 +310,37 @@ ENVIRONMENT VARIABLES:
       host: process.env.TESTRAIL_HOST,
       username: process.env.TESTRAIL_USERNAME,
       password: process.env.TESTRAIL_PASSWORD,
-      projectId: process.env.TESTRAIL_PROJECT_ID ? parseInt(process.env.TESTRAIL_PROJECT_ID) : undefined,
-      timeout: process.env.TESTRAIL_TIMEOUT ? parseInt(process.env.TESTRAIL_TIMEOUT) : 30000,
-      retryAttempts: process.env.TESTRAIL_RETRY_ATTEMPTS ? parseInt(process.env.TESTRAIL_RETRY_ATTEMPTS) : 3,
-      debug: process.env.TESTRAIL_DEBUG === 'true'
+      projectId: process.env.TESTRAIL_PROJECT_ID
+        ? parseInt(process.env.TESTRAIL_PROJECT_ID, 10)
+        : undefined,
+      timeout: process.env.TESTRAIL_TIMEOUT ? parseInt(process.env.TESTRAIL_TIMEOUT, 10) : 30000,
+      retryAttempts: process.env.TESTRAIL_RETRY_ATTEMPTS
+        ? parseInt(process.env.TESTRAIL_RETRY_ATTEMPTS, 10)
+        : 3,
+      debug: process.env.TESTRAIL_DEBUG === 'true',
     };
   }
 
   private async outputJSON(data: any, outputPath?: string, filename?: string): Promise<void> {
     const json = JSON.stringify(data, null, 2);
-    
+
     if (outputPath && filename) {
       const filePath = `${outputPath}/${filename}.json`;
-      await this.fileUtils.writeFile(filePath, json);
+      await FileUtils.writeFile(filePath, json);
       console.log(`📄 Report saved to: ${filePath}`);
     } else {
       console.log(json);
     }
   }
 
-  private async outputMarkdown(content: string, outputPath?: string, filename?: string): Promise<void> {
+  private async outputMarkdown(
+    content: string,
+    outputPath?: string,
+    filename?: string
+  ): Promise<void> {
     if (outputPath && filename) {
       const filePath = `${outputPath}/${filename}.md`;
-      await this.fileUtils.writeFile(filePath, content);
+      await FileUtils.writeFile(filePath, content);
       console.log(`📄 Report saved to: ${filePath}`);
     } else {
       console.log(content);
@@ -351,9 +356,14 @@ ENVIRONMENT VARIABLES:
     if (result.issues.length > 0) {
       report += `## Issues Found\n\n`;
       for (const issue of result.issues) {
-        const icon = issue.severity === 'critical' ? '🚨' : 
-                    issue.severity === 'high' ? '⚠️' : 
-                    issue.severity === 'medium' ? '⚡' : '💡';
+        const icon =
+          issue.severity === 'critical'
+            ? '🚨'
+            : issue.severity === 'high'
+              ? '⚠️'
+              : issue.severity === 'medium'
+                ? '⚡'
+                : '💡';
         report += `${icon} **${issue.severity.toUpperCase()}**: ${issue.description}\n`;
         report += `   *Recommendation*: ${issue.recommendation}\n\n`;
       }
@@ -377,9 +387,14 @@ ENVIRONMENT VARIABLES:
     if (result.issues.length > 0) {
       console.log('Issues Found:');
       for (const issue of result.issues) {
-        const icon = issue.severity === 'critical' ? '🚨' : 
-                    issue.severity === 'high' ? '⚠️' : 
-                    issue.severity === 'medium' ? '⚡' : '💡';
+        const icon =
+          issue.severity === 'critical'
+            ? '🚨'
+            : issue.severity === 'high'
+              ? '⚠️'
+              : issue.severity === 'medium'
+                ? '⚡'
+                : '💡';
         console.log(`${icon} ${issue.severity.toUpperCase()}: ${issue.description}`);
         console.log(`   → ${issue.recommendation}\n`);
       }
@@ -402,7 +417,9 @@ ENVIRONMENT VARIABLES:
     console.log('Individual Test Results:');
     for (const result of suite.results) {
       const status = result.success ? '✅' : '❌';
-      console.log(`${status} ${result.testName}: ${result.duration}ms (${result.throughput.toFixed(2)} ops/sec)`);
+      console.log(
+        `${status} ${result.testName}: ${result.duration}ms (${result.throughput.toFixed(2)} ops/sec)`
+      );
     }
   }
 
@@ -470,7 +487,7 @@ ENVIRONMENT VARIABLES:
 if (require.main === module) {
   const cli = new ProductionCLI();
   const args = process.argv.slice(2);
-  
+
   cli.run(args).catch(error => {
     console.error('Fatal error:', error);
     process.exit(1);

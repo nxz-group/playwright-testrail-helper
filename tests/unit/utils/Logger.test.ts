@@ -28,15 +28,9 @@ describe('Logger', () => {
       const logger = new Logger('TestContext', LogLevel.DEBUG);
       logger.debug('Debug message', { key: 'value' });
 
-      expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('"level":"DEBUG"')
-      );
-      expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('"context":"TestContext"')
-      );
-      expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('"message":"Debug message"')
-      );
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('"level":"DEBUG"'));
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('"context":"TestContext"'));
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('"message":"Debug message"'));
     });
 
     it('should not log debug messages when level is higher', () => {
@@ -50,33 +44,27 @@ describe('Logger', () => {
       const logger = new Logger('TestContext', LogLevel.INFO);
       logger.info('Info message');
 
-      expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('"level":"INFO"')
-      );
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('"level":"INFO"'));
     });
 
     it('should log warn messages', () => {
       const logger = new Logger('TestContext', LogLevel.WARN);
       logger.warn('Warning message');
 
-      expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('"level":"WARN"')
-      );
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('"level":"WARN"'));
     });
 
     it('should log error messages', () => {
       const logger = new Logger('TestContext', LogLevel.ERROR);
       logger.error('Error message');
 
-      expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('"level":"ERROR"')
-      );
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('"level":"ERROR"'));
     });
 
     it('should include data in log output', () => {
       const logger = new Logger('TestContext');
       const testData = { userId: 123, action: 'test' };
-      
+
       logger.info('Test message', testData);
 
       expect(consoleSpy).toHaveBeenCalledWith(
@@ -88,15 +76,13 @@ describe('Logger', () => {
       const logger = new Logger('TestContext');
       logger.info('Test message');
 
-      expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('"timestamp":"')
-      );
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('"timestamp":"'));
     });
 
     it('should handle error objects', () => {
       const logger = new Logger('TestContext');
       const error = new Error('Test error');
-      
+
       logger.error('Error occurred', error);
 
       expect(consoleSpy).toHaveBeenCalledWith(
@@ -108,7 +94,7 @@ describe('Logger', () => {
   describe('log levels', () => {
     it('should respect DEBUG level', () => {
       const logger = new Logger('TestContext', LogLevel.DEBUG);
-      
+
       logger.debug('Debug');
       logger.info('Info');
       logger.warn('Warn');
@@ -119,7 +105,7 @@ describe('Logger', () => {
 
     it('should respect INFO level', () => {
       const logger = new Logger('TestContext', LogLevel.INFO);
-      
+
       logger.debug('Debug');
       logger.info('Info');
       logger.warn('Warn');
@@ -130,7 +116,7 @@ describe('Logger', () => {
 
     it('should respect WARN level', () => {
       const logger = new Logger('TestContext', LogLevel.WARN);
-      
+
       logger.debug('Debug');
       logger.info('Info');
       logger.warn('Warn');
@@ -141,7 +127,7 @@ describe('Logger', () => {
 
     it('should respect ERROR level', () => {
       const logger = new Logger('TestContext', LogLevel.ERROR);
-      
+
       logger.debug('Debug');
       logger.info('Info');
       logger.warn('Warn');

@@ -298,7 +298,6 @@ export function createBatchProcessor<T, R>(
  */
 export class RateLimitedBatchProcessor<T, R> extends BatchProcessor<T, R> {
   private lastRequestTime = 0;
-  private readonly minRequestInterval: number;
 
   constructor(
     processorFn: (items: T[]) => Promise<R[]>,
