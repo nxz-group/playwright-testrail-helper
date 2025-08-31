@@ -4,6 +4,9 @@
   "description": "TestRail integration helper for Playwright tests",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "bin": {
+    "testrail-helper": "dist/cli/ProductionCLI.js"
+  },
   "scripts": {
     "build": "tsc",
     "test": "jest",
@@ -18,7 +21,12 @@
     "check:fix": "biome check --apply .",
     "clean": "rm -rf dist",
     "prepublishOnly": "npm run clean && npm run build",
-    "prepare": "lefthook install"
+    "prepare": "lefthook install",
+    "audit:security": "node dist/cli/ProductionCLI.js audit",
+    "benchmark": "node dist/cli/ProductionCLI.js benchmark",
+    "migrate": "node dist/cli/ProductionCLI.js migrate",
+    "validate:production": "node dist/cli/ProductionCLI.js validate",
+    "health:check": "node dist/cli/ProductionCLI.js health"
   },
   "keywords": [
     "testrail",
