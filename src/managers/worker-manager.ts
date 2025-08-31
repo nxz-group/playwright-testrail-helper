@@ -1,5 +1,5 @@
-import { TestRailError } from "@utils/errors";
-import fs from "fs";
+import fs from "node:fs";
+import type { TestCaseInfo } from "../types/index.js";
 
 /**
  * Manages worker coordination, file locking, and result aggregation for parallel test execution
@@ -13,22 +13,11 @@ export class WorkerManager {
   }
 
   /**
-   * Formats test duration from milliseconds to human readable format
-   * @param ms - Duration in milliseconds
-   * @returns Formatted duration string
-   */
-  private formatDuration(ms: number): string {
-    if (ms < 1000) return `${ms}ms`;
-    if (ms < 60000) return `${(ms / 1000).toFixed(1)}s`;
-    return `${(ms / 60000).toFixed(1)}m`;
-  }
-
-  /**
    * Saves worker test results to individual worker file
    * @param sectionWorkerId - Combined section and worker ID
    * @param testResults - Array of test results to save
    */
-  async saveWorkerResults(sectionWorkerId: string, testResults: Record<string, any>[]): Promise<void> {
+  async saveWorkerResults(sectionWorkerId: string, testResults: TestCaseInfo[]): Promise<void> {
     const workerResultFile = `${this.testRailDir}/worker_${sectionWorkerId}_results.json`;
     fs.writeFileSync(workerResultFile, JSON.stringify(testResults), this.encode);
   }
@@ -38,8 +27,8 @@ export class WorkerManager {
    * @param sectionId - Section ID to get results for
    * @returns Combined test results from all workers
    */
-  async getSectionWorkerResults(sectionId: number): Promise<Record<string, any>[]> {
-    const allResults: Record<string, any>[] = [];
+  async getSectionWorkerResults(sectionId: number): Promise<TestCaseInfo[]> {
+    const allResults: TestCaseInfo[] = [];
     const files = fs
       .readdirSync(this.testRailDir)
       .filter((f) => f.includes(`_${sectionId}_`) && f.endsWith("_results.json"));
@@ -56,8 +45,8 @@ export class WorkerManager {
    * Retrieves test results from all workers across all sections
    * @returns Combined test results from all workers
    */
-  async getAllWorkerResults(): Promise<Record<string, any>[]> {
-    const allResults: Record<string, any>[] = [];
+  async getAllWorkerResults(): Promise<TestCaseInfo[]> {
+    const allResults: TestCaseInfo[] = [];
     const files = fs
       .readdirSync(this.testRailDir)
       .filter((f) => f.startsWith("worker_") && f.endsWith("_results.json"));
@@ -87,12 +76,16 @@ export class WorkerManager {
     // Clean up result files for this section
     files
       .filter((f) => f.includes(`_${sectionId}_`) && f.endsWith("_results.json"))
-      .forEach((file) => fs.unlinkSync(`${this.testRailDir}/${file}`));
+      .forEach((file) => {
+        fs.unlinkSync(`${this.testRailDir}/${file}`);
+      });
 
     // Clean up completion markers for this section
     files
       .filter((f) => f.includes(`_${sectionId}_`) && f.endsWith("_complete.marker"))
-      .forEach((file) => fs.unlinkSync(`${this.testRailDir}/${file}`));
+      .forEach((file) => {
+        fs.unlinkSync(`${this.testRailDir}/${file}`);
+      });
   }
 
   /**
@@ -102,7 +95,9 @@ export class WorkerManager {
     const files = fs
       .readdirSync(this.testRailDir)
       .filter((f) => f.startsWith("worker_") && f.endsWith("_results.json"));
-    files.forEach((file) => fs.unlinkSync(`${this.testRailDir}/${file}`));
+    files.forEach((file) => {
+      fs.unlinkSync(`${this.testRailDir}/${file}`);
+    });
   }
 
   /**
@@ -114,8 +109,8 @@ export class WorkerManager {
    */
   async coordinateWorkers(
     workerId: string,
-    testResults: Record<string, any>[],
-    callback: (allResults: Record<string, any>[]) => Promise<void>
+    testResults: TestCaseInfo[],
+    callback: (allResults: TestCaseInfo[]) => Promise<void>
   ): Promise<void> {
     // Save worker results with timestamp
     const workerResultFile = `${this.testRailDir}/worker_${workerId}_results.json`;
@@ -182,7 +177,9 @@ export class WorkerManager {
               await this.cleanupWorkerResults();
               fs.readdirSync(this.testRailDir)
                 .filter((f) => f.endsWith("_complete.marker"))
-                .forEach((f) => fs.unlinkSync(`${this.testRailDir}/${f}`));
+                .forEach((f) => {
+                  fs.unlinkSync(`${this.testRailDir}/${f}`);
+                });
             }
           }
         }
@@ -206,7 +203,7 @@ export class WorkerManager {
     let waitTime = 0;
     let lastCompletedCount = 0;
     let stableTime = 0;
-    let lastActivityTime = Date.now();
+    let _lastActivityTime = Date.now();
 
     console.log("Coordinator waiting for all workers to complete...");
 
@@ -221,7 +218,7 @@ export class WorkerManager {
       if (currentCount > lastCompletedCount) {
         console.log(`Workers completed: ${currentCount} (new: ${currentCount - lastCompletedCount})`);
         lastCompletedCount = currentCount;
-        lastActivityTime = Date.now();
+        _lastActivityTime = Date.now();
         stableTime = 0; // Reset stable timer
       } else {
         stableTime += checkInterval;

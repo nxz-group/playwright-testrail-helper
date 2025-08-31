@@ -1,6 +1,7 @@
 import type { TestRailClient } from "@api/testrail-client";
 import { AutomationType, Priority, TestStatus, TestTemplate, TestType } from "@utils/constants";
 import { TestRailError } from "@utils/errors";
+import type { TestCaseInfo, TestResult, TestStep } from "../types/index.js";
 
 /**
  * Manages test case synchronization and creation logic
@@ -125,7 +126,7 @@ export class TestCaseManager {
    * @param testCase - Test case to validate
    * @throws {TestRailError} When validation fails
    */
-  validateTestCase(testCase: any): void {
+  validateTestCase(testCase: TestCaseInfo): void {
     if (!testCase.title || typeof testCase.title !== "string") {
       throw new TestRailError("Test case must have a valid title");
     }
@@ -153,7 +154,7 @@ export class TestCaseManager {
   async syncTestCase(
     sectionId: number,
     platformId: number,
-    testCaseInfo: Record<string, any>,
+    testCaseInfo: TestCaseInfo,
     existingCases: Array<{ id: number; title: string }>,
     userId: number
   ): Promise<number> {
@@ -168,8 +169,8 @@ export class TestCaseManager {
       priority_id: this.getPriority(tags),
       custom_steps_separated: testCaseInfo._steps
         ? testCaseInfo._steps
-            .filter((step: Record<string, any>) => step.category === "test.step" && step.title !== 'Expect "toPass"')
-            .map((step: Record<string, any>) => ({
+            .filter((step: TestStep) => step.category === "test.step" && step.title !== 'Expect "toPass"')
+            .map((step: TestStep) => ({
               content: step.title.split(">")[0].trim(),
               expected: step.title.split(">")[1] ? step.title.split(">")[1].trim() : this.playwrightExecuted
             }))
@@ -196,15 +197,18 @@ export class TestCaseManager {
    * @param userId - User ID for assignment
    * @returns Test result object
    */
-  createTestResult(testCase: any, testCaseId: number, userId: number): Record<string, any> {
+  createTestResult(testCase: TestCaseInfo, testCaseId: number, userId: number): TestResult {
     let errorComment = "";
 
     if (testCase.status === "failed" && testCase._steps) {
       const errorStep = testCase._steps.filter(
-        (step: Record<string, any>) => step.category === "test.step" && step.error !== undefined
+        (step: TestStep) => step.category === "test.step" && step.error !== undefined
       );
       if (errorStep.length > 0) {
-        errorComment = `Error step: ${errorStep[0].title}\n\n${errorStep[0].error.message.replace(/\x1B\[[0-9;]*[mG]/g, "")}`;
+        // Remove ANSI escape codes from error message
+        const ansiPattern = `${String.fromCharCode(27)}\\[[0-9;]*[mG]`;
+        const cleanMessage = errorStep[0].error?.message?.replace(new RegExp(ansiPattern, "g"), "") || "";
+        errorComment = `Error step: ${errorStep[0].title}\n\n${cleanMessage}`;
       }
     }
 

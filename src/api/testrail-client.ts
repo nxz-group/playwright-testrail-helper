@@ -1,5 +1,6 @@
 import { APIError } from "@utils/errors";
 import axios, { type AxiosInstance } from "axios";
+import type { TestCaseData, TestResult, TestRunInfo } from "../types/index.js";
 
 /**
  * HTTP client for TestRail API operations
@@ -29,9 +30,9 @@ export class TestRailClient {
   async request(
     method: "post" | "get",
     path: string,
-    data?: Record<string, any>,
+    data?: Record<string, unknown>,
     retries: number = 3
-  ): Promise<{ statusCode: number; body: any }> {
+  ): Promise<{ statusCode: number; body: unknown }> {
     for (let attempt = 0; attempt <= retries; attempt++) {
       try {
         const response =
@@ -43,14 +44,15 @@ export class TestRailClient {
           statusCode: response.status,
           body: response.data
         };
-      } catch (error: any) {
+      } catch (error: unknown) {
         const isLastAttempt = attempt === retries;
         const isRetryableError = this.isRetryableError(error);
 
         if (isLastAttempt || !isRetryableError) {
+          const err = error as Record<string, any>;
           return {
-            statusCode: error.response?.status || 500,
-            body: error.response?.data || { error: error.message }
+            statusCode: err.response?.status || 500,
+            body: err.response?.data || { error: err.message }
           };
         }
 
@@ -69,15 +71,23 @@ export class TestRailClient {
    * @param error - The error to check
    * @returns True if the error should be retried
    */
-  private isRetryableError(error: any): boolean {
+  private isRetryableError(error: unknown): boolean {
+    // Type guard for error objects
+    if (typeof error !== "object" || error === null) {
+      return false;
+    }
+
+    const err = error as Record<string, unknown>;
+
     // Network errors
-    if (error.code === "ECONNRESET" || error.code === "ETIMEDOUT" || error.code === "ENOTFOUND") {
+    if (err.code === "ECONNRESET" || err.code === "ETIMEDOUT" || err.code === "ENOTFOUND") {
       return true;
     }
 
     // HTTP status codes that should be retried
     const retryableStatusCodes = [408, 429, 500, 502, 503, 504];
-    return error.response?.status && retryableStatusCodes.includes(error.response.status);
+    const response = err.response as Record<string, unknown> | undefined;
+    return Boolean(response?.status && retryableStatusCodes.includes(response.status as number));
   }
 
   /**
@@ -90,7 +100,7 @@ export class TestRailClient {
     if (result.statusCode !== 200) {
       throw new APIError(`Failed to get user by email: ${result.statusCode}`, result.statusCode, result.body);
     }
-    return result.body.id;
+    return (result.body as any).id;
   }
 
   /**
@@ -108,8 +118,9 @@ export class TestRailClient {
       if (result.statusCode !== 200) {
         throw new APIError(`Failed to get cases: ${result.statusCode}`, result.statusCode, result.body);
       }
-      cases = [...cases, ...result.body.cases.map(({ id, title }: { id: number; title: string }) => ({ id, title }))];
-      nextLink = result.body._links.next;
+      const body = result.body as any;
+      cases = [...cases, ...body.cases.map(({ id, title }: { id: number; title: string }) => ({ id, title }))];
+      nextLink = body._links.next;
     } while (nextLink !== null);
 
     return cases;
@@ -121,12 +132,12 @@ export class TestRailClient {
    * @param testCase - Test case data
    * @returns Created test case ID
    */
-  async addCase(sectionId: number, testCase: Record<string, any>): Promise<number> {
+  async addCase(sectionId: number, testCase: TestCaseData): Promise<number> {
     const result = await this.request("post", `/api/v2/add_case/${sectionId}`, testCase);
     if (result.statusCode !== 200) {
       throw new APIError(`Failed to add case: ${result.statusCode}`, result.statusCode, result.body);
     }
-    return result.body.id;
+    return (result.body as any).id;
   }
 
   /**
@@ -135,7 +146,7 @@ export class TestRailClient {
    * @param sectionId - Section ID
    * @param testCase - Updated test case data
    */
-  async updateCase(caseId: number, sectionId: number, testCase: Record<string, any>): Promise<void> {
+  async updateCase(caseId: number, sectionId: number, testCase: TestCaseData): Promise<void> {
     const result = await this.request("post", `/api/v2/update_case/${caseId}&section_id=${sectionId}`, testCase);
     if (result.statusCode !== 200) {
       throw new APIError(`Failed to update case: ${result.statusCode}`, result.statusCode, result.body);
@@ -148,7 +159,7 @@ export class TestRailClient {
    * @param runInfo - Test run information
    * @returns Created test run data
    */
-  async addRun(projectId: number, runInfo: Record<string, any>): Promise<any> {
+  async addRun(projectId: number, runInfo: TestRunInfo): Promise<unknown> {
     const result = await this.request("post", `/api/v2/add_run/${projectId}`, runInfo);
     if (result.statusCode !== 200) {
       throw new APIError(`Failed to add run: ${result.statusCode}`, result.statusCode, result.body);
@@ -167,7 +178,7 @@ export class TestRailClient {
       ? { statusCode: result.statusCode }
       : {
           statusCode: result.statusCode,
-          is_completed: result.body.is_completed
+          is_completed: (result.body as any).is_completed
         };
   }
 
@@ -188,7 +199,7 @@ export class TestRailClient {
    * @param runId - Test run ID
    * @param testResults - Array of test results
    */
-  async addResultsForCases(runId: number, testResults: Record<string, any>[]): Promise<void> {
+  async addResultsForCases(runId: number, testResults: TestResult[]): Promise<void> {
     const result = await this.request("post", `/api/v2/add_results_for_cases/${runId}`, { results: testResults });
     if (result.statusCode !== 200) {
       throw new APIError(`Failed to add results for cases: ${result.statusCode}`, result.statusCode, result.body);

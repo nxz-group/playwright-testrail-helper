@@ -1,7 +1,8 @@
+import fs from "node:fs";
 import type { TestRailClient } from "@api/testrail-client";
 import { TestRailError } from "@utils/errors";
 import dayjs from "dayjs";
-import fs from "fs";
+import type { TestResult } from "../types/index.js";
 
 /**
  * Manages TestRail test run operations and file persistence
@@ -32,7 +33,7 @@ export class TestRunManager {
    * @param dirPath - Directory to check
    * @param dataSize - Estimated size of data to write
    */
-  private checkDiskSpaceAndPermissions(dirPath: string, dataSize: number): void {
+  private checkDiskSpaceAndPermissions(dirPath: string, _dataSize: number): void {
     try {
       // Check write permissions by creating a test file
       const testFile = `${dirPath}/.write-test-${Date.now()}`;
@@ -46,14 +47,15 @@ export class TestRunManager {
         // More sophisticated space checking would require platform-specific code
         return;
       }
-    } catch (error: any) {
-      if (error.code === "EACCES") {
+    } catch (error: unknown) {
+      const err = error as Record<string, unknown>;
+      if (err.code === "EACCES") {
         throw new TestRailError(`No write permission for directory: ${dirPath}`);
       }
-      if (error.code === "ENOSPC") {
+      if (err.code === "ENOSPC") {
         throw new TestRailError(`Insufficient disk space in directory: ${dirPath}`);
       }
-      throw new TestRailError(`Cannot write to directory: ${dirPath} - ${error.message}`);
+      throw new TestRailError(`Cannot write to directory: ${dirPath} - ${err.message}`);
     }
   }
 
@@ -62,7 +64,7 @@ export class TestRunManager {
    * @param filePath - Path to the file
    * @param data - Data to write
    */
-  private async writeJsonSafely(filePath: string, data: any): Promise<void> {
+  private async writeJsonSafely(filePath: string, data: unknown): Promise<void> {
     // Check disk space and permissions first
     const jsonString = JSON.stringify(data, null, 2);
     this.checkDiskSpaceAndPermissions(this.testRailDir, jsonString.length);
@@ -84,7 +86,7 @@ export class TestRunManager {
           console.warn(`Removing stale lock file (age: ${lockAge}ms, pid: ${lockInfo.pid})`);
           fs.unlinkSync(lockFile);
         }
-      } catch (error) {
+      } catch (_error) {
         // If we can't read lock file, it's probably corrupted - remove it
         console.warn("Removing corrupted lock file");
         fs.unlinkSync(lockFile);
@@ -116,15 +118,16 @@ export class TestRunManager {
       const tempFile = `${filePath}.${Date.now()}.tmp`;
       fs.writeFileSync(tempFile, jsonString);
       fs.renameSync(tempFile, filePath);
-    } catch (error: any) {
-      if (error.code === "EEXIST") {
+    } catch (error: unknown) {
+      const err = error as Record<string, unknown>;
+      if (err.code === "EEXIST") {
         // Another process created lock simultaneously, retry
         throw new TestRailError("Lock creation race condition - retry needed");
       }
-      if (error.code === "ENOSPC") {
+      if (err.code === "ENOSPC") {
         throw new TestRailError("Insufficient disk space to write file");
       }
-      if (error.code === "EACCES") {
+      if (err.code === "EACCES") {
         throw new TestRailError("Permission denied writing to file");
       }
       throw error;
@@ -135,9 +138,9 @@ export class TestRunManager {
       }
       // Cleanup any leftover temp files
       try {
-        const tempPattern = `${filePath}.*.tmp`;
-        const dir = require("path").dirname(filePath);
-        const basename = require("path").basename(filePath);
+        const _tempPattern = `${filePath}.*.tmp`;
+        const dir = require("node:path").dirname(filePath);
+        const basename = require("node:path").basename(filePath);
         const files = fs.readdirSync(dir);
         files.forEach((file) => {
           if (file.startsWith(`${basename}.`) && file.endsWith(".tmp")) {
@@ -233,13 +236,15 @@ export class TestRunManager {
           assignedto_id: userId,
           include_all: false
         });
-        this.newTestRunId = newRun.id;
+        this.newTestRunId = (newRun as any).id;
         this.newCaseIds = caseIds;
       } else {
         this.newTestRunId = this.existingTestRunId;
-        this.existingCaseIds.length === 0
-          ? (this.newCaseIds = caseIds)
-          : (this.newCaseIds = [...new Set([...this.existingCaseIds, ...caseIds])]);
+        if (this.existingCaseIds.length === 0) {
+          this.newCaseIds = caseIds;
+        } else {
+          this.newCaseIds = [...new Set([...this.existingCaseIds, ...caseIds])];
+        }
       }
     } finally {
       // Release lock
@@ -267,7 +272,7 @@ export class TestRunManager {
    * Updates test run with case IDs and adds results
    * @param testResults - Array of test results
    */
-  async updateRunAndAddResults(testResults: Record<string, any>[]): Promise<void> {
+  async updateRunAndAddResults(testResults: TestResult[]): Promise<void> {
     if (testResults.length === 0) {
       throw new TestRailError("Cannot update run with empty test results");
     }

@@ -42,7 +42,7 @@ export interface TestResult {
 /**
  * Test run information
  */
-export interface TestRunInfo {
+export interface TestRunInfo extends Record<string, unknown> {
   name: string;
   assignedto_id: number;
   include_all: boolean;
@@ -53,13 +53,13 @@ export interface TestRunInfo {
  */
 export interface APIResponse {
   statusCode: number;
-  body: any;
+  body: unknown;
 }
 
 /**
  * Test case data for TestRail API
  */
-export interface TestCaseData {
+export interface TestCaseData extends Record<string, unknown> {
   title: string;
   section_id: number;
   custom_case_custom_automation_type: number;

@@ -2,7 +2,7 @@ import { TestRailClient } from "@api/testrail-client";
 import { TestCaseManager } from "@managers/test-case-manager";
 import { TestRunManager } from "@managers/test-run-manager";
 import { WorkerManager } from "@managers/worker-manager";
-import type { TestCaseInfo } from "@types";
+import type { TestCaseInfo, TestResult } from "@types";
 import { Platform } from "@utils/constants";
 import { ConfigurationError } from "@utils/errors";
 import { ValidationUtils } from "@utils/validation";
@@ -27,9 +27,9 @@ class TestRailHelper {
    * @throws {ConfigurationError} When required environment variables are missing
    */
   constructor() {
-    const testRailHost = process.env.TEST_RAIL_HOST!;
-    const testRailUsername = process.env.TEST_RAIL_USERNAME!;
-    const testRailPassword = process.env.TEST_RAIL_PASSWORD!;
+    const testRailHost = process.env.TEST_RAIL_HOST;
+    const testRailUsername = process.env.TEST_RAIL_USERNAME;
+    const testRailPassword = process.env.TEST_RAIL_PASSWORD;
     const projectId = process.env.TEST_RAIL_PROJECT_ID;
 
     if (!testRailHost || !testRailUsername || !testRailPassword || !projectId) {
@@ -39,7 +39,7 @@ class TestRailHelper {
     }
 
     this.projectId = parseInt(projectId, 10);
-    if (isNaN(this.projectId) || this.projectId <= 0) {
+    if (Number.isNaN(this.projectId) || this.projectId <= 0) {
       throw new ConfigurationError("TEST_RAIL_PROJECT_ID must be a valid positive number");
     }
 
@@ -77,7 +77,7 @@ class TestRailHelper {
 
     const workerId = process.env.TEST_WORKER_INDEX || "0";
     const caseIdsInListFile: number[] = [];
-    const testResults: Record<string, any>[] = [];
+    const testCaseInfos: TestCaseInfo[] = [];
 
     await this.testRunManager.ensureTestRailSetup();
     if (isReset) {
@@ -89,7 +89,7 @@ class TestRailHelper {
       return;
     }
 
-    const userId = await this.client.getUserIdByEmail(process.env.TEST_RAIL_USERNAME!);
+    const userId = await this.client.getUserIdByEmail(process.env.TEST_RAIL_USERNAME as string);
     const casesInSection = await this.client.getCases(this.projectId, sectionId);
 
     // Process test cases and create results
@@ -104,14 +104,25 @@ class TestRailHelper {
         userId
       );
 
-      const testResult = this.testCaseManager.createTestResult(testCase, testCaseId, userId);
-      testResults.push(testResult);
+      testCaseInfos.push(testCase);
       caseIdsInListFile.push(testCaseId);
     }
 
     // Use WorkerManager for coordination
-    await this.workerManager.coordinateWorkers(workerId, testResults, async (allResults) => {
-      const allCaseIds = [...new Set(allResults.map((r) => r.case_id))];
+    await this.workerManager.coordinateWorkers(workerId, testCaseInfos, async (allResults) => {
+      // Convert TestCaseInfo to TestResult for TestRail API
+      const testResults: TestResult[] = [];
+      const allCaseIds: number[] = [];
+
+      for (const testCase of allResults) {
+        // Find the corresponding case ID from our processed cases
+        const matchingCase = casesInSection.find((c) => c.title === testCase.title);
+        if (matchingCase) {
+          const testResult = this.testCaseManager.createTestResult(testCase, matchingCase.id, userId);
+          testResults.push(testResult);
+          allCaseIds.push(matchingCase.id);
+        }
+      }
 
       // Set test run ID and case IDs
       await this.testRunManager.setTestRunIdAndCaseId(runName, userId, allCaseIds);
@@ -120,7 +131,7 @@ class TestRailHelper {
       await this.testRunManager.writeTestRunJson();
 
       // Update run and add results
-      await this.testRunManager.updateRunAndAddResults(allResults);
+      await this.testRunManager.updateRunAndAddResults(testResults);
     });
   }
 }
