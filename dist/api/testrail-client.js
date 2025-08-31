@@ -4,20 +4,47 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.TestRailClient = void 0;
-const errors_1 = require("@utils/errors");
 const axios_1 = __importDefault(require("axios"));
+const errors_1 = require("../utils/errors");
 /**
  * HTTP client for TestRail API operations
  */
 class TestRailClient {
     constructor(host, username, password) {
         this.axiosInstance = axios_1.default.create({
-            baseURL: `${host}/index.php`,
+            baseURL: `${host}/index.php?`,
             timeout: 30000, // 30 second timeout
             headers: {
                 "Content-Type": "application/json",
                 Authorization: `Basic ${Buffer.from(`${username}:${password}`).toString("base64")}`
             }
+        });
+        // Add request interceptor to log actual URL
+        this.axiosInstance.interceptors.request.use((config) => {
+            const fullUrl = `${config.baseURL}${config.url}`;
+            console.log(`🔍 ~ Axios Request ~ Full URL: ${fullUrl}`);
+            console.log(`🔍 ~ Axios Request ~ Config:`, {
+                baseURL: config.baseURL,
+                url: config.url,
+                method: config.method,
+                params: config.params
+            });
+            return config;
+        }, (error) => {
+            console.log(`❌ ~ Axios Request Error:`, error);
+            return Promise.reject(error);
+        });
+        // Add response interceptor to log response details
+        this.axiosInstance.interceptors.response.use((response) => {
+            console.log(`✅ ~ Axios Response ~ Status: ${response.status}, URL: ${response.config.url}`);
+            return response;
+        }, (error) => {
+            console.log(`❌ ~ Axios Response Error:`, {
+                status: error.response?.status,
+                url: error.config?.url,
+                data: error.response?.data
+            });
+            return Promise.reject(error);
         });
     }
     /**
@@ -31,9 +58,12 @@ class TestRailClient {
     async request(method, path, data, retries = 3) {
         for (let attempt = 0; attempt <= retries; attempt++) {
             try {
+                const fullUrl = `${this.axiosInstance.defaults.baseURL}?${path}`;
+                console.log(`🚀 ~ TestRailClient ~ ${method.toUpperCase()} ~ ${fullUrl}`);
                 const response = method === "get"
                     ? await this.axiosInstance.get(`?${path}`, data)
                     : await this.axiosInstance.post(`?${path}`, data);
+                console.log(`✅ ~ TestRailClient ~ Response ~ Status: ${response.status}`);
                 return {
                     statusCode: response.status,
                     body: response.data
@@ -44,9 +74,12 @@ class TestRailClient {
                 const isRetryableError = this.isRetryableError(error);
                 if (isLastAttempt || !isRetryableError) {
                     const err = error;
+                    const errorStatus = err.response?.status || 500;
+                    const errorBody = err.response?.data || { error: err.message };
+                    console.log(`❌ ~ TestRailClient ~ Error ~ Status: ${errorStatus}, Body:`, errorBody);
                     return {
-                        statusCode: err.response?.status || 500,
-                        body: err.response?.data || { error: err.message }
+                        statusCode: errorStatus,
+                        body: errorBody
                     };
                 }
                 // Wait before retry (exponential backoff)
@@ -83,11 +116,14 @@ class TestRailClient {
      * @returns User ID
      */
     async getUserIdByEmail(email) {
-        const result = await this.request("get", `/api/v2/get_user_by_email&email=${email}`);
-        if (result.statusCode !== 200) {
-            throw new errors_1.APIError(`Failed to get user by email: ${result.statusCode}`, result.statusCode, result.body);
+        // Try using axios params instead of URL string
+        const response = await this.axiosInstance.get("/api/v2/get_user_by_email", {
+            params: { email: email }
+        });
+        if (response.status !== 200) {
+            throw new errors_1.APIError(`Failed to get user by email: ${response.status}`, response.status, response.data);
         }
-        return result.body.id;
+        return response.data.id;
     }
     /**
      * Gets test cases for a project section
@@ -96,17 +132,19 @@ class TestRailClient {
      * @returns Array of test cases
      */
     async getCases(projectId, sectionId) {
-        let nextLink = `/api/v2/get_cases/${projectId}&section_id=${sectionId}`;
+        let nextUrl = `/api/v2/get_cases/${projectId}`;
         let cases = [];
         do {
-            const result = await this.request("get", nextLink);
-            if (result.statusCode !== 200) {
-                throw new errors_1.APIError(`Failed to get cases: ${result.statusCode}`, result.statusCode, result.body);
+            const response = await this.axiosInstance.get(nextUrl, {
+                params: { section_id: sectionId }
+            });
+            if (response.status !== 200) {
+                throw new errors_1.APIError(`Failed to get cases: ${response.status}`, response.status, response.data);
             }
-            const body = result.body;
+            const body = response.data;
             cases = [...cases, ...body.cases.map(({ id, title }) => ({ id, title }))];
-            nextLink = body._links.next;
-        } while (nextLink !== null);
+            nextUrl = body._links.next;
+        } while (nextUrl !== null);
         return cases;
     }
     /**
@@ -116,11 +154,11 @@ class TestRailClient {
      * @returns Created test case ID
      */
     async addCase(sectionId, testCase) {
-        const result = await this.request("post", `/api/v2/add_case/${sectionId}`, testCase);
-        if (result.statusCode !== 200) {
-            throw new errors_1.APIError(`Failed to add case: ${result.statusCode}`, result.statusCode, result.body);
+        const response = await this.axiosInstance.post(`/api/v2/add_case/${sectionId}`, testCase);
+        if (response.status !== 200) {
+            throw new errors_1.APIError(`Failed to add case: ${response.status}`, response.status, response.data);
         }
-        return result.body.id;
+        return response.data.id;
     }
     /**
      * Updates an existing test case
@@ -129,9 +167,11 @@ class TestRailClient {
      * @param testCase - Updated test case data
      */
     async updateCase(caseId, sectionId, testCase) {
-        const result = await this.request("post", `/api/v2/update_case/${caseId}&section_id=${sectionId}`, testCase);
-        if (result.statusCode !== 200) {
-            throw new errors_1.APIError(`Failed to update case: ${result.statusCode}`, result.statusCode, result.body);
+        const response = await this.axiosInstance.post(`/api/v2/update_case/${caseId}`, testCase, {
+            params: { section_id: sectionId }
+        });
+        if (response.status !== 200) {
+            throw new errors_1.APIError(`Failed to update case: ${response.status}`, response.status, response.data);
         }
     }
     /**
@@ -141,11 +181,11 @@ class TestRailClient {
      * @returns Created test run data
      */
     async addRun(projectId, runInfo) {
-        const result = await this.request("post", `/api/v2/add_run/${projectId}`, runInfo);
-        if (result.statusCode !== 200) {
-            throw new errors_1.APIError(`Failed to add run: ${result.statusCode}`, result.statusCode, result.body);
+        const response = await this.axiosInstance.post(`/api/v2/add_run/${projectId}`, runInfo);
+        if (response.status !== 200) {
+            throw new errors_1.APIError(`Failed to add run: ${response.status}`, response.status, response.data);
         }
-        return result.body;
+        return response.data;
     }
     /**
      * Gets test run information
@@ -153,12 +193,12 @@ class TestRailClient {
      * @returns Test run data or error status
      */
     async getRun(runId) {
-        const result = await this.request("get", `/api/v2/get_run/${runId}`);
-        return result.statusCode !== 200
-            ? { statusCode: result.statusCode }
+        const response = await this.axiosInstance.get(`/api/v2/get_run/${runId}`);
+        return response.status !== 200
+            ? { statusCode: response.status }
             : {
-                statusCode: result.statusCode,
-                is_completed: result.body.is_completed
+                statusCode: response.status,
+                is_completed: response.data.is_completed
             };
     }
     /**
@@ -167,9 +207,9 @@ class TestRailClient {
      * @param caseIds - Array of test case IDs
      */
     async updateRun(runId, caseIds) {
-        const result = await this.request("post", `/api/v2/update_run/${runId}`, { case_ids: caseIds });
-        if (result.statusCode !== 200) {
-            throw new errors_1.APIError(`Failed to update run: ${result.statusCode}`, result.statusCode, result.body);
+        const response = await this.axiosInstance.post(`/api/v2/update_run/${runId}`, { case_ids: caseIds });
+        if (response.status !== 200) {
+            throw new errors_1.APIError(`Failed to update run: ${response.status}`, response.status, response.data);
         }
     }
     /**
@@ -178,9 +218,9 @@ class TestRailClient {
      * @param testResults - Array of test results
      */
     async addResultsForCases(runId, testResults) {
-        const result = await this.request("post", `/api/v2/add_results_for_cases/${runId}`, { results: testResults });
-        if (result.statusCode !== 200) {
-            throw new errors_1.APIError(`Failed to add results for cases: ${result.statusCode}`, result.statusCode, result.body);
+        const response = await this.axiosInstance.post(`/api/v2/add_results_for_cases/${runId}`, { results: testResults });
+        if (response.status !== 200) {
+            throw new errors_1.APIError(`Failed to add results for cases: ${response.status}`, response.status, response.data);
         }
     }
     /**
@@ -188,9 +228,9 @@ class TestRailClient {
      * @param runId - Test run ID
      */
     async closeRun(runId) {
-        const result = await this.request("post", `/api/v2/close_run/${runId}`);
-        if (result.statusCode !== 200) {
-            throw new errors_1.APIError(`Failed to close run: ${result.statusCode}`, result.statusCode, result.body);
+        const response = await this.axiosInstance.post(`/api/v2/close_run/${runId}`);
+        if (response.status !== 200) {
+            throw new errors_1.APIError(`Failed to close run: ${response.status}`, response.status, response.data);
         }
     }
 }

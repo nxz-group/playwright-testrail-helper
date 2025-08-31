@@ -1,8 +1,7 @@
 export declare enum TestStatus {
     PASSED = 1,
-    INTERRUPTED = 2,
-    SKIPPED = 3,
-    TIMEOUT = 4,
+    BLOCKED = 2,
+    RETEST = 4,
     FAILED = 5
 }
 export declare enum TestTemplate {

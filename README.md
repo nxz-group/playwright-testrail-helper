@@ -24,8 +24,8 @@ npm install playwright-testrail-helper
 # Required
 TEST_RAIL_HOST=https://your-domain.testrail.io
 TEST_RAIL_USERNAME=your-email@domain.com
-TEST_RAIL_PASSWORD=your-password-or-api-key
-TEST_RAIL_PROJECT_ID=3
+TEST_RAIL_PASSWORD=your-api-key-here
+TEST_RAIL_PROJECT_ID=4
 
 # Optional
 TEST_RAIL_DIR=testRail
@@ -33,6 +33,8 @@ TEST_RAIL_EXECUTED_BY="Executed by Playwright"
 RUN_NAME=optional-run-name-override
 TEST_WORKER_INDEX=0
 ```
+
+> 📋 **For detailed environment variable documentation, see [ENVIRONMENT_VARIABLES.md](./ENVIRONMENT_VARIABLES.md)**
 
 ### 2. Basic Usage
 ```typescript
@@ -56,6 +58,8 @@ await onTestRailHelper.updateTestResult(
 ```
 
 ### 3. Test Results Format
+
+#### Manual Format
 ```typescript
 const testResults = [
   {
@@ -72,6 +76,28 @@ const testResults = [
     ]
   }
 ];
+```
+
+#### Auto-Convert from Playwright TestInfo
+```typescript
+import { PlaywrightConverter } from 'playwright-testrail-helper';
+import { test } from '@playwright/test';
+
+test.afterEach(async ({ }, testInfo) => {
+  // Convert single test result
+  const testCaseInfo = PlaywrightConverter.convertFromAfterEach(testInfo);
+  
+  await onTestRailHelper.updateTestResult(
+    "Login Tests",
+    SECTION_IDS.login,
+    Platform.WEB_DESKTOP,
+    [testCaseInfo]
+  );
+});
+
+// Or convert multiple tests at once
+const testInfos = [testInfo1, testInfo2, testInfo3];
+const testResults = PlaywrightConverter.convertMultipleTests(testInfos);
 ```
 
 ## Advanced Usage

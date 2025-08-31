@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2024-08-31
+
+### Added
+- New Playwright converter utility (`src/utils/playwright-converter.ts`)
+- Playwright integration example (`src/examples/playwright-integration.example.ts`)
+- Section IDs example (`src/examples/section-ids.example.ts`)
+- Worker manager for better parallel execution handling (`src/managers/worker-manager.ts`)
+- Environment variables documentation (`ENVIRONMENT_VARIABLES.md`)
+- Setup documentation (`SETUP.md`)
+
+### Enhanced
+- Improved test case manager with better error handling
+- Enhanced test run manager with more robust coordination
+- Updated validation utilities with additional checks
+- Better TypeScript type definitions and exports
+- Improved constants management
+
+### Technical Improvements
+- Enhanced dist build output with new utilities
+- Better modular architecture with examples separation
+- Improved error handling across all managers
+- Enhanced API client with better retry mechanisms
+
 ## [1.0.0] - 2024-08-31
 
 ### Added

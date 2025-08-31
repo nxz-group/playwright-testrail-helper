@@ -15,13 +15,13 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.onTestRailHelper = void 0;
-const testrail_client_1 = require("@api/testrail-client");
-const test_case_manager_1 = require("@managers/test-case-manager");
-const test_run_manager_1 = require("@managers/test-run-manager");
-const worker_manager_1 = require("@managers/worker-manager");
-const constants_1 = require("@utils/constants");
-const errors_1 = require("@utils/errors");
-const validation_1 = require("@utils/validation");
+const testrail_client_1 = require("./api/testrail-client");
+const test_case_manager_1 = require("./managers/test-case-manager");
+const test_run_manager_1 = require("./managers/test-run-manager");
+const worker_manager_1 = require("./managers/worker-manager");
+const constants_1 = require("./utils/constants");
+const errors_1 = require("./utils/errors");
+const validation_1 = require("./utils/validation");
 /**
  * Main TestRail integration helper class
  * Orchestrates test case synchronization and result reporting
@@ -98,8 +98,11 @@ class TestRailHelper {
                 const matchingCase = casesInSection.find((c) => c.title === testCase.title);
                 if (matchingCase) {
                     const testResult = this.testCaseManager.createTestResult(testCase, matchingCase.id, userId);
-                    testResults.push(testResult);
-                    allCaseIds.push(matchingCase.id);
+                    // Only add to results if not null (skip untested/skipped tests)
+                    if (testResult !== null) {
+                        testResults.push(testResult);
+                        allCaseIds.push(matchingCase.id);
+                    }
                 }
             }
             // Set test run ID and case IDs
@@ -114,6 +117,7 @@ class TestRailHelper {
 exports.onTestRailHelper = new TestRailHelper();
 exports.default = TestRailHelper;
 // Export types and constants for library users
-__exportStar(require("@types"), exports);
-__exportStar(require("@utils/constants"), exports);
-__exportStar(require("@utils/errors"), exports);
+__exportStar(require("./types"), exports);
+__exportStar(require("./utils/constants"), exports);
+__exportStar(require("./utils/errors"), exports);
+__exportStar(require("./utils/playwright-converter"), exports);

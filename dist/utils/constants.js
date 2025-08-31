@@ -4,9 +4,8 @@ exports.Platform = exports.Priority = exports.AutomationType = exports.TestType 
 var TestStatus;
 (function (TestStatus) {
     TestStatus[TestStatus["PASSED"] = 1] = "PASSED";
-    TestStatus[TestStatus["INTERRUPTED"] = 2] = "INTERRUPTED";
-    TestStatus[TestStatus["SKIPPED"] = 3] = "SKIPPED";
-    TestStatus[TestStatus["TIMEOUT"] = 4] = "TIMEOUT";
+    TestStatus[TestStatus["BLOCKED"] = 2] = "BLOCKED";
+    TestStatus[TestStatus["RETEST"] = 4] = "RETEST";
     TestStatus[TestStatus["FAILED"] = 5] = "FAILED";
 })(TestStatus || (exports.TestStatus = TestStatus = {}));
 var TestTemplate;

@@ -1,8 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.TestCaseManager = void 0;
-const constants_1 = require("@utils/constants");
-const errors_1 = require("@utils/errors");
+const constants_1 = require("../utils/constants");
+const errors_1 = require("../utils/errors");
 /**
  * Manages test case synchronization and creation logic
  */
@@ -83,22 +83,22 @@ class TestCaseManager {
     /**
      * Maps test status string to TestRail status ID
      * @param status - Test status string
-     * @returns TestRail status enum value
+     * @returns TestRail status enum value or null for skipped tests
      */
     getStatusId(status) {
         switch (status) {
             case "passed":
-                return constants_1.TestStatus.PASSED;
+                return constants_1.TestStatus.PASSED; // 1
             case "interrupted":
-                return constants_1.TestStatus.INTERRUPTED;
+                return constants_1.TestStatus.BLOCKED; // 2 - Map interrupted to blocked
             case "skipped":
-                return constants_1.TestStatus.SKIPPED;
+                return null; // Skip untested/skipped tests - don't send to TestRail
             case "timeOut":
-                return constants_1.TestStatus.TIMEOUT;
+                return constants_1.TestStatus.FAILED; // 5 - Map timeout to failed
             case "failed":
-                return constants_1.TestStatus.FAILED;
+                return constants_1.TestStatus.FAILED; // 5
             default:
-                return constants_1.TestStatus.FAILED;
+                return constants_1.TestStatus.FAILED; // 5 - Default to failed for unknown statuses
         }
     }
     /**
@@ -174,9 +174,14 @@ class TestCaseManager {
      * @param testCase - Test case information
      * @param testCaseId - TestRail test case ID
      * @param userId - User ID for assignment
-     * @returns Test result object
+     * @returns Test result object or null for skipped tests
      */
     createTestResult(testCase, testCaseId, userId) {
+        const statusId = this.getStatusId(testCase.status);
+        // Skip untested/skipped tests - don't send to TestRail
+        if (statusId === null) {
+            return null;
+        }
         let errorComment = "";
         if (testCase.status === "failed" && testCase._steps) {
             const errorStep = testCase._steps.filter((step) => step.category === "test.step" && step.error !== undefined);
@@ -189,7 +194,7 @@ class TestCaseManager {
         }
         return {
             case_id: testCaseId,
-            status_id: this.getStatusId(testCase.status),
+            status_id: statusId,
             assignedto_id: userId,
             comment: testCase.status === "failed"
                 ? errorComment

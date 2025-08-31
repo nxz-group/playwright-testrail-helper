@@ -1,5 +1,5 @@
-import { Platform } from "@utils/constants";
-import { TestRailError } from "@utils/errors";
+import { Platform } from "./constants";
+import { TestRailError } from "./errors";
 
 // Type definitions for validation
 interface TestCase {
