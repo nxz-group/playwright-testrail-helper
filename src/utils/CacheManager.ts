@@ -32,15 +32,15 @@ export interface CacheConfig {
 /**
  * Advanced caching system with TTL, LRU eviction, and memory management
  */
-export class CacheManager<T = any> {
+export class CacheManager<T = unknown> {
   private readonly logger: Logger;
   private readonly config: CacheConfig;
   private readonly cache: Map<string, CacheEntry<T>> = new Map();
-  private cleanupTimer?: NodeJS.Timeout;
+  private cleanupTimer?: NodeJS.Timeout | undefined;
   private stats = {
     hitCount: 0,
     missCount: 0,
-    evictionCount: 0
+    evictionCount: 0,
   };
 
   constructor(config?: Partial<CacheConfig>) {
@@ -51,7 +51,7 @@ export class CacheManager<T = any> {
       defaultTtl: 5 * 60 * 1000, // 5 minutes
       cleanupInterval: 60 * 1000, // 1 minute
       enableStats: true,
-      ...config
+      ...config,
     };
 
     this.startCleanup();
@@ -107,7 +107,7 @@ export class CacheManager<T = any> {
       expiresAt: now + expirationTime,
       accessCount: 0,
       lastAccessed: now,
-      size
+      size,
     };
 
     // Check if we need to evict entries
@@ -147,11 +147,7 @@ export class CacheManager<T = any> {
   /**
    * Get or set pattern - get value, or compute and cache if not found
    */
-  async getOrSet<R extends T>(
-    key: string,
-    factory: () => Promise<R>,
-    ttl?: number
-  ): Promise<R> {
+  async getOrSet<R extends T>(key: string, factory: () => Promise<R>, ttl?: number): Promise<R> {
     const cached = this.get(key);
     if (cached !== null) {
       return cached as R;
@@ -165,11 +161,7 @@ export class CacheManager<T = any> {
   /**
    * Get or set pattern (synchronous)
    */
-  getOrSetSync<R extends T>(
-    key: string,
-    factory: () => R,
-    ttl?: number
-  ): R {
+  getOrSetSync<R extends T>(key: string, factory: () => R, ttl?: number): R {
     const cached = this.get(key);
     if (cached !== null) {
       return cached as R;
@@ -210,7 +202,7 @@ export class CacheManager<T = any> {
       hitRate,
       evictionCount: this.stats.evictionCount,
       oldestEntry,
-      newestEntry
+      newestEntry,
     };
   }
 
@@ -306,7 +298,7 @@ export class CacheManager<T = any> {
   shutdown(): void {
     if (this.cleanupTimer) {
       clearInterval(this.cleanupTimer);
-      this.cleanupTimer = undefined as any;
+      this.cleanupTimer = undefined;
     }
     this.clear();
     this.logger.info('CacheManager shutdown completed');
@@ -330,7 +322,10 @@ export class CacheManager<T = any> {
     const currentMemory = this.getCurrentMemoryUsage();
     if (currentMemory + newEntrySize > this.config.maxMemory) {
       // Evict entries until we have enough space
-      while (this.getCurrentMemoryUsage() + newEntrySize > this.config.maxMemory && this.cache.size > 0) {
+      while (
+        this.getCurrentMemoryUsage() + newEntrySize > this.config.maxMemory &&
+        this.cache.size > 0
+      ) {
         this.evictLRU();
       }
     }
@@ -365,7 +360,7 @@ export class CacheManager<T = any> {
       // Simple size estimation based on JSON serialization
       const jsonString = JSON.stringify(value);
       return jsonString.length * 2; // Rough estimate for UTF-16 encoding
-    } catch (error) {
+    } catch (_error) {
       // Fallback for non-serializable objects
       return 1024; // 1KB default estimate
     }
