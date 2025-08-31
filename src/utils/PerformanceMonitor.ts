@@ -6,7 +6,7 @@ export interface PerformanceMetrics {
   endTime: number;
   duration: number;
   success: boolean;
-  metadata: Record<string, any> | undefined;
+  metadata: Record<string, unknown> | undefined;
 }
 
 export interface PerformanceStats {
@@ -37,7 +37,7 @@ export class PerformanceMonitor {
   private readonly metrics: Map<string, PerformanceMetrics[]> = new Map();
   private readonly activeOperations: Map<string, number> = new Map();
   private memorySnapshots: MemoryStats[] = [];
-  private monitoringInterval?: NodeJS.Timeout;
+  private monitoringInterval?: NodeJS.Timeout | undefined;
 
   private constructor() {
     this.logger = new Logger('PerformanceMonitor');
@@ -53,7 +53,11 @@ export class PerformanceMonitor {
   /**
    * Start monitoring an operation
    */
-  startOperation(operationId: string, operationName: string, metadata?: Record<string, any>): void {
+  startOperation(
+    operationId: string,
+    operationName: string,
+    metadata?: Record<string, unknown>
+  ): void {
     const startTime = performance.now();
     this.activeOperations.set(operationId, startTime);
 
@@ -71,7 +75,7 @@ export class PerformanceMonitor {
     operationId: string,
     operationName: string,
     success: boolean = true,
-    metadata?: Record<string, any>
+    metadata?: Record<string, unknown>
   ): PerformanceMetrics | null {
     const endTime = performance.now();
     const startTime = this.activeOperations.get(operationId);
@@ -95,7 +99,7 @@ export class PerformanceMonitor {
     if (!this.metrics.has(operationName)) {
       this.metrics.set(operationName, []);
     }
-    this.metrics.get(operationName)!.push(metric);
+    this.metrics.get(operationName)?.push(metric);
 
     // Clean up active operation
     this.activeOperations.delete(operationId);
@@ -117,7 +121,7 @@ export class PerformanceMonitor {
   async timeOperation<T>(
     operationName: string,
     operation: () => Promise<T>,
-    metadata?: Record<string, any>
+    metadata?: Record<string, unknown>
   ): Promise<T> {
     const operationId = `${operationName}-${Date.now()}-${Math.random()}`;
     this.startOperation(operationId, operationName, metadata);
@@ -138,7 +142,7 @@ export class PerformanceMonitor {
   /**
    * Time a synchronous operation
    */
-  timeSync<T>(operationName: string, operation: () => T, metadata?: Record<string, any>): T {
+  timeSync<T>(operationName: string, operation: () => T, metadata?: Record<string, unknown>): T {
     const operationId = `${operationName}-${Date.now()}-${Math.random()}`;
     this.startOperation(operationId, operationName, metadata);
 
@@ -236,7 +240,7 @@ export class PerformanceMonitor {
   stopMemoryMonitoring(): void {
     if (this.monitoringInterval) {
       clearInterval(this.monitoringInterval);
-      this.monitoringInterval = undefined as any;
+      this.monitoringInterval = undefined;
       this.logger.info('Memory monitoring stopped');
     }
   }
@@ -301,7 +305,7 @@ export class PerformanceMonitor {
     };
 
     return {
-      current: current!,
+      current: current || { heapUsed: 0, heapTotal: 0, external: 0, rss: 0, timestamp: Date.now() },
       peak,
       average,
       snapshots: count,
