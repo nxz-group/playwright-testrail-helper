@@ -56,11 +56,11 @@ export class PerformanceMonitor {
   startOperation(operationId: string, operationName: string, metadata?: Record<string, any>): void {
     const startTime = performance.now();
     this.activeOperations.set(operationId, startTime);
-    
+
     this.logger.debug('Operation started', {
       operationId,
       operationName,
-      metadata
+      metadata,
     });
   }
 
@@ -88,7 +88,7 @@ export class PerformanceMonitor {
       endTime,
       duration,
       success,
-      metadata
+      metadata,
     };
 
     // Store metric
@@ -105,7 +105,7 @@ export class PerformanceMonitor {
       operationName,
       duration: `${duration.toFixed(2)}ms`,
       success,
-      metadata
+      metadata,
     });
 
     return metric;
@@ -127,7 +127,10 @@ export class PerformanceMonitor {
       this.endOperation(operationId, operationName, true, metadata);
       return result;
     } catch (error) {
-      this.endOperation(operationId, operationName, false, { ...metadata, error: (error as Error).message });
+      this.endOperation(operationId, operationName, false, {
+        ...metadata,
+        error: (error as Error).message,
+      });
       throw error;
     }
   }
@@ -135,11 +138,7 @@ export class PerformanceMonitor {
   /**
    * Time a synchronous operation
    */
-  timeSync<T>(
-    operationName: string,
-    operation: () => T,
-    metadata?: Record<string, any>
-  ): T {
+  timeSync<T>(operationName: string, operation: () => T, metadata?: Record<string, any>): T {
     const operationId = `${operationName}-${Date.now()}-${Math.random()}`;
     this.startOperation(operationId, operationName, metadata);
 
@@ -148,7 +147,10 @@ export class PerformanceMonitor {
       this.endOperation(operationId, operationName, true, metadata);
       return result;
     } catch (error) {
-      this.endOperation(operationId, operationName, false, { ...metadata, error: (error as Error).message });
+      this.endOperation(operationId, operationName, false, {
+        ...metadata,
+        error: (error as Error).message,
+      });
       throw error;
     }
   }
@@ -165,7 +167,7 @@ export class PerformanceMonitor {
     const totalOperations = operationMetrics.length;
     const successfulOperations = operationMetrics.filter(m => m.success).length;
     const failedOperations = totalOperations - successfulOperations;
-    
+
     const durations = operationMetrics.map(m => m.duration);
     const totalDuration = durations.reduce((sum, d) => sum + d, 0);
     const averageDuration = totalDuration / totalOperations;
@@ -173,7 +175,9 @@ export class PerformanceMonitor {
     const maxDuration = Math.max(...durations);
 
     // Calculate operations per second based on time span
-    const timeSpan = (operationMetrics[operationMetrics.length - 1]?.endTime || 0) - (operationMetrics[0]?.startTime || 0);
+    const timeSpan =
+      (operationMetrics[operationMetrics.length - 1]?.endTime || 0) -
+      (operationMetrics[0]?.startTime || 0);
     const operationsPerSecond = timeSpan > 0 ? (totalOperations * 1000) / timeSpan : 0;
 
     return {
@@ -184,7 +188,7 @@ export class PerformanceMonitor {
       minDuration,
       maxDuration,
       totalDuration,
-      operationsPerSecond
+      operationsPerSecond,
     };
   }
 
@@ -200,7 +204,7 @@ export class PerformanceMonitor {
    */
   getPerformanceReport(): Record<string, PerformanceStats> {
     const report: Record<string, PerformanceStats> = {};
-    
+
     for (const operationName of this.getTrackedOperations()) {
       const stats = this.getStats(operationName);
       if (stats) {
@@ -247,7 +251,7 @@ export class PerformanceMonitor {
       heapTotal: memUsage.heapTotal,
       external: memUsage.external,
       rss: memUsage.rss,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
 
     this.memorySnapshots.push(snapshot);
@@ -274,7 +278,7 @@ export class PerformanceMonitor {
     }
 
     const current = this.memorySnapshots[this.memorySnapshots.length - 1];
-    const peak = this.memorySnapshots.reduce((max, snapshot) => 
+    const peak = this.memorySnapshots.reduce((max, snapshot) =>
       snapshot.heapUsed > max.heapUsed ? snapshot : max
     );
 
@@ -283,7 +287,7 @@ export class PerformanceMonitor {
         heapUsed: acc.heapUsed + snapshot.heapUsed,
         heapTotal: acc.heapTotal + snapshot.heapTotal,
         external: acc.external + snapshot.external,
-        rss: acc.rss + snapshot.rss
+        rss: acc.rss + snapshot.rss,
       }),
       { heapUsed: 0, heapTotal: 0, external: 0, rss: 0 }
     );
@@ -293,14 +297,14 @@ export class PerformanceMonitor {
       heapUsed: totals.heapUsed / count,
       heapTotal: totals.heapTotal / count,
       external: totals.external / count,
-      rss: totals.rss / count
+      rss: totals.rss / count,
     };
 
     return {
       current: current!,
       peak,
       average,
-      snapshots: count
+      snapshots: count,
     };
   }
 
@@ -343,7 +347,7 @@ export class PerformanceMonitor {
       operations: Object.keys(report).length,
       totalMetrics: Object.values(report).reduce((sum, stats) => sum + stats.totalOperations, 0),
       slowOperations: slowOps.length,
-      memorySnapshots: memoryStats?.snapshots || 0
+      memorySnapshots: memoryStats?.snapshots || 0,
     });
 
     // Log each operation's stats
@@ -355,7 +359,7 @@ export class PerformanceMonitor {
         avgDuration: `${stats.averageDuration.toFixed(2)}ms`,
         minDuration: `${stats.minDuration.toFixed(2)}ms`,
         maxDuration: `${stats.maxDuration.toFixed(2)}ms`,
-        opsPerSec: stats.operationsPerSecond.toFixed(2)
+        opsPerSec: stats.operationsPerSecond.toFixed(2),
       });
     }
 
@@ -365,7 +369,7 @@ export class PerformanceMonitor {
         currentHeap: `${(memoryStats.current.heapUsed / 1024 / 1024).toFixed(2)}MB`,
         peakHeap: `${(memoryStats.peak.heapUsed / 1024 / 1024).toFixed(2)}MB`,
         avgHeap: `${(memoryStats.average.heapUsed / 1024 / 1024).toFixed(2)}MB`,
-        currentRSS: `${(memoryStats.current.rss / 1024 / 1024).toFixed(2)}MB`
+        currentRSS: `${(memoryStats.current.rss / 1024 / 1024).toFixed(2)}MB`,
       });
     }
 
@@ -374,8 +378,8 @@ export class PerformanceMonitor {
       this.logger.warn(`Found ${slowOps.length} slow operations`, {
         slowest: {
           operation: slowOps[0]?.operationName || 'unknown',
-          duration: `${slowOps[0]?.duration.toFixed(2) || 0}ms`
-        }
+          duration: `${slowOps[0]?.duration.toFixed(2) || 0}ms`,
+        },
       });
     }
   }
@@ -393,7 +397,7 @@ export class PerformanceMonitor {
       metrics: Object.fromEntries(this.metrics),
       memorySnapshots: [...this.memorySnapshots],
       summary: this.getPerformanceReport(),
-      exportTime: Date.now()
+      exportTime: Date.now(),
     };
   }
 }
