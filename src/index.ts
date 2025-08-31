@@ -14,9 +14,19 @@ export { ConfigManager } from './config/TestRailConfig';
 // Constants and mappings
 export * from './config/constants';
 
+// HTTP Client
+export { TestRailApiClient } from './client/TestRailApiClient';
+
+// Manager classes
+export { TestCaseManager } from './managers/TestCaseManager';
+export { TestRunManager } from './managers/TestRunManager';
+export { ResultManager } from './managers/ResultManager';
+
 // Utilities
 export { FileUtils } from './utils/FileUtils';
 export { Logger } from './utils/Logger';
+export { CircuitBreaker, CircuitBreakerState } from './utils/CircuitBreaker';
+export { ErrorHandler, ErrorSeverity, ErrorCategory } from './utils/ErrorHandler';
 
 // Re-export commonly used constants for convenience
 export {
