@@ -1,9 +1,13 @@
-import { WorkerCoordinator, WorkerInfo, CoordinationConfig } from '../../../src/coordination/WorkerCoordinator';
-import { ConfigManager } from '../../../src/config/TestRailConfig';
-import { TestResult } from '../../../src/types';
-import { FileUtils } from '../../../src/utils/FileUtils';
-import * as path from 'path';
 import * as fs from 'fs/promises';
+import * as path from 'path';
+import type { ConfigManager } from '../../../src/config/TestRailConfig';
+import {
+  type CoordinationConfig,
+  WorkerCoordinator,
+  WorkerInfo,
+} from '../../../src/coordination/WorkerCoordinator';
+import type { TestResult } from '../../../src/types';
+import { FileUtils } from '../../../src/utils/FileUtils';
 
 // Mock dependencies
 jest.mock('../../../src/utils/FileUtils');
@@ -19,24 +23,24 @@ describe('WorkerCoordinator', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    
+
     // Mock the ConfigManager to avoid initialization issues
     testRailConfig = {
       getConfig: jest.fn().mockReturnValue({
         host: 'https://test.testrail.com',
         username: 'test@example.com',
         password: 'test-password',
-        projectId: 1
-      })
+        projectId: 1,
+      }),
     } as any;
     mockCoordinationDir = '/tmp/test-coordination';
-    
+
     coordinationConfig = {
       lockTimeout: 5000,
       heartbeatInterval: 1000,
       workerTimeout: 10000,
       maxRetries: 2,
-      coordinationDir: mockCoordinationDir
+      coordinationDir: mockCoordinationDir,
     };
 
     coordinator = new WorkerCoordinator(testRailConfig, coordinationConfig);
@@ -80,7 +84,7 @@ describe('WorkerCoordinator', () => {
           pid: process.pid,
           status: 'active',
           testCount: 0,
-          resultsProcessed: 0
+          resultsProcessed: 0,
         })
       );
     });
@@ -108,7 +112,7 @@ describe('WorkerCoordinator', () => {
         expect.stringContaining('test-resource.lock'),
         expect.objectContaining({
           resource: 'test-resource',
-          workerId: expect.any(String)
+          workerId: expect.any(String),
         }),
         { flag: 'wx' }
       );
@@ -119,7 +123,7 @@ describe('WorkerCoordinator', () => {
         workerId: 'other-worker',
         resource: 'test-resource',
         acquiredAt: new Date(),
-        expiresAt: new Date(Date.now() + 10000)
+        expiresAt: new Date(Date.now() + 10000),
       };
       mockFileUtils.readJsonFile.mockResolvedValue(existingLock);
 
@@ -133,7 +137,7 @@ describe('WorkerCoordinator', () => {
         workerId: 'other-worker',
         resource: 'test-resource',
         acquiredAt: new Date(Date.now() - 20000),
-        expiresAt: new Date(Date.now() - 10000)
+        expiresAt: new Date(Date.now() - 10000),
       };
       mockFileUtils.readJsonFile.mockResolvedValue(expiredLock);
       mockFileUtils.writeJsonFile.mockResolvedValue(undefined);
@@ -149,7 +153,7 @@ describe('WorkerCoordinator', () => {
         workerId: (coordinator as any).workerId,
         resource: 'test-resource',
         acquiredAt: new Date(),
-        expiresAt: new Date(Date.now() + 10000)
+        expiresAt: new Date(Date.now() + 10000),
       };
       mockFileUtils.readJsonFile.mockResolvedValue(ownLock);
 
@@ -166,7 +170,7 @@ describe('WorkerCoordinator', () => {
         workerId: 'other-worker',
         resource: 'test-resource',
         acquiredAt: new Date(),
-        expiresAt: new Date(Date.now() + 10000)
+        expiresAt: new Date(Date.now() + 10000),
       };
       mockFileUtils.readJsonFile.mockResolvedValue(otherLock);
 
@@ -191,7 +195,7 @@ describe('WorkerCoordinator', () => {
           lastHeartbeat: new Date(),
           status: 'active' as const,
           testCount: 5,
-          resultsProcessed: 3
+          resultsProcessed: 3,
         },
         {
           id: 'worker-2',
@@ -200,8 +204,8 @@ describe('WorkerCoordinator', () => {
           lastHeartbeat: new Date(Date.now() - 20000), // Old heartbeat
           status: 'active' as const,
           testCount: 2,
-          resultsProcessed: 1
-        }
+          resultsProcessed: 1,
+        },
       ];
 
       mockFileUtils.listFiles.mockResolvedValue(['worker-1.worker', 'worker-2.worker']);
@@ -239,7 +243,7 @@ describe('WorkerCoordinator', () => {
       mockFileUtils.readJsonFile.mockResolvedValue({
         id: 'worker-1',
         status: 'active',
-        lastHeartbeat: new Date()
+        lastHeartbeat: new Date(),
       });
 
       const completed = await coordinator.waitForAllWorkers(5000);
@@ -252,7 +256,7 @@ describe('WorkerCoordinator', () => {
       mockFileUtils.readJsonFile.mockResolvedValue({
         id: 'worker-1',
         status: 'active',
-        lastHeartbeat: new Date()
+        lastHeartbeat: new Date(),
       });
 
       const completed = await coordinator.waitForAllWorkers(100); // Very short timeout
@@ -269,10 +273,10 @@ describe('WorkerCoordinator', () => {
     it('should aggregate results from all workers', async () => {
       const mockResults1: TestResult[] = [
         { case_id: 1, status_id: 1, comment: 'Test 1 passed', assignedto_id: 1, elapsed: 10 },
-        { case_id: 2, status_id: 5, comment: 'Test 2 failed', assignedto_id: 1, elapsed: 15 }
+        { case_id: 2, status_id: 5, comment: 'Test 2 failed', assignedto_id: 1, elapsed: 15 },
       ];
       const mockResults2: TestResult[] = [
-        { case_id: 3, status_id: 1, comment: 'Test 3 passed', assignedto_id: 1, elapsed: 8 }
+        { case_id: 3, status_id: 1, comment: 'Test 3 passed', assignedto_id: 1, elapsed: 8 },
       ];
 
       mockFileUtils.listFiles.mockResolvedValue(['worker-1.results', 'worker-2.results']);
@@ -298,7 +302,7 @@ describe('WorkerCoordinator', () => {
     it('should store results for worker', async () => {
       const testResults: TestResult[] = [
         { case_id: 1, status_id: 1, comment: 'Test passed', assignedto_id: 1, elapsed: 12 },
-        { case_id: 2, status_id: 5, comment: 'Test failed', assignedto_id: 1, elapsed: 18 }
+        { case_id: 2, status_id: 5, comment: 'Test failed', assignedto_id: 1, elapsed: 18 },
       ];
 
       await coordinator.storeResults(testResults);
@@ -319,7 +323,7 @@ describe('WorkerCoordinator', () => {
       const staleWorker = {
         id: 'stale-worker',
         lastHeartbeat: new Date(Date.now() - 120000), // 2 minutes ago
-        status: 'active'
+        status: 'active',
       };
 
       mockFileUtils.listFiles.mockResolvedValue(['stale-worker.worker']);
@@ -337,7 +341,7 @@ describe('WorkerCoordinator', () => {
       const expiredLock = {
         workerId: 'some-worker',
         resource: 'expired-resource',
-        expiresAt: new Date(Date.now() - 10000) // Expired 10 seconds ago
+        expiresAt: new Date(Date.now() - 10000), // Expired 10 seconds ago
       };
 
       mockFileUtils.listFiles.mockResolvedValue(['expired-resource.lock']);
@@ -354,7 +358,7 @@ describe('WorkerCoordinator', () => {
       const ownLock = {
         workerId: (coordinator as any).workerId,
         resource: 'my-resource',
-        expiresAt: new Date(Date.now() + 10000)
+        expiresAt: new Date(Date.now() + 10000),
       };
 
       mockFileUtils.listFiles.mockResolvedValue(['my-resource.lock']);

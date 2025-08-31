@@ -1,4 +1,4 @@
-import { CacheManager, CacheEntry, CacheStats } from '../../../src/utils/CacheManager';
+import { CacheEntry, CacheManager, CacheStats } from '../../../src/utils/CacheManager';
 
 // Mock Logger
 jest.mock('../../../src/utils/Logger');
@@ -12,7 +12,7 @@ describe('CacheManager', () => {
       maxMemory: 1024 * 1024, // 1MB
       defaultTtl: 1000, // 1 second
       cleanupInterval: 100, // 100ms
-      enableStats: true
+      enableStats: true,
     });
   });
 
@@ -49,7 +49,7 @@ describe('CacheManager', () => {
 
     it('should check if key exists', () => {
       cache.set('key1', 'value1');
-      
+
       expect(cache.has('key1')).toBe(true);
       expect(cache.has('non-existent')).toBe(false);
     });
@@ -57,7 +57,7 @@ describe('CacheManager', () => {
     it('should clear all entries', () => {
       cache.set('key1', 'value1');
       cache.set('key2', 'value2');
-      
+
       expect(cache.get('key1')).toBe('value1');
       expect(cache.get('key2')).toBe('value2');
 
@@ -71,20 +71,20 @@ describe('CacheManager', () => {
   describe('TTL (Time To Live)', () => {
     it('should expire entries after TTL', async () => {
       cache.set('key1', 'value1', 50); // 50ms TTL
-      
+
       expect(cache.get('key1')).toBe('value1');
 
       // Wait for expiration
       await new Promise(resolve => setTimeout(resolve, 60));
-      
+
       expect(cache.get('key1')).toBeNull();
     });
 
     it('should use default TTL when not specified', async () => {
       cache.set('key1', 'value1'); // Uses default TTL (1000ms)
-      
+
       expect(cache.get('key1')).toBe('value1');
-      
+
       // Should still be valid after 100ms
       await new Promise(resolve => setTimeout(resolve, 100));
       expect(cache.get('key1')).toBe('value1');
@@ -92,7 +92,7 @@ describe('CacheManager', () => {
 
     it('should update TTL for existing entries', () => {
       cache.set('key1', 'value1', 1000);
-      
+
       const updated = cache.setTtl('key1', 2000);
       expect(updated).toBe(true);
 
@@ -112,9 +112,9 @@ describe('CacheManager', () => {
 
     it('should return 0 TTL for expired entries', async () => {
       cache.set('key1', 'value1', 50);
-      
+
       await new Promise(resolve => setTimeout(resolve, 60));
-      
+
       const ttl = cache.getTtl('key1');
       expect(ttl).toBe(0);
     });
@@ -125,13 +125,13 @@ describe('CacheManager', () => {
       cache.set('key1', 'existing-value');
 
       const value = await cache.getOrSet('key1', async () => 'new-value');
-      
+
       expect(value).toBe('existing-value');
     });
 
     it('should set and return new value when key does not exist', async () => {
       const value = await cache.getOrSet('key1', async () => 'new-value');
-      
+
       expect(value).toBe('new-value');
       expect(cache.get('key1')).toBe('new-value');
     });
@@ -150,7 +150,7 @@ describe('CacheManager', () => {
 
     it('should work with synchronous factory', () => {
       const value = cache.getOrSetSync('key1', () => 'sync-value');
-      
+
       expect(value).toBe('sync-value');
       expect(cache.get('key1')).toBe('sync-value');
     });
@@ -176,7 +176,7 @@ describe('CacheManager', () => {
 
     it('should track access count', () => {
       cache.set('key1', 'value1');
-      
+
       cache.get('key1');
       cache.get('key1');
       cache.get('key1');
@@ -204,7 +204,7 @@ describe('CacheManager', () => {
 
     it('should get entries by pattern', () => {
       const userEntries = cache.getByPattern(/^user:/);
-      
+
       expect(userEntries).toHaveLength(2);
       expect(userEntries.map(e => e.key)).toContain('user:1');
       expect(userEntries.map(e => e.key)).toContain('user:2');
@@ -214,7 +214,7 @@ describe('CacheManager', () => {
 
     it('should delete entries by pattern', () => {
       const deletedCount = cache.deleteByPattern(/^user:/);
-      
+
       expect(deletedCount).toBe(2);
       expect(cache.get('user:1')).toBeNull();
       expect(cache.get('user:2')).toBeNull();
@@ -224,9 +224,9 @@ describe('CacheManager', () => {
 
     it('should not return expired entries in pattern search', async () => {
       cache.set('temp:1', 'temp-data', 50); // 50ms TTL
-      
+
       await new Promise(resolve => setTimeout(resolve, 60));
-      
+
       const tempEntries = cache.getByPattern(/^temp:/);
       expect(tempEntries).toHaveLength(0);
     });
@@ -236,7 +236,7 @@ describe('CacheManager', () => {
     beforeEach(() => {
       cache.set('key1', 'value1');
       cache.set('key2', 'value2');
-      
+
       cache.get('key1'); // Hit
       cache.get('key1'); // Hit
       cache.get('non-existent'); // Miss
@@ -248,7 +248,7 @@ describe('CacheManager', () => {
       expect(stats.totalEntries).toBe(2);
       expect(stats.hitCount).toBe(2);
       expect(stats.missCount).toBe(1);
-      expect(stats.hitRate).toBeCloseTo(2/3, 2);
+      expect(stats.hitRate).toBeCloseTo(2 / 3, 2);
       expect(stats.totalSize).toBeGreaterThan(0);
       expect(stats.oldestEntry).toBeDefined();
       expect(stats.newestEntry).toBeDefined();
@@ -283,13 +283,13 @@ describe('CacheManager', () => {
     it('should automatically cleanup expired entries', async () => {
       cache.set('key1', 'value1', 50); // 50ms TTL
       cache.set('key2', 'value2', 200); // 200ms TTL
-      
+
       expect(cache.get('key1')).toBe('value1');
       expect(cache.get('key2')).toBe('value2');
 
       // Wait for first key to expire and cleanup to run
       await new Promise(resolve => setTimeout(resolve, 150));
-      
+
       expect(cache.get('key1')).toBeNull(); // Should be cleaned up
       expect(cache.get('key2')).toBe('value2'); // Should still exist
     });
@@ -297,16 +297,16 @@ describe('CacheManager', () => {
     it('should manually cleanup expired entries', async () => {
       cache.set('key1', 'value1', 50);
       cache.set('key2', 'value2', 50);
-      
+
       await new Promise(resolve => setTimeout(resolve, 60));
-      
+
       const removedCount = cache.cleanup();
       expect(removedCount).toBe(2);
     });
 
     it('should return 0 when no entries to cleanup', () => {
       cache.set('key1', 'value1', 10000); // Long TTL
-      
+
       const removedCount = cache.cleanup();
       expect(removedCount).toBe(0);
     });
@@ -321,7 +321,7 @@ describe('CacheManager', () => {
 
     it('should return all keys', () => {
       const keys = cache.keys();
-      
+
       expect(keys).toHaveLength(3);
       expect(keys).toContain('key1');
       expect(keys).toContain('key2');
@@ -330,7 +330,7 @@ describe('CacheManager', () => {
 
     it('should handle shutdown gracefully', () => {
       expect(() => cache.shutdown()).not.toThrow();
-      
+
       // After shutdown, cache should be empty
       expect(cache.get('key1')).toBeNull();
     });
@@ -339,39 +339,39 @@ describe('CacheManager', () => {
   describe('configuration', () => {
     it('should use default configuration when not provided', () => {
       const defaultCache = new CacheManager();
-      
+
       // Test that it works with defaults
       defaultCache.set('test', 'value');
       expect(defaultCache.get('test')).toBe('value');
-      
+
       defaultCache.shutdown();
     });
 
     it('should merge provided configuration with defaults', () => {
       const customCache = new CacheManager({
         maxSize: 10,
-        defaultTtl: 5000
+        defaultTtl: 5000,
       });
-      
+
       customCache.set('test', 'value');
       expect(customCache.get('test')).toBe('value');
-      
+
       customCache.shutdown();
     });
 
     it('should disable stats when configured', () => {
       const noStatsCache = new CacheManager({
-        enableStats: false
+        enableStats: false,
       });
-      
+
       noStatsCache.set('key1', 'value1');
       noStatsCache.get('key1');
       noStatsCache.get('non-existent');
-      
+
       const stats = noStatsCache.getStats();
       expect(stats.hitCount).toBe(0);
       expect(stats.missCount).toBe(0);
-      
+
       noStatsCache.shutdown();
     });
   });
@@ -380,7 +380,7 @@ describe('CacheManager', () => {
     it('should handle null and undefined values', () => {
       cache.set('null-key', null as any);
       cache.set('undefined-key', undefined as any);
-      
+
       expect(cache.get('null-key')).toBeNull();
       expect(cache.get('undefined-key')).toBeUndefined();
     });
@@ -391,22 +391,22 @@ describe('CacheManager', () => {
         name: 'test',
         nested: {
           array: [1, 2, 3],
-          date: new Date()
-        }
+          date: new Date(),
+        },
       };
-      
+
       const complexCache = new CacheManager<typeof complexObject>();
       complexCache.set('complex', complexObject);
-      
+
       const retrieved = complexCache.get('complex');
       expect(retrieved).toEqual(complexObject);
-      
+
       complexCache.shutdown();
     });
 
     it('should handle very large values', () => {
       const largeValue = 'x'.repeat(10000); // 10KB string
-      
+
       cache.set('large', largeValue);
       expect(cache.get('large')).toBe(largeValue);
     });

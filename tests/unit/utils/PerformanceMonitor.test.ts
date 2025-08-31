@@ -1,4 +1,8 @@
-import { PerformanceMonitor, PerformanceMetrics, PerformanceStats } from '../../../src/utils/PerformanceMonitor';
+import {
+  PerformanceMetrics,
+  PerformanceMonitor,
+  PerformanceStats,
+} from '../../../src/utils/PerformanceMonitor';
 
 // Mock Logger
 jest.mock('../../../src/utils/Logger');
@@ -31,7 +35,7 @@ describe('PerformanceMonitor', () => {
       const operationName = 'test-operation';
 
       monitor.startOperation(operationId, operationName, { userId: 123 });
-      
+
       // Simulate some work
       const start = performance.now();
       while (performance.now() - start < 10) {
@@ -58,7 +62,9 @@ describe('PerformanceMonitor', () => {
       const operationName = 'failing-operation';
 
       monitor.startOperation(operationId, operationName);
-      const metric = monitor.endOperation(operationId, operationName, false, { error: 'Test error' });
+      const metric = monitor.endOperation(operationId, operationName, false, {
+        error: 'Test error',
+      });
 
       expect(metric).toBeDefined();
       expect(metric!.success).toBe(false);
@@ -94,12 +100,9 @@ describe('PerformanceMonitor', () => {
       const error = new Error('Async operation failed');
 
       await expect(
-        monitor.timeOperation(
-          operationName,
-          async () => {
-            throw error;
-          }
-        )
+        monitor.timeOperation(operationName, async () => {
+          throw error;
+        })
       ).rejects.toThrow('Async operation failed');
 
       const stats = monitor.getStats(operationName);
@@ -156,16 +159,16 @@ describe('PerformanceMonitor', () => {
     beforeEach(() => {
       // Add some test metrics
       const operationName = 'test-stats';
-      
+
       // Simulate multiple operations with different durations
       monitor.startOperation('op1', operationName);
       monitor.endOperation('op1', operationName, true); // ~0ms
-      
+
       monitor.startOperation('op2', operationName);
       const start = performance.now();
       while (performance.now() - start < 5) {} // ~5ms
       monitor.endOperation('op2', operationName, true);
-      
+
       monitor.startOperation('op3', operationName);
       monitor.endOperation('op3', operationName, false); // Failed operation
     });
@@ -211,7 +214,7 @@ describe('PerformanceMonitor', () => {
 
       expect(Object.keys(report)).toContain('op-1');
       expect(Object.keys(report)).toContain('op-2');
-      
+
       expect(report['op-1']?.totalOperations).toBe(1);
       expect(report['op-2']?.totalOperations).toBe(1);
     });
@@ -235,16 +238,16 @@ describe('PerformanceMonitor', () => {
 
     it('should start and stop memory monitoring', () => {
       monitor.startMemoryMonitoring(100); // 100ms interval
-      
+
       // Wait a bit to capture some snapshots
-      return new Promise<void>((resolve) => {
+      return new Promise<void>(resolve => {
         setTimeout(() => {
           monitor.stopMemoryMonitoring();
-          
+
           const stats = monitor.getMemoryStats();
           expect(stats).toBeDefined();
           expect(stats!.snapshots).toBeGreaterThan(0);
-          
+
           resolve();
         }, 250);
       });

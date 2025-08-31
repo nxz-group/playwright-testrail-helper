@@ -151,7 +151,7 @@ export class BatchProcessor<T, R> {
 
   private shouldProcessBatch(): boolean {
     return (
-      this.pendingItems.length >= this.config.maxBatchSize ||
+      this.pendingItems.length >= this.config.maxBatchSize &&
       this.activeBatches < this.config.maxConcurrency
     );
   }

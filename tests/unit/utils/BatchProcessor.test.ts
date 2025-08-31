@@ -1,13 +1,17 @@
-import { BatchProcessor, createBatchProcessor, RateLimitedBatchProcessor } from '../../../src/utils/BatchProcessor';
+import {
+  BatchProcessor,
+  createBatchProcessor,
+  RateLimitedBatchProcessor,
+} from '../../../src/utils/BatchProcessor';
 
 // Mock dependencies
 jest.mock('../../../src/utils/Logger');
 jest.mock('../../../src/utils/PerformanceMonitor', () => ({
   PerformanceMonitor: {
     getInstance: jest.fn(() => ({
-      timeOperation: jest.fn((name, operation) => operation())
-    }))
-  }
+      timeOperation: jest.fn((name, operation) => operation()),
+    })),
+  },
 }));
 
 describe('BatchProcessor', () => {
@@ -21,7 +25,7 @@ describe('BatchProcessor', () => {
       maxWaitTime: 100,
       maxConcurrency: 2,
       retryAttempts: 2,
-      retryDelay: 50
+      retryDelay: 50,
     });
   });
 
@@ -42,11 +46,7 @@ describe('BatchProcessor', () => {
     it('should batch multiple items together', async () => {
       mockProcessorFn.mockResolvedValue(['result-1', 'result-2', 'result-3']);
 
-      const promises = [
-        processor.process(1),
-        processor.process(2),
-        processor.process(3)
-      ];
+      const promises = [processor.process(1), processor.process(2), processor.process(3)];
 
       const results = await Promise.all(promises);
 
@@ -88,8 +88,11 @@ describe('BatchProcessor', () => {
     it('should process multiple items in batch', async () => {
       const items = [1, 2, 3, 4, 5];
       const expectedResults = ['result-1', 'result-2', 'result-3', 'result-4', 'result-5'];
-      
-      mockProcessorFn.mockResolvedValue(expectedResults);
+
+      // Mock to return results based on batch size
+      mockProcessorFn
+        .mockResolvedValueOnce(['result-1', 'result-2', 'result-3']) // First batch (3 items)
+        .mockResolvedValueOnce(['result-4', 'result-5']); // Second batch (2 items)
 
       const results = await processor.processMultiple(items);
 
@@ -109,19 +112,14 @@ describe('BatchProcessor', () => {
       const error = new Error('Processing failed');
       mockProcessorFn.mockRejectedValue(error);
 
-      const promises = [
-        processor.process(1),
-        processor.process(2)
-      ];
+      const promises = [processor.process(1), processor.process(2)];
 
       await expect(Promise.all(promises)).rejects.toThrow('Processing failed');
     });
 
     it('should retry failed operations', async () => {
       const error = new Error('Temporary failure');
-      mockProcessorFn
-        .mockRejectedValueOnce(error)
-        .mockResolvedValue(['result-1']);
+      mockProcessorFn.mockRejectedValueOnce(error).mockResolvedValue(['result-1']);
 
       const result = await processor.process(1);
 
@@ -140,17 +138,16 @@ describe('BatchProcessor', () => {
     it('should handle incomplete results', async () => {
       mockProcessorFn.mockResolvedValue(['result-1']); // Only 1 result for 2 items
 
-      const promises = [
-        processor.process(1),
-        processor.process(2)
-      ];
+      const promises = [processor.process(1), processor.process(2)];
 
       const results = await Promise.allSettled(promises);
 
       expect(results[0]?.status).toBe('fulfilled');
       expect((results[0] as PromiseFulfilledResult<string>).value).toBe('result-1');
       expect(results[1]?.status).toBe('rejected');
-      expect((results[1] as PromiseRejectedResult).reason.message).toBe('Batch processing incomplete');
+      expect((results[1] as PromiseRejectedResult).reason.message).toBe(
+        'Batch processing incomplete'
+      );
     });
   });
 
@@ -159,19 +156,20 @@ describe('BatchProcessor', () => {
       let activeProcessing = 0;
       let maxConcurrentProcessing = 0;
 
-      mockProcessorFn.mockImplementation(async (items) => {
+      mockProcessorFn.mockImplementation(async items => {
         activeProcessing++;
         maxConcurrentProcessing = Math.max(maxConcurrentProcessing, activeProcessing);
-        
+
         await new Promise(resolve => setTimeout(resolve, 50));
-        
+
         activeProcessing--;
         return items.map((_, i) => `result-${i}`);
       });
 
       // Start multiple batches
       const promises = [];
-      for (let i = 0; i < 9; i++) { // 3 batches of 3 items each
+      for (let i = 0; i < 9; i++) {
+        // 3 batches of 3 items each
         promises.push(processor.process(i));
       }
 
@@ -181,9 +179,9 @@ describe('BatchProcessor', () => {
     });
 
     it('should queue batches when concurrency limit is reached', async () => {
-      let processingOrder: number[] = [];
+      const processingOrder: number[] = [];
 
-      mockProcessorFn.mockImplementation(async (items) => {
+      mockProcessorFn.mockImplementation(async items => {
         processingOrder.push(items[0] || 0);
         await new Promise(resolve => setTimeout(resolve, 30));
         return items.map(item => `result-${item}`);
@@ -237,17 +235,17 @@ describe('BatchProcessor', () => {
           maxWaitTime: 100,
           maxConcurrency: 2,
           retryAttempts: 2,
-          retryDelay: 50
-        })
+          retryDelay: 50,
+        }),
       });
     });
 
     it('should update statistics during processing', async () => {
-      mockProcessorFn.mockImplementation(async (items) => {
+      mockProcessorFn.mockImplementation(async items => {
         // Check stats during processing
         const stats = processor.getStats();
         expect(stats.activeBatches).toBeGreaterThan(0);
-        
+
         return items.map(item => `result-${item}`);
       });
 
@@ -271,19 +269,19 @@ describe('BatchProcessor', () => {
     it('should wait for active batches to complete', async () => {
       let processingComplete = false;
 
-      mockProcessorFn.mockImplementation(async (items) => {
+      mockProcessorFn.mockImplementation(async items => {
         await new Promise(resolve => setTimeout(resolve, 100));
         processingComplete = true;
         return items.map(item => `result-${item}`);
       });
 
       const promise = processor.process(1);
-      
+
       // Start shutdown while processing
       const shutdownPromise = processor.shutdown();
 
       expect(processingComplete).toBe(false);
-      
+
       await shutdownPromise;
       await promise;
 
@@ -305,9 +303,7 @@ describe('BatchProcessor', () => {
 
   describe('edge cases', () => {
     it('should handle rapid successive operations', async () => {
-      mockProcessorFn.mockImplementation(async (items) => 
-        items.map(item => `result-${item}`)
-      );
+      mockProcessorFn.mockImplementation(async items => items.map(item => `result-${item}`));
 
       const promises = [];
       for (let i = 0; i < 50; i++) {
@@ -349,7 +345,7 @@ describe('RateLimitedBatchProcessor', () => {
         maxWaitTime: 50,
         maxConcurrency: 1,
         retryAttempts: 1,
-        retryDelay: 10
+        retryDelay: 10,
       }
     );
   });
@@ -361,7 +357,7 @@ describe('RateLimitedBatchProcessor', () => {
   it('should enforce minimum request interval', async () => {
     const timestamps: number[] = [];
 
-    mockProcessorFn.mockImplementation(async (items) => {
+    mockProcessorFn.mockImplementation(async items => {
       timestamps.push(Date.now());
       return items.map(item => `result-${item}`);
     });
@@ -371,7 +367,7 @@ describe('RateLimitedBatchProcessor', () => {
       processor.process(1),
       processor.process(2),
       processor.process(3),
-      processor.process(4)
+      processor.process(4),
     ];
 
     await Promise.all(promises);
