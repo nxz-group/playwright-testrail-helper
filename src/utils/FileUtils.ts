@@ -116,4 +116,42 @@ export class FileUtils {
       await new Promise(resolve => setTimeout(resolve, checkIntervalMs));
     }
   }
+
+  /**
+   * Alias for ensureDir for compatibility
+   */
+  static async ensureDirectoryExists(dirPath: string): Promise<void> {
+    return this.ensureDir(dirPath);
+  }
+
+  /**
+   * Alias for writeJson with options support
+   */
+  static async writeJsonFile<T>(filePath: string, data: T, options?: { flag?: string }): Promise<void> {
+    const dir = dirname(filePath);
+    await this.ensureDir(dir);
+    const jsonString = JSON.stringify(data, null, 2);
+    await fs.writeFile(filePath, jsonString, { encoding: 'utf8', ...options });
+  }
+
+  /**
+   * Alias for readJson
+   */
+  static async readJsonFile<T>(filePath: string): Promise<T> {
+    return this.readJson<T>(filePath);
+  }
+
+  /**
+   * List files in directory
+   */
+  static async listFiles(dirPath: string): Promise<string[]> {
+    try {
+      return await fs.readdir(dirPath);
+    } catch (error: any) {
+      if (error.code === 'ENOENT') {
+        return [];
+      }
+      throw new Error(`Failed to list files in ${dirPath}: ${error.message}`);
+    }
+  }
 }

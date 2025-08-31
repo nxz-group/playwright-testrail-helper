@@ -28,6 +28,14 @@ export { Logger } from './utils/Logger';
 export { CircuitBreaker, CircuitBreakerState } from './utils/CircuitBreaker';
 export { ErrorHandler, ErrorSeverity, ErrorCategory } from './utils/ErrorHandler';
 
+// Week 3 Advanced Features - Worker Coordination
+export { WorkerCoordinator } from './coordination/WorkerCoordinator';
+
+// Week 3 Advanced Features - Performance & Optimization
+export { PerformanceMonitor } from './utils/PerformanceMonitor';
+export { CacheManager, globalCache } from './utils/CacheManager';
+export { BatchProcessor, createBatchProcessor, RateLimitedBatchProcessor } from './utils/BatchProcessor';
+
 // Re-export commonly used constants for convenience
 export {
   TEST_RAIL_STATUS,
