@@ -4,6 +4,16 @@
 pre-commit:
   parallel: false
   commands:
+    # Format and lint with Biome (faster than separate tools)
+    biome:
+      glob: "*.{js,ts,json}"
+      run: npx biome check --write {staged_files}
+      stage_fixed: true
+      
+    # Type check TypeScript files
+    typecheck:
+      glob: "*.{ts}"
+      run: npx tsc --noEmit
       
   scripts:
     "echo":
@@ -15,10 +25,6 @@ pre-push:
     # Check code quality with Biome
     biome-check:
       run: npm run check
-      
-    # Run full test suite before push
-    test-all:
-      run: npm test
       
     # Check test coverage
     coverage:

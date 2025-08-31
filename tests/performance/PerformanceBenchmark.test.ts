@@ -1,5 +1,5 @@
-import { PerformanceBenchmark } from '../../src/performance/PerformanceBenchmark';
 import type { TestRailApiClient } from '../../src/client/TestRailApiClient';
+import { PerformanceBenchmark } from '../../src/performance/PerformanceBenchmark';
 
 // Mock the TestRailApiClient with minimal interface for benchmarking
 const mockApiClient = {
@@ -8,7 +8,7 @@ const mockApiClient = {
   getCases: jest.fn(),
   addCase: jest.fn(),
   get: jest.fn(),
-  post: jest.fn()
+  post: jest.fn(),
 };
 
 describe('PerformanceBenchmark', () => {
@@ -47,11 +47,11 @@ describe('PerformanceBenchmark', () => {
       const suite = await benchmark.runBenchmarkSuite(mockApiClient);
 
       expect(suite.results).toHaveLength(6);
-      
+
       // Some tests should fail due to API errors
       const failedTests = suite.results.filter(r => !r.success);
       expect(failedTests.length).toBeGreaterThan(0);
-      
+
       // Failed tests should have error messages
       failedTests.forEach(test => {
         expect(test.error).toBeDefined();
@@ -65,7 +65,7 @@ describe('PerformanceBenchmark', () => {
         .mockResolvedValueOnce({ data: 'success' })
         .mockRejectedValueOnce(new Error('Failure'))
         .mockResolvedValue({ data: 'success' });
-      
+
       mockApiClient.getSections.mockResolvedValue({ data: 'success' });
       mockApiClient.getCases.mockResolvedValue({ data: 'success' });
       mockApiClient.addCase.mockResolvedValue({ data: 'success' });
@@ -82,14 +82,14 @@ describe('PerformanceBenchmark', () => {
 
   describe('individual benchmark tests', () => {
     it('should measure API response time correctly', async () => {
-      mockApiClient.getProject.mockImplementation(() => 
-        new Promise(resolve => setTimeout(() => resolve({ data: 'response' }), 100))
+      mockApiClient.getProject.mockImplementation(
+        () => new Promise(resolve => setTimeout(() => resolve({ data: 'response' }), 100))
       );
-      mockApiClient.getSections.mockImplementation(() => 
-        new Promise(resolve => setTimeout(() => resolve({ data: 'response' }), 100))
+      mockApiClient.getSections.mockImplementation(
+        () => new Promise(resolve => setTimeout(() => resolve({ data: 'response' }), 100))
       );
-      mockApiClient.getCases.mockImplementation(() => 
-        new Promise(resolve => setTimeout(() => resolve({ data: 'response' }), 100))
+      mockApiClient.getCases.mockImplementation(
+        () => new Promise(resolve => setTimeout(() => resolve({ data: 'response' }), 100))
       );
 
       const suite = await benchmark.runBenchmarkSuite(mockApiClient);
@@ -103,8 +103,8 @@ describe('PerformanceBenchmark', () => {
     });
 
     it('should measure batch operations performance', async () => {
-      mockApiClient.addCase.mockImplementation(() => 
-        new Promise(resolve => setTimeout(() => resolve({ data: 'created' }), 50))
+      mockApiClient.addCase.mockImplementation(
+        () => new Promise(resolve => setTimeout(() => resolve({ data: 'created' }), 50))
       );
 
       const suite = await benchmark.runBenchmarkSuite(mockApiClient);
@@ -117,8 +117,8 @@ describe('PerformanceBenchmark', () => {
     });
 
     it('should measure concurrent requests performance', async () => {
-      mockApiClient.getProject.mockImplementation(() => 
-        new Promise(resolve => setTimeout(() => resolve({ data: 'response' }), 100))
+      mockApiClient.getProject.mockImplementation(
+        () => new Promise(resolve => setTimeout(() => resolve({ data: 'response' }), 100))
       );
 
       const suite = await benchmark.runBenchmarkSuite(mockApiClient);
@@ -234,39 +234,33 @@ describe('PerformanceBenchmark', () => {
   describe('error handling', () => {
     it('should handle network timeouts gracefully', async () => {
       // Mock all API methods to timeout
-      mockApiClient.getProject.mockImplementation(() => 
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Network timeout')), 100)
-        )
+      mockApiClient.getProject.mockImplementation(
+        () =>
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Network timeout')), 100))
       );
-      mockApiClient.getSections.mockImplementation(() => 
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Network timeout')), 100)
-        )
+      mockApiClient.getSections.mockImplementation(
+        () =>
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Network timeout')), 100))
       );
-      mockApiClient.getCases.mockImplementation(() => 
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Network timeout')), 100)
-        )
+      mockApiClient.getCases.mockImplementation(
+        () =>
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Network timeout')), 100))
       );
-      mockApiClient.addCase.mockImplementation(() => 
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Network timeout')), 100)
-        )
+      mockApiClient.addCase.mockImplementation(
+        () =>
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Network timeout')), 100))
       );
-      (mockApiClient.get as jest.Mock).mockImplementation(() => 
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Network timeout')), 100)
-        )
+      (mockApiClient.get as jest.Mock).mockImplementation(
+        () =>
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Network timeout')), 100))
       );
-      (mockApiClient.post as jest.Mock).mockImplementation(() => 
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Network timeout')), 100)
-        )
+      (mockApiClient.post as jest.Mock).mockImplementation(
+        () =>
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Network timeout')), 100))
       );
 
       const suite = await benchmark.runBenchmarkSuite(mockApiClient);
-      
+
       // The benchmark should complete even with timeouts
       expect(suite.results).toHaveLength(6);
       expect(suite.summary.successRate).toBeLessThanOrEqual(100);
@@ -280,7 +274,7 @@ describe('PerformanceBenchmark', () => {
         heapTotal: 50 * 1024 * 1024, // 50MB
         heapUsed: 40 * 1024 * 1024, // 40MB
         external: 5 * 1024 * 1024, // 5MB
-        arrayBuffers: 1 * 1024 * 1024 // 1MB
+        arrayBuffers: 1 * 1024 * 1024, // 1MB
       })) as any;
 
       const suite = await benchmark.runBenchmarkSuite(mockApiClient);
@@ -310,7 +304,7 @@ describe('PerformanceBenchmark', () => {
 
       // Should still have all 6 benchmark tests
       expect(suite.results).toHaveLength(6);
-      
+
       // The benchmark should complete regardless of individual failures
       expect(suite.summary.successRate).toBeLessThanOrEqual(100);
     });
@@ -319,17 +313,17 @@ describe('PerformanceBenchmark', () => {
   describe('performance thresholds', () => {
     it('should identify slow API responses', async () => {
       // Mock slow API responses for all methods (reduced delay to avoid timeout)
-      mockApiClient.getProject.mockImplementation(() => 
-        new Promise(resolve => setTimeout(() => resolve({ data: 'slow response' }), 500))
+      mockApiClient.getProject.mockImplementation(
+        () => new Promise(resolve => setTimeout(() => resolve({ data: 'slow response' }), 500))
       );
-      mockApiClient.getSections.mockImplementation(() => 
-        new Promise(resolve => setTimeout(() => resolve({ data: 'slow response' }), 500))
+      mockApiClient.getSections.mockImplementation(
+        () => new Promise(resolve => setTimeout(() => resolve({ data: 'slow response' }), 500))
       );
-      mockApiClient.getCases.mockImplementation(() => 
-        new Promise(resolve => setTimeout(() => resolve({ data: 'slow response' }), 500))
+      mockApiClient.getCases.mockImplementation(
+        () => new Promise(resolve => setTimeout(() => resolve({ data: 'slow response' }), 500))
       );
-      (mockApiClient.get as jest.Mock).mockImplementation(() => 
-        new Promise(resolve => setTimeout(() => resolve({ data: 'slow response' }), 500))
+      (mockApiClient.get as jest.Mock).mockImplementation(
+        () => new Promise(resolve => setTimeout(() => resolve({ data: 'slow response' }), 500))
       );
 
       const suite = await benchmark.runBenchmarkSuite(mockApiClient);
@@ -342,16 +336,16 @@ describe('PerformanceBenchmark', () => {
 
     it('should measure performance improvements with caching', async () => {
       let callCount = 0;
-      
+
       // Mock all API methods to track calls
       const mockImplementation = () => {
         callCount++;
         const delay = callCount === 1 ? 1000 : 100;
-        return new Promise(resolve => 
+        return new Promise(resolve =>
           setTimeout(() => resolve({ data: `response ${callCount}` }), delay)
         );
       };
-      
+
       mockApiClient.getProject.mockImplementation(mockImplementation);
       mockApiClient.getSections.mockImplementation(mockImplementation);
       mockApiClient.getCases.mockImplementation(mockImplementation);
@@ -360,7 +354,7 @@ describe('PerformanceBenchmark', () => {
       (mockApiClient.post as jest.Mock).mockImplementation(mockImplementation);
 
       const suite = await benchmark.runBenchmarkSuite(mockApiClient);
-      
+
       // Verify that the benchmark suite completed
       expect(suite.results).toHaveLength(6);
       expect(callCount).toBeGreaterThanOrEqual(0);
