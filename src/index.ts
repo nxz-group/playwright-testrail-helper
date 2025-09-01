@@ -111,10 +111,10 @@ class TestRailHelper {
     // Convert Playwright TestInfo objects to TestCaseInfo with automatic enhancement
     const testList = testInfos.map((testInfo) => {
       // Handle both single testInfo and { testInfo, testResult } objects
-      if (testInfo.testInfo && testInfo.testResult) {
-        return PlaywrightConverter.convertTestInfo(testInfo.testInfo, testInfo.testResult);
+      if ((testInfo as any).testInfo && (testInfo as any).testResult) {
+        return PlaywrightConverter.convertTestInfo((testInfo as any).testInfo, (testInfo as any).testResult);
       }
-      return PlaywrightConverter.convertTestInfo(testInfo);
+      return PlaywrightConverter.convertTestInfo(testInfo as any);
     });
 
     // Use existing updateTestResult method

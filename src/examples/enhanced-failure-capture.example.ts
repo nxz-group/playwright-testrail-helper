@@ -199,7 +199,7 @@ export async function batchProcessTestResults(testResults: Array<{ testInfo: unk
 
   for (const testResult of testResults) {
     // Convert with automatic failure capture และ environment detection
-    const testCaseInfo = PlaywrightConverter.convertTestInfo(testResult.testInfo, testResult.result);
+    const testCaseInfo = PlaywrightConverter.convertTestInfo(testResult.testInfo as any, testResult.result as any);
     // ไม่ต้องทำอะไรเพิ่ม - failure info จะถูกดึงอัตโนมัติ
 
     processedResults.push(testCaseInfo);
