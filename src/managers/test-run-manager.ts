@@ -21,7 +21,7 @@ export class TestRunManager {
   constructor(
     private client: TestRailClient,
     projectId: number,
-    testRailDir: string = "testRail"
+    testRailDir = "testRail"
   ) {
     this.projectId = projectId;
     this.testRailDir = testRailDir;

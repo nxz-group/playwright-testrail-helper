@@ -66,7 +66,7 @@ export class TestRailClient {
     method: "post" | "get",
     path: string,
     data?: Record<string, unknown>,
-    retries: number = 3
+    retries = 3
   ): Promise<{ statusCode: number; body: unknown }> {
     for (let attempt = 0; attempt <= retries; attempt++) {
       try {
