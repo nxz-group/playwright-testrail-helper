@@ -1,39 +1,16 @@
 {
   "name": "playwright-testrail-helper",
-  "version": "1.2.1",
-  "description": "A TypeScript library for seamless TestRail integration with Playwright test automation, featuring automated failure capture and enhanced result comments",
-  "keywords": [
-    "playwright",
-    "testrail",
-    "test-automation",
-    "testing",
-    "typescript",
-    "test-reporting",
-    "failure-capture",
-    "enhanced-comments",
-    "error-reporting",
-    "nxz-group",
-    "qackskills"
-  ],
-  "homepage": "https://github.com/nxz-group/playwright-testrail-helper#readme",
-  "bugs": {
-    "url": "https://github.com/nxz-group/playwright-testrail-helper/issues"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/nxz-group/playwright-testrail-helper.git"
-  },
-  "license": "MIT",
-  "author": "Qackskills (NXZ-GROUP)",
+  "version": "1.3.0",
+  "description": "Internal TypeScript library for TestRail integration with Playwright test automation",
+  "private": true,
   "type": "commonjs",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "files": ["dist/**/*", "README.md", "LICENSE", "ENVIRONMENT_VARIABLES.md"],
   "scripts": {
     "build": "tsc",
     "build:watch": "tsc --watch",
     "clean": "rm -rf dist",
-    "prepublishOnly": "npm run clean && npm run build",
+    "prebuild": "npm run clean",
     "lint": "npx @biomejs/biome check --write",
     "lint:ci": "npx @biomejs/biome ci",
     "format": "npx @biomejs/biome format --write .",
@@ -60,8 +37,5 @@
   },
   "engines": {
     "node": ">=16.0.0"
-  },
-  "publishConfig": {
-    "access": "public"
   }
 }
