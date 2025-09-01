@@ -13,16 +13,29 @@ A TypeScript library for seamless TestRail integration with Playwright test auto
 
 ## Installation
 
-```bash
-# SSH (Recommended for internal repos)
-npm install git+ssh://git@github.com/nxz-group/playwright-testrail-helper.git#v1.2.2
+This is an internal library. Install it using one of these methods:
 
-# HTTPS (Alternative)
-npm install git+https://github.com/nxz-group/playwright-testrail-helper.git#v1.2.2
+```bash
+# From internal repository (SSH - Recommended)
+npm install git+ssh://git@github.com/nxz-group/playwright-testrail-helper.git#v1.3.0
+
+# From internal repository (HTTPS)
+npm install git+https://github.com/nxz-group/playwright-testrail-helper.git#v1.3.0
+
+# Or clone and link locally for development
+git clone git@github.com/nxz-group/playwright-testrail-helper.git
+cd playwright-testrail-helper
+npm install
+npm run build
+npm link
+
+# In your project
+npm link playwright-testrail-helper
 ```
 
 > 🔑 **SSH**: Requires SSH keys configured for GitHub access  
 > 🌐 **HTTPS**: May require GitHub personal access token for private repos  
+> 🔗 **Local Link**: Best for active development and testing
 > 📌 **Version**: Update the version tag as needed (e.g., #v1.2.3, #main)
 
 ## Quick Start
@@ -170,7 +183,7 @@ try {
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) file for details.
+Internal use only - proprietary to the organization.
 
 ## Support
 

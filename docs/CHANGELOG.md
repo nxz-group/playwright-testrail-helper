@@ -2,7 +2,39 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.2.0] - 2024-12-15
+## [1.3.0] - 2025-01-09
+
+### 🔄 Major Refactoring
+
+#### Internal Library Conversion
+- **Package Configuration**: Converted from public npm package to internal library
+- **Private Package**: Added `"private": true` to prevent accidental publishing
+- **Simplified Metadata**: Removed npm publishing related fields (keywords, homepage, bugs, repository, license, author, files, publishConfig)
+- **Updated Description**: Changed to reflect internal library usage
+- **Build Scripts**: Updated `prepublishOnly` to `prebuild` for internal development workflow
+
+#### Documentation Restructure
+- **Organized Structure**: Moved all documentation to `docs/` folder for better organization
+- **Installation Guide**: Updated installation instructions for internal library usage including git installation and local development setup
+- **License Update**: Changed from MIT to internal use only
+- **Removed Files**: Cleaned up public-facing documentation files no longer needed for internal use
+
+#### File Cleanup
+- **Removed .npmignore**: Not needed since package won't be published to npm
+- **Removed LICENSE**: Not required for internal library
+- **Removed Public Docs**: Cleaned up various public documentation files (ENHANCED_FEATURES.md, NEW_FEATURES_SUMMARY.md, etc.)
+
+### 📚 Documentation Improvements
+- **Installation Methods**: Added multiple installation options including SSH, HTTPS, and local linking
+- **Internal Focus**: Updated all documentation to reflect internal library usage
+- **Development Setup**: Enhanced local development instructions with npm link workflow
+
+### 🔧 Technical Changes
+- **Version Bump**: Updated to 1.3.0 to reflect significant structural changes
+- **Build Process**: Streamlined for internal development and distribution
+- **Repository Structure**: Cleaner structure focused on internal development needs
+
+## [1.2.0] - 2024-08-31
 
 ### 🚀 New Features
 
