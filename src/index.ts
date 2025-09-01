@@ -5,6 +5,7 @@ import { WorkerManager } from "./managers/worker-manager";
 import type { TestCaseInfo, TestResult } from "./types";
 import { AutomationType, Platform, Priority, TestStatus, TestTemplate, TestType } from "./utils/constants";
 import { ConfigurationError } from "./utils/errors";
+import { PlaywrightConverter } from "./utils/playwright-converter";
 import { ValidationUtils } from "./utils/validation";
 
 /**
@@ -55,7 +56,7 @@ class TestRailHelper {
       );
     }
 
-    this.projectId = parseInt(projectId, 10);
+    this.projectId = Number.parseInt(projectId, 10);
     if (Number.isNaN(this.projectId) || this.projectId <= 0) {
       throw new ConfigurationError("TEST_RAIL_PROJECT_ID must be a valid positive number");
     }
@@ -70,6 +71,54 @@ class TestRailHelper {
     this.workerManager = new WorkerManager(this.testRailDir);
 
     this.initialized = true;
+  }
+
+  /**
+   * Updates a single test result in TestRail from Playwright TestInfo (simplest usage)
+   * @param runName - Name of the test run
+   * @param sectionId - TestRail section ID where test cases belong
+   * @param platformId - Platform identifier for test execution
+   * @param testInfo - Playwright TestInfo object
+   * @param isReset - Whether to reset existing test run data (default: false)
+   * @throws {TestRailError} When validation fails or TestRail operations fail
+   */
+  public async updateTestResultFromPlaywrightSingle(
+    runName: string,
+    sectionId: number,
+    platformId: number,
+    testInfo: unknown,
+    isReset = false
+  ): Promise<void> {
+    return this.updateTestResultFromPlaywright(runName, sectionId, platformId, [testInfo], isReset);
+  }
+
+  /**
+   * Updates test results in TestRail from Playwright TestInfo objects (recommended)
+   * @param runName - Name of the test run
+   * @param sectionId - TestRail section ID where test cases belong
+   * @param platformId - Platform identifier for test execution
+   * @param testInfos - Array of Playwright TestInfo objects to process
+   * @param isReset - Whether to reset existing test run data (default: false)
+   * @throws {TestRailError} When validation fails or TestRail operations fail
+   */
+  public async updateTestResultFromPlaywright(
+    runName: string,
+    sectionId: number,
+    platformId: number,
+    testInfos: unknown[],
+    isReset = false
+  ): Promise<void> {
+    // Convert Playwright TestInfo objects to TestCaseInfo with automatic enhancement
+    const testList = testInfos.map((testInfo) => {
+      // Handle both single testInfo and { testInfo, testResult } objects
+      if (testInfo.testInfo && testInfo.testResult) {
+        return PlaywrightConverter.convertTestInfo(testInfo.testInfo, testInfo.testResult);
+      }
+      return PlaywrightConverter.convertTestInfo(testInfo);
+    });
+
+    // Use existing updateTestResult method
+    return this.updateTestResult(runName, sectionId, platformId, testList, isReset);
   }
 
   /**
@@ -169,3 +218,5 @@ export * from "./types";
 export * from "./utils/constants";
 export * from "./utils/errors";
 export * from "./utils/playwright-converter";
+export * from "./utils/failure-capture";
+export * from "./utils/comment-enhancer";

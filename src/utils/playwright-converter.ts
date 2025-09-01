@@ -9,8 +9,8 @@ interface PlaywrightTestInfo {
   endTime?: Date;
   annotations?: Array<{ type: string; description?: string }>;
   project?: { name: string };
-  attachments?: Array<{ name: string; [key: string]: any }>;
-  [key: string]: any;
+  attachments?: Array<{ name: string; [key: string]: unknown }>;
+  [key: string]: unknown;
 }
 
 interface PlaywrightTestResult {
@@ -20,12 +20,14 @@ interface PlaywrightTestResult {
     category?: string;
     title: string;
     error?: Error | { message: string };
-    [key: string]: any;
+    [key: string]: unknown;
   }>;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 import type { TestCaseInfo, TestStep } from "../types/index.js";
+import { CommentEnhancer, type EnvironmentInfo } from "./comment-enhancer.js";
+import { FailureCapture, type FailureInfo } from "./failure-capture.js";
 
 /**
  * Utility functions for converting Playwright test objects to TestRail format
@@ -50,13 +52,34 @@ export class PlaywrightConverter {
     // Extract test steps if available
     const steps = PlaywrightConverter.extractTestSteps(testInfo, testResult);
 
-    return {
+    // Extract failure information for failed tests
+    let failureInfo: FailureInfo | null = null;
+    if (status === "failed") {
+      failureInfo = FailureCapture.extractFailureInfo(testInfo, testResult, steps);
+    } else if (status === "timeOut") {
+      failureInfo = FailureCapture.extractTimeoutFailure(testInfo, testResult);
+    } else if (status === "interrupted") {
+      failureInfo = FailureCapture.extractInterruptionFailure(testInfo, testResult);
+    }
+
+    const testCaseInfo: TestCaseInfo = {
       title: testInfo.title,
       tags,
       status,
       duration,
       _steps: steps
     };
+
+    // Add failure information to test case if available
+    if (failureInfo) {
+      (testCaseInfo as TestCaseInfo)._failureInfo = failureInfo;
+    }
+
+    // Add environment information
+    const environmentInfo = CommentEnhancer.extractEnvironmentInfo(testInfo);
+    (testCaseInfo as TestCaseInfo)._environmentInfo = environmentInfo;
+
+    return testCaseInfo;
   }
 
   /**
@@ -75,11 +98,11 @@ export class PlaywrightConverter {
 
     // Extract tags from annotations
     if (testInfo.annotations) {
-      testInfo.annotations.forEach((annotation) => {
+      for (const annotation of testInfo.annotations) {
         if (annotation.type === "tag") {
           tags.push(`@${annotation.description}`);
         }
-      });
+      }
     }
 
     // Add project name as tag if available

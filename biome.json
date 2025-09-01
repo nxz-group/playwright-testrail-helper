@@ -7,7 +7,8 @@
   },
   "files": {
     "ignoreUnknown": false,
-    "includes": ["src/**/*", "*.ts", "*.js", "*.json"]
+    "include": ["src/**/*", "*.ts", "*.js", "*.json"],
+    "ignore": ["dist/**/*", "node_modules/**/*", "testRail/**/*", "*.d.ts", "coverage/**/*", "build/**/*"]
   },
   "formatter": {
     "enabled": true,
@@ -25,14 +26,24 @@
     "rules": {
       "recommended": true,
       "suspicious": {
-        "noExplicitAny": "warn"
+        "noExplicitAny": "warn",
+        "noExportsInTest": "off"
       },
       "correctness": {
-        "noUnusedVariables": "error"
+        "noUnusedVariables": "warn",
+        "noEmptyPattern": "off"
       },
       "style": {
         "useConst": "error",
-        "useTemplate": "warn"
+        "useTemplate": "warn",
+        "noNonNullAssertion": "off",
+        "noUselessElse": "warn",
+        "noUnusedTemplateLiteral": "off"
+      },
+      "complexity": {
+        "noForEach": "warn",
+        "noStaticOnlyClass": "off",
+        "noUselessConstructor": "off"
       }
     }
   },

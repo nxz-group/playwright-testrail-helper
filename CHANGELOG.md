@@ -2,6 +2,91 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.0] - 2024-12-15
+
+### 🚀 New Features
+
+#### Automated Failure Reason Capture
+- **FailureCapture utility**: Automatically extracts detailed failure information from Playwright test results
+- **Error message cleaning**: Removes ANSI escape codes and formats error messages
+- **Stack trace processing**: Captures and truncates stack traces for debugging
+- **Failed step identification**: Identifies which specific test step failed
+- **Location tracking**: Captures file, line, and column information for failures
+- **Attachment detection**: Links screenshots, videos, and trace files
+- **Timeout handling**: Special processing for timeout failures
+- **Interruption detection**: Detects browser crashes and external interruptions
+
+#### Result Comment Enhancement
+- **CommentEnhancer utility**: Creates rich, detailed comments for TestRail results
+- **Status indicators**: Emoji-based status indicators (✅ ❌ ⏭️ 🚫 ⏱️)
+- **Comprehensive failure details**: Formatted failure information with context
+- **Duration tracking**: Human-readable test duration formatting
+- **Environment information**: Browser, OS, Node.js, and Playwright version tracking
+- **Test steps summary**: Overview of executed test steps with status
+- **Customizable formatting**: Configurable comment structure and content
+- **Length management**: Automatic truncation for TestRail comment limits
+
+### 🔧 Enhanced Integration
+
+#### PlaywrightConverter Improvements
+- **Automatic failure capture**: Failure information automatically extracted during conversion
+- **Environment detection**: System and browser information automatically captured
+- **Enhanced TestCaseInfo**: Added `_failureInfo` and `_environmentInfo` properties
+
+#### TestCaseManager Enhancements
+- **Comment enhancement integration**: Uses CommentEnhancer for all test result comments
+- **Configurable comment formatting**: Customizable comment enhancement options
+- **Backward compatibility**: Existing code continues to work without changes
+
+### 📊 New Comment Formats
+
+#### Passed Tests
+```
+🤖 Automated Test
+✅ Executed by Playwright
+Duration: 2.3s
+Executed: 12/15/2023, 10:30:45 AM
+```
+
+#### Failed Tests
+```
+🤖 Automated Test
+❌ **Test Failed**
+**Error:** Expected element to be visible, but it was not found
+**Failed Step:** Click login button
+**Location:** /tests/login.spec.ts:42:10
+**Attachments:** 📸 Screenshot, 🎥 Video, 🔍 Trace
+
+⏱️ **Duration:** 5.2s
+🕐 **Executed:** 12/15/2023, 10:30:45 AM
+
+🖥️ **Environment:**
+• Browser: chromium 119.0.6045.105
+• OS: macOS
+• Node.js: v18.17.0
+• Playwright: 1.40.0
+
+📋 **Test Steps:**
+1. ✅ Navigate to login page
+2. ❌ Click login button
+```
+
+### 📚 New Examples and Documentation
+- **Enhanced failure capture example**: Complete example showing new features
+- **Configuration examples**: Environment-specific configurations
+- **Migration guide**: Backward compatibility and gradual adoption guide
+- **Comprehensive documentation**: Detailed feature documentation in ENHANCED_FEATURES.md
+
+### 🔄 Breaking Changes
+- None - All changes are backward compatible
+
+### 📦 New Exports
+- `FailureCapture` - Utility for capturing failure information
+- `CommentEnhancer` - Utility for enhancing TestRail comments
+- `CommentEnhancementConfig` - Configuration interface for comment enhancement
+- `FailureInfo` - Interface for failure information
+- `EnvironmentInfo` - Interface for environment information
+
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 

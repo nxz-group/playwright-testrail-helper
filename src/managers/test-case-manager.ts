@@ -1,5 +1,6 @@
 import type { TestRailClient } from "../api/testrail-client";
 import type { TestCaseInfo, TestResult, TestStep } from "../types/index.js";
+import { type CommentEnhancementConfig, CommentEnhancer } from "../utils/comment-enhancer.js";
 import { AutomationType, Priority, TestStatus, TestTemplate, TestType } from "../utils/constants";
 import { TestRailError } from "../utils/errors";
 
@@ -8,12 +9,18 @@ import { TestRailError } from "../utils/errors";
  */
 export class TestCaseManager {
   private readonly playwrightExecuted: string;
+  private readonly commentEnhancer: CommentEnhancer;
 
   constructor(
     private client: TestRailClient,
-    executedByText: string = "Executed by Playwright"
+    executedByText = "Executed by Playwright",
+    commentConfig?: Partial<CommentEnhancementConfig>
   ) {
     this.playwrightExecuted = executedByText;
+    this.commentEnhancer = new CommentEnhancer({
+      customPrefix: executedByText,
+      ...commentConfig
+    });
   }
 
   /**
@@ -205,29 +212,41 @@ export class TestCaseManager {
       return null;
     }
 
-    let errorComment = "";
+    // Generate enhanced comment using the new comment enhancer
+    let comment: string;
 
-    if (testCase.status === "failed" && testCase._steps) {
-      const errorStep = testCase._steps.filter(
-        (step: TestStep) => step.category === "test.step" && step.error !== undefined
-      );
-      if (errorStep.length > 0) {
-        // Remove ANSI escape codes from error message
-        const ansiPattern = `${String.fromCharCode(27)}\\[[0-9;]*[mG]`;
-        const cleanMessage = errorStep[0].error?.message?.replace(new RegExp(ansiPattern, "g"), "") || "";
-        errorComment = `Error step: ${errorStep[0].title}\n\n${cleanMessage}`;
-      }
+    if (testCase.status === "passed") {
+      // For passed tests, use simple comment
+      comment = this.commentEnhancer.createSimplePassedComment(testCase, this.playwrightExecuted);
+    } else {
+      // For failed/timeout/interrupted tests, use enhanced comment with failure info
+      const failureInfo = (testCase as any)._failureInfo;
+      const environmentInfo = (testCase as any)._environmentInfo;
+      comment = this.commentEnhancer.enhanceComment(testCase, failureInfo, environmentInfo);
     }
 
     return {
       case_id: testCaseId,
       status_id: statusId,
       assignedto_id: userId,
-      comment:
-        testCase.status === "failed"
-          ? errorComment
-          : `${this.playwrightExecuted}\nDuration: ${this.formatDuration(testCase.duration)}`,
+      comment,
       elapsed: testCase.duration
     };
+  }
+
+  /**
+   * Updates comment enhancement configuration
+   * @param config - New configuration options
+   */
+  updateCommentConfig(config: Partial<CommentEnhancementConfig>): void {
+    this.commentEnhancer.updateConfig(config);
+  }
+
+  /**
+   * Gets current comment enhancement configuration
+   * @returns Current configuration
+   */
+  getCommentConfig(): CommentEnhancementConfig {
+    return this.commentEnhancer.getConfig();
   }
 }

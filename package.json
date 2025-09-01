@@ -1,7 +1,7 @@
 {
   "name": "playwright-testrail-helper",
-  "version": "1.1.1",
-  "description": "A TypeScript library for seamless TestRail integration with Playwright test automation",
+  "version": "1.2.0",
+  "description": "A TypeScript library for seamless TestRail integration with Playwright test automation, featuring automated failure capture and enhanced result comments",
   "keywords": [
     "playwright",
     "testrail",
@@ -9,6 +9,9 @@
     "testing",
     "typescript",
     "test-reporting",
+    "failure-capture",
+    "enhanced-comments",
+    "error-reporting",
     "nxz-group",
     "qackskills"
   ],
@@ -25,12 +28,7 @@
   "type": "commonjs",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "files": [
-    "dist/**/*",
-    "README.md",
-    "LICENSE",
-    "ENVIRONMENT_VARIABLES.md"
-  ],
+  "files": ["dist/**/*", "README.md", "LICENSE", "ENVIRONMENT_VARIABLES.md"],
   "scripts": {
     "build": "tsc",
     "build:watch": "tsc --watch",
@@ -38,7 +36,13 @@
     "prepublishOnly": "npm run clean && npm run build",
     "lint": "npx @biomejs/biome check --write",
     "lint:ci": "npx @biomejs/biome ci",
-    "test": "echo \"No tests specified\" && exit 0"
+    "format": "npx @biomejs/biome format --write .",
+    "format:check": "npx @biomejs/biome format .",
+    "check": "npx @biomejs/biome check .",
+    "fix": "npx @biomejs/biome check --write .",
+    "test": "echo \"No tests specified\" && exit 0",
+    "test:features": "npx ts-node scripts/test-enhanced-features.ts",
+    "dev": "npm run build:watch"
   },
   "dependencies": {
     "axios": "^1.6.0",
@@ -48,6 +52,7 @@
     "@biomejs/biome": "^1.4.0",
     "@types/node": "^20.0.0",
     "lefthook": "^1.5.0",
+    "ts-node": "^10.9.0",
     "typescript": "^5.0.0"
   },
   "peerDependencies": {
