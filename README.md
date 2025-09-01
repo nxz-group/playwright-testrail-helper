@@ -14,8 +14,16 @@ A TypeScript library for seamless TestRail integration with Playwright test auto
 ## Installation
 
 ```bash
-npm install playwright-testrail-helper
+# SSH (Recommended for internal repos)
+npm install git+ssh://git@github.com/nxz-group/playwright-testrail-helper.git#v1.2.2
+
+# HTTPS (Alternative)
+npm install git+https://github.com/nxz-group/playwright-testrail-helper.git#v1.2.2
 ```
+
+> 🔑 **SSH**: Requires SSH keys configured for GitHub access  
+> 🌐 **HTTPS**: May require GitHub personal access token for private repos  
+> 📌 **Version**: Update the version tag as needed (e.g., #v1.2.3, #main)
 
 ## Quick Start
 
@@ -26,19 +34,13 @@ TEST_RAIL_HOST=https://your-domain.testrail.io
 TEST_RAIL_USERNAME=your-email@domain.com
 TEST_RAIL_PASSWORD=your-api-key-here
 TEST_RAIL_PROJECT_ID=4
-
-# Optional
-TEST_RAIL_DIR=testRail
-TEST_RAIL_EXECUTED_BY="Executed by Playwright"
-RUN_NAME=optional-run-name-override
-TEST_WORKER_INDEX=0
 ```
 
-> 📋 **For detailed environment variable documentation, see [ENVIRONMENT_VARIABLES.md](./ENVIRONMENT_VARIABLES.md)**
+> 🚀 **Need help fast? Check our [Quick Reference Guide](./docs/QUICK_REFERENCE.md)**
 
-### 2. Basic Usage
+### 2. Basic Usage (One Line Integration!)
 ```typescript
-import { onTestRailHelper, Platform } from 'playwright-testrail-helper';
+import { onTestRailHelper } from 'playwright-testrail-helper';
 
 // Define your section IDs
 const SECTION_IDS = {
@@ -47,117 +49,72 @@ const SECTION_IDS = {
   payments: 102
 };
 
-// Update test results
-await onTestRailHelper.updateTestResult(
-  "Login Tests",                    // Run name
-  SECTION_IDS.login,               // Section ID
-  Platform.WEB_DESKTOP,           // Platform
-  testResults,                     // Test results array
-  false                           // Reset flag (optional)
-);
-```
-
-### 3. Test Results Format
-
-#### Manual Format
-```typescript
-const testResults = [
-  {
-    title: "User can login with valid credentials",
-    tags: ["@smoke", "@login", "@high"],
-    status: "passed", // "passed" | "failed" | "skipped" | "interrupted" | "timeOut"
-    duration: 2500,   // milliseconds
-    _steps: [         // Optional: test steps
-      {
-        category: "test.step",
-        title: "Navigate to login page",
-        error: undefined
-      }
-    ]
-  }
-];
-```
-
-#### Auto-Convert from Playwright TestInfo
-```typescript
-import { PlaywrightConverter } from 'playwright-testrail-helper';
-import { test } from '@playwright/test';
-
+// 🎉 One-line integration with automatic failure capture!
 test.afterEach(async ({ }, testInfo) => {
-  // Convert single test result
-  const testCaseInfo = PlaywrightConverter.convertFromAfterEach(testInfo);
-  
-  await onTestRailHelper.updateTestResult(
-    "Login Tests",
-    SECTION_IDS.login,
-    Platform.WEB_DESKTOP,
-    [testCaseInfo]
+  await onTestRailHelper.updateTestResultFromPlaywrightSingle(
+    "Login Tests",                           // Run name
+    SECTION_IDS.login,                      // Section ID
+    onTestRailHelper.platform.WEB_DESKTOP, // Platform
+    testInfo                                // Playwright testInfo - automatic!
   );
 });
-
-// Or convert multiple tests at once
-const testInfos = [testInfo1, testInfo2, testInfo3];
-const testResults = PlaywrightConverter.convertMultipleTests(testInfos);
 ```
+
+### 3. Test Tagging
+```typescript
+// Proper test tagging for better organization
+test("@smoke @functional @critical @login User can login successfully", async ({ page }) => {
+  await page.goto('/login');
+  await page.fill('#username', 'testuser@example.com');
+  await page.fill('#password', 'validpassword');
+  await page.click('#login-button');
+  
+  await expect(page.locator('.welcome-message')).toBeVisible();
+});
+```
+
+> 📋 **For detailed tagging guidelines, see [Test Tags Guide](./docs/TEST_TAGS.md)**
+
+## Platform Types
+
+Access platform constants directly from the helper:
+
+```typescript
+// Recommended approach
+onTestRailHelper.platform.API              // 1 - API testing
+onTestRailHelper.platform.WEB_DESKTOP      // 2 - Desktop web
+onTestRailHelper.platform.MOBILE_APPLICATION // 5 - Mobile app
+
+// Alternative approach
+import { Platform } from 'playwright-testrail-helper';
+Platform.WEB_DESKTOP
+```
+
+> 📊 **For complete platform guide, see [Platform Types](./docs/PLATFORM_TYPES.md)**
 
 ## Advanced Usage
 
-### Section ID Organization
+### Section Organization
 ```typescript
-// Create a centralized section configuration
 export const TEST_SECTIONS = {
-  authentication: {
-    login: 100,
-    logout: 101,
-    registration: 102
-  },
-  ecommerce: {
-    cart: 200,
-    checkout: 201,
-    payment: 202
-  }
+  authentication: { login: 100, logout: 101 },
+  ecommerce: { cart: 200, checkout: 201 }
 } as const;
+```
 
-// Use in tests
+### Batch Updates
+```typescript
 await onTestRailHelper.updateTestResult(
-  "Authentication Tests",
-  TEST_SECTIONS.authentication.login,
-  Platform.WEB_DESKTOP,
-  testResults
+  "Batch Tests",
+  SECTION_IDS.login,
+  onTestRailHelper.platform.WEB_DESKTOP,
+  testResults // Array of test results
 );
 ```
 
-### Parallel Execution
-The library automatically handles parallel execution when `TEST_WORKER_INDEX` is set:
-
-```bash
-# Playwright automatically sets this for parallel workers
-TEST_WORKER_INDEX=0  # Worker 1
-TEST_WORKER_INDEX=1  # Worker 2
-# ... up to 10 workers supported
-```
-
-### Platform Types
+### Error Handling
 ```typescript
-import { Platform } from 'playwright-testrail-helper';
-
-Platform.API                           // 1
-Platform.WEB_DESKTOP                   // 2  
-Platform.WEB_RESPONSIVE                // 3
-Platform.WEB_DESKTOP_AND_RESPONSIVE    // 4
-Platform.MOBILE_APPLICATION            // 5
-Platform.MIGRATION                     // 6
-Platform.OTHER                         // 7
-```
-
-## Error Handling
-
-```typescript
-import { 
-  TestRailError, 
-  APIError, 
-  ConfigurationError 
-} from 'playwright-testrail-helper';
+import { TestRailError, APIError, ConfigurationError } from 'playwright-testrail-helper';
 
 try {
   await onTestRailHelper.updateTestResult(runName, sectionId, platform, results);
@@ -166,13 +123,11 @@ try {
     console.error('Configuration issue:', error.message);
   } else if (error instanceof APIError) {
     console.error('TestRail API error:', error.statusCode, error.message);
-  } else if (error instanceof TestRailError) {
-    console.error('Library error:', error.message);
   }
 }
 ```
 
-## Configuration Reference
+## Configuration
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
@@ -181,83 +136,37 @@ try {
 | `TEST_RAIL_PASSWORD` | ✅ | - | TestRail password or API key |
 | `TEST_RAIL_PROJECT_ID` | ✅ | - | TestRail project ID |
 | `TEST_RAIL_DIR` | ❌ | `testRail` | Directory for coordination files |
-| `TEST_RAIL_EXECUTED_BY` | ❌ | `Executed by Playwright` | Comment text for results |
-| `RUN_NAME` | ❌ | - | Override test run name |
-| `TEST_WORKER_INDEX` | ❌ | `0` | Worker ID for parallel execution |
 
-## Best Practices
-
-### 1. Section ID Management
-```typescript
-// ✅ Good: Centralized configuration
-const SECTIONS = {
-  userManagement: 100,
-  paymentFlow: 101
-} as const;
-
-// ❌ Avoid: Magic numbers in tests
-await onTestRailHelper.updateTestResult("Test", 100, Platform.WEB_DESKTOP, results);
-```
-
-### 2. Error Handling
-```typescript
-// ✅ Good: Specific error handling
-try {
-  await onTestRailHelper.updateTestResult(runName, sectionId, platform, results);
-} catch (error) {
-  if (error instanceof APIError && error.statusCode === 429) {
-    // Handle rate limiting
-    await new Promise(resolve => setTimeout(resolve, 5000));
-    // Retry logic
-  }
-}
-```
-
-### 3. Test Organization
-```typescript
-// ✅ Good: Consistent tagging
-const testCase = {
-  title: "User can complete checkout process",
-  tags: ["@e2e", "@checkout", "@critical"],  // Type, Feature, Priority
-  status: "passed",
-  duration: 15000
-};
-```
+> ⚙️ **For complete configuration reference, see [Environment Variables](./docs/ENVIRONMENT_VARIABLES.md)**
 
 ## Troubleshooting
 
 ### Common Issues
 
-**1. "Missing required environment variables"**
-- Ensure all required environment variables are set
-- Check for typos in variable names
+**Missing environment variables**
+- Ensure all required variables are set
 
-**2. "File lock timeout"**
-- Usually indicates a crashed worker process
-- Check for stale `.lock` files in the TestRail directory
-- The library auto-cleans locks older than 30 seconds
+**File lock timeout**
+- Check for stale `.lock` files in TestRail directory
 
-**3. "API rate limiting (429 errors)"**
-- Reduce concurrent workers or add delays between API calls
-- Check TestRail instance rate limits
+**API rate limiting**
+- Reduce concurrent workers or add delays
 
-**4. "Permission denied writing to file"**
-- Ensure write permissions for the TestRail directory
-- Check available disk space
+> 🔍 **For detailed troubleshooting, see [Technical Details](./docs/TECHNICAL_DETAILS.md)**
 
-## Development
+## 📚 Documentation
 
-### Building
-```bash
-npm run build        # Build once
-npm run build:watch  # Build and watch for changes
-```
-
-### Linting
-```bash
-npm run lint         # Fix linting issues
-npm run lint:ci      # Check without fixing (CI mode)
-```
+| Document | Description |
+|----------|-------------|
+| **[Quick Reference](./docs/QUICK_REFERENCE.md)** | 🚀 2-minute setup guide & cheat sheet |
+| **[Test Tags](./docs/TEST_TAGS.md)** | 🏷️ Test tagging system & best practices |
+| **[Platform Types](./docs/PLATFORM_TYPES.md)** | 📊 Platform constants & usage examples |
+| **[Visual Guide](./docs/VISUAL_GUIDE.md)** | 📈 Flowcharts, diagrams & decision trees |
+| **[Technical Details](./docs/TECHNICAL_DETAILS.md)** | 🔧 Advanced configuration & architecture |
+| **[Integration Examples](./docs/INTEGRATION_EXAMPLES.md)** | 🔗 CI/CD, Docker, Kubernetes examples |
+| **[Development Setup](./docs/SETUP.md)** | 🛠️ Local development & contribution guide |
+| **[Changelog](./docs/CHANGELOG.md)** | 📋 Version history & feature details |
+| **[Environment Variables](./docs/ENVIRONMENT_VARIABLES.md)** | ⚙️ Configuration reference |
 
 ## License
 
