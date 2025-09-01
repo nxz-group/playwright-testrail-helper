@@ -205,8 +205,6 @@ export class WorkerManager {
     let stableTime = 0;
     let _lastActivityTime = Date.now();
 
-    console.log("Coordinator waiting for all workers to complete...");
-
     while (waitTime < maxWaitTime) {
       const completedWorkers = fs
         .readdirSync(this.testRailDir)
@@ -216,7 +214,6 @@ export class WorkerManager {
 
       // Check if we have new activity
       if (currentCount > lastCompletedCount) {
-        console.log(`Workers completed: ${currentCount} (new: ${currentCount - lastCompletedCount})`);
         lastCompletedCount = currentCount;
         _lastActivityTime = Date.now();
         stableTime = 0; // Reset stable timer
@@ -226,7 +223,6 @@ export class WorkerManager {
 
       // If no new workers for stableWaitTime, assume all are done
       if (stableTime >= stableWaitTime) {
-        console.log(`No new workers for ${stableWaitTime}ms, proceeding with ${currentCount} workers`);
         break;
       }
 
@@ -252,7 +248,6 @@ export class WorkerManager {
 
       // If no recent activity and we've waited a reasonable time, proceed
       if (!hasRecentActivity && waitTime > 30000) {
-        console.log("No recent worker activity detected, proceeding...");
         break;
       }
 
@@ -263,7 +258,5 @@ export class WorkerManager {
     if (waitTime >= maxWaitTime) {
       console.warn(`Coordinator timeout after ${maxWaitTime}ms, proceeding with available results`);
     }
-
-    console.log(`Coordinator finished waiting. Total workers: ${lastCompletedCount}, Wait time: ${waitTime}ms`);
   }
 }
