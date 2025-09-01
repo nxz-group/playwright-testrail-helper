@@ -18,39 +18,16 @@ export class TestRailClient {
       }
     });
 
-    // Add request interceptor to log actual URL
+    // Add request interceptor
     this.axiosInstance.interceptors.request.use(
-      (config) => {
-        const fullUrl = `${config.baseURL}${config.url}`;
-        console.log(`🔍 ~ Axios Request ~ Full URL: ${fullUrl}`);
-        console.log(`🔍 ~ Axios Request ~ Config:`, {
-          baseURL: config.baseURL,
-          url: config.url,
-          method: config.method,
-          params: config.params
-        });
-        return config;
-      },
-      (error) => {
-        console.log(`❌ ~ Axios Request Error:`, error);
-        return Promise.reject(error);
-      }
+      (config) => config,
+      (error) => Promise.reject(error)
     );
 
-    // Add response interceptor to log response details
+    // Add response interceptor
     this.axiosInstance.interceptors.response.use(
-      (response) => {
-        console.log(`✅ ~ Axios Response ~ Status: ${response.status}, URL: ${response.config.url}`);
-        return response;
-      },
-      (error) => {
-        console.log(`❌ ~ Axios Response Error:`, {
-          status: error.response?.status,
-          url: error.config?.url,
-          data: error.response?.data
-        });
-        return Promise.reject(error);
-      }
+      (response) => response,
+      (error) => Promise.reject(error)
     );
   }
 
@@ -70,15 +47,10 @@ export class TestRailClient {
   ): Promise<{ statusCode: number; body: unknown }> {
     for (let attempt = 0; attempt <= retries; attempt++) {
       try {
-        const fullUrl = `${this.axiosInstance.defaults.baseURL}?${path}`;
-        console.log(`🚀 ~ TestRailClient ~ ${method.toUpperCase()} ~ ${fullUrl}`);
-
         const response =
           method === "get"
             ? await this.axiosInstance.get(`?${path}`, data)
             : await this.axiosInstance.post(`?${path}`, data);
-
-        console.log(`✅ ~ TestRailClient ~ Response ~ Status: ${response.status}`);
 
         return {
           statusCode: response.status,
@@ -92,8 +64,6 @@ export class TestRailClient {
           const err = error as { response?: { status?: number; data?: unknown }; message?: string };
           const errorStatus = err.response?.status || 500;
           const errorBody = err.response?.data || { error: err.message };
-
-          console.log(`❌ ~ TestRailClient ~ Error ~ Status: ${errorStatus}, Body:`, errorBody);
 
           return {
             statusCode: errorStatus,
