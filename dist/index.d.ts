@@ -37,7 +37,7 @@ declare class TestRailHelper {
      * @param isReset - Whether to reset existing test run data (default: false)
      * @throws {TestRailError} When validation fails or TestRail operations fail
      */
-    updateTestResultFromPlaywrightSingle(runName: string, sectionId: number, platformId: number, testInfo: unknown, isReset?: boolean): Promise<void>;
+    updateTestResultSingle(runName: string, sectionId: number, platformId: number, testInfo: unknown, isReset?: boolean): Promise<void>;
     /**
      * Updates test results in TestRail from Playwright TestInfo objects (recommended)
      * @param runName - Name of the test run
@@ -47,7 +47,7 @@ declare class TestRailHelper {
      * @param isReset - Whether to reset existing test run data (default: false)
      * @throws {TestRailError} When validation fails or TestRail operations fail
      */
-    updateTestResultFromPlaywright(runName: string, sectionId: number, platformId: number, testInfos: unknown[], isReset?: boolean): Promise<void>;
+    updateTestResult(runName: string, sectionId: number, platformId: number, testInfos: unknown[], isReset?: boolean): Promise<void>;
     /**
      * Updates test results in TestRail by syncing test cases and creating/updating test runs
      * @param runName - Name of the test run
@@ -57,7 +57,7 @@ declare class TestRailHelper {
      * @param isReset - Whether to reset existing test run data (default: false)
      * @throws {TestRailError} When validation fails or TestRail operations fail
      */
-    updateTestResult(runName: string, sectionId: number, platformId: number, testList: TestCaseInfo[], isReset?: boolean): Promise<void>;
+    updateTestResultAdvanced(runName: string, sectionId: number, platformId: number, testList: TestCaseInfo[], isReset?: boolean): Promise<void>;
 }
 export declare const onTestRailHelper: TestRailHelper;
 export default TestRailHelper;

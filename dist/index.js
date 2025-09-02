@@ -50,12 +50,17 @@ class TestRailHelper {
         if (this.initialized) {
             return;
         }
-        const testRailHost = process.env.TEST_RAIL_HOST;
+        // Support both new and legacy environment variable names
+        const testRailHost = process.env.TEST_RAIL_HOST || process.env.TEST_RAIL_ENDPOINT;
         const testRailUsername = process.env.TEST_RAIL_USERNAME;
         const testRailPassword = process.env.TEST_RAIL_PASSWORD;
         const projectId = process.env.TEST_RAIL_PROJECT_ID;
+        // Warn about legacy environment variable usage
+        if (!process.env.TEST_RAIL_HOST && process.env.TEST_RAIL_ENDPOINT) {
+            console.warn("⚠️  WARNING: TEST_RAIL_ENDPOINT is deprecated. Please use TEST_RAIL_HOST instead.");
+        }
         if (!testRailHost || !testRailUsername || !testRailPassword || !projectId) {
-            throw new errors_1.ConfigurationError("Missing required environment variables: TEST_RAIL_HOST, TEST_RAIL_USERNAME, TEST_RAIL_PASSWORD, TEST_RAIL_PROJECT_ID");
+            throw new errors_1.ConfigurationError("Missing required environment variables: TEST_RAIL_HOST (or legacy TEST_RAIL_ENDPOINT), TEST_RAIL_USERNAME, TEST_RAIL_PASSWORD, TEST_RAIL_PROJECT_ID");
         }
         this.projectId = Number.parseInt(projectId, 10);
         if (Number.isNaN(this.projectId) || this.projectId <= 0) {
@@ -79,8 +84,8 @@ class TestRailHelper {
      * @param isReset - Whether to reset existing test run data (default: false)
      * @throws {TestRailError} When validation fails or TestRail operations fail
      */
-    async updateTestResultFromPlaywrightSingle(runName, sectionId, platformId, testInfo, isReset = false) {
-        return this.updateTestResultFromPlaywright(runName, sectionId, platformId, [testInfo], isReset);
+    async updateTestResultSingle(runName, sectionId, platformId, testInfo, isReset = false) {
+        return this.updateTestResult(runName, sectionId, platformId, [testInfo], isReset);
     }
     /**
      * Updates test results in TestRail from Playwright TestInfo objects (recommended)
@@ -91,7 +96,7 @@ class TestRailHelper {
      * @param isReset - Whether to reset existing test run data (default: false)
      * @throws {TestRailError} When validation fails or TestRail operations fail
      */
-    async updateTestResultFromPlaywright(runName, sectionId, platformId, testInfos, isReset = false) {
+    async updateTestResult(runName, sectionId, platformId, testInfos, isReset = false) {
         // Convert Playwright TestInfo objects to TestCaseInfo with automatic enhancement
         const testList = testInfos.map((testInfo) => {
             // Handle both single testInfo and { testInfo, testResult } objects
@@ -100,8 +105,8 @@ class TestRailHelper {
             }
             return playwright_converter_1.PlaywrightConverter.convertTestInfo(testInfo);
         });
-        // Use existing updateTestResult method
-        return this.updateTestResult(runName, sectionId, platformId, testList, isReset);
+        // Use existing updateTestResultAdvanced method
+        return this.updateTestResultAdvanced(runName, sectionId, platformId, testList, isReset);
     }
     /**
      * Updates test results in TestRail by syncing test cases and creating/updating test runs
@@ -112,7 +117,7 @@ class TestRailHelper {
      * @param isReset - Whether to reset existing test run data (default: false)
      * @throws {TestRailError} When validation fails or TestRail operations fail
      */
-    async updateTestResult(runName, sectionId, platformId, testList, isReset = false) {
+    async updateTestResultAdvanced(runName, sectionId, platformId, testList, isReset = false) {
         // Initialize if not already done
         this.initialize();
         // Validate input parameters
