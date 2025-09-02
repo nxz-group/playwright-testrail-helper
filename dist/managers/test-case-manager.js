@@ -107,18 +107,6 @@ class TestCaseManager {
         }
     }
     /**
-     * Formats test duration from milliseconds to human readable format
-     * @param ms - Duration in milliseconds
-     * @returns Formatted duration string
-     */
-    formatDuration(ms) {
-        if (ms < 1000)
-            return `${ms}ms`;
-        if (ms < 60000)
-            return `${(ms / 1000).toFixed(1)}s`;
-        return `${(ms / 60000).toFixed(1)}m`;
-    }
-    /**
      * Validates test case data structure
      * @param testCase - Test case to validate
      * @throws {TestRailError} When validation fails
@@ -187,40 +175,17 @@ class TestCaseManager {
         if (statusId === null) {
             return null;
         }
-        // Generate enhanced comment using the new comment enhancer
+        // Generate comment using enhanced CommentEnhancer
         let comment;
         if (testCase.status === "passed") {
-            // For passed tests, use simple comment
-            comment = this.commentEnhancer.createSimplePassedComment(testCase, this.playwrightExecuted);
+            comment = this.commentEnhancer.formatPassedComment(testCase.duration);
+        }
+        else if (testCase.status === "failed") {
+            comment = this.commentEnhancer.formatFailedComment(testCase);
         }
         else {
-            // For failed/timeout/interrupted tests, use enhanced comment with failure info
-            const failureInfo = testCase._failureInfo;
-            const environmentInfo = testCase._environmentInfo;
-            // If no failure info is provided for failed tests, create a default one
-            if (testCase.status === "failed" && !failureInfo) {
-                // Extract error message from steps if available
-                let errorMessage = "Test failed without specific error message";
-                if (testCase._steps) {
-                    const failedStep = testCase._steps.find((step) => step.error);
-                    if (failedStep?.error?.message) {
-                        errorMessage = failedStep.error.message;
-                    }
-                }
-                const defaultFailureInfo = {
-                    errorMessage,
-                    errorStack: undefined,
-                    failedStep: undefined,
-                    location: undefined,
-                    screenshot: undefined,
-                    video: undefined,
-                    trace: undefined
-                };
-                comment = this.commentEnhancer.enhanceComment(testCase, defaultFailureInfo, environmentInfo);
-            }
-            else {
-                comment = this.commentEnhancer.enhanceComment(testCase, failureInfo, environmentInfo);
-            }
+            // For other statuses (timeOut, interrupted), use enhanced comment
+            comment = this.commentEnhancer.enhanceComment(testCase);
         }
         return {
             case_id: testCaseId,

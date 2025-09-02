@@ -14,8 +14,27 @@ interface PlaywrightTestInfo {
     };
     attachments?: Array<{
         name: string;
+        path?: string;
+        contentType?: string;
         [key: string]: unknown;
     }>;
+    errors?: Array<{
+        message: string;
+        stack?: string;
+        location?: {
+            file: string;
+            line: number;
+            column: number;
+        };
+    }>;
+    location?: {
+        file: string;
+        line: number;
+        column: number;
+    };
+    retry?: number;
+    workerIndex?: number;
+    parallelIndex?: number;
     [key: string]: unknown;
 }
 interface PlaywrightTestResult {

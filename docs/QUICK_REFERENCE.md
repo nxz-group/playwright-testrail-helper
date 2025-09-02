@@ -5,10 +5,10 @@
 ### 1. Install & Configure
 ```bash
 # SSH (Recommended)
-npm install git+ssh://git@github.com/nxz-group/playwright-testrail-helper.git#v1.2.2
+npm install git+ssh://git@github.com/nxz-group/playwright-testrail-helper.git#v1.4.0
 
 # HTTPS (Alternative)
-npm install git+https://github.com/nxz-group/playwright-testrail-helper.git#v1.2.2
+npm install git+https://github.com/nxz-group/playwright-testrail-helper.git#v1.4.0
 ```
 
 ```bash
@@ -159,12 +159,11 @@ import { CommentEnhancer } from 'playwright-testrail-helper';
 
 const commentConfig = {
   includeStackTrace: true,
-  includeEnvironmentInfo: true,
-  customPrefix: "🤖 Automated Test",
-  maxCommentLength: 4000
+  customPrefix: "🤖 Automated Test"
 };
 
-const enhancer = new CommentEnhancer(commentConfig);
+const enhancer = new CommentEnhancer();
+const comment = enhancer.enhanceComment(testInfo, commentConfig);
 ```
 
 ---
@@ -235,29 +234,24 @@ try {
 
 ### ✅ Passed Test
 ```
-🤖 Automated Test
-✅ Executed by Playwright
-Duration: 2.3s
-Executed: 15/12/2024, 10:30:45
+Status: ✅ PASSED | Duration: 2.3s
+
+🤖 Automated Test - Executed by Playwright
 ```
 
 ### ❌ Failed Test
 ```
-🤖 Automated Test
-❌ **Test Failed**
-**Error:** Expected element to be visible
-**Failed Step:** Click login button
-**Location:** /tests/login.spec.ts:42:10
-**Attachments:** 📸 Screenshot, 🎥 Video
+Status: ❌ FAILED | Duration: 5.2s
 
-⏱️ **Duration:** 5.2s
-🕐 **Executed:** 15/12/2024, 10:30:45
+🤖 Automated Test - Executed by Playwright
 
-🖥️ **Environment:**
-• Browser: chromium 119.0.6045.105
-• OS: macOS
-• Node.js: v18.17.0
-• Playwright: 1.40.0
+❌ Error Details:
+Expected element to be visible, but it was not found
+
+Stack Trace:
+Error: Expected element to be visible
+    at /tests/login.spec.ts:42:10
+    at TestCase.run (/node_modules/@playwright/test/lib/testCase.js:123:45)
 ```
 
 ---
@@ -294,7 +288,7 @@ await onTestRailHelper.updateTestResult("Test", 100, 2, results);
 test("login test", async ({ page }) => { /* ... */ });
 test("User Login Functionality", async ({ page }) => { /* ... */ });
 
-// Manual result conversion (unnecessary in v1.2+)
+// Manual result conversion (unnecessary in v1.4+)
 const converted = PlaywrightConverter.convertTestInfo(testInfo);
 // Just pass testInfo directly instead!
 ```

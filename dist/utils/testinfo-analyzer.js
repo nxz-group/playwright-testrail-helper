@@ -191,7 +191,13 @@ class TestInfoAnalyzer {
         // Add failure info for failed tests
         if (status === "failed" || status === "timeOut" || status === "interrupted") {
             const failureInfo = TestInfoAnalyzer.createFailureInfo(testInfo);
-            testCaseInfo._failureInfo = failureInfo;
+            // Convert to errors array format
+            testCaseInfo.errors = [
+                {
+                    message: failureInfo.errorMessage,
+                    stack: failureInfo.errorStack
+                }
+            ];
         }
         // Add steps if available
         if (testInfo.steps && testInfo.steps.length > 0) {
@@ -267,15 +273,12 @@ function createTestCaseFromError(title, errorMessage, duration = 0, tags = []) {
         status: "failed",
         duration,
         tags,
-        _failureInfo: {
-            errorMessage,
-            errorStack: undefined,
-            failedStep: undefined,
-            location: undefined,
-            screenshot: undefined,
-            video: undefined,
-            trace: undefined
-        }
+        errors: [
+            {
+                message: errorMessage,
+                stack: undefined
+            }
+        ]
     };
 }
 /**

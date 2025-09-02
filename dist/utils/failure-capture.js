@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.FailureCapture = void 0;
+const ansi_cleaner_js_1 = require("./ansi-cleaner.js");
 /**
  * Utility class for capturing and processing test failure information from Playwright
  */
@@ -13,8 +14,9 @@ class FailureCapture {
      * @returns Detailed failure information
      */
     static extractFailureInfo(testInfo, testResult, steps) {
-        // Only process failed tests
-        if (!testResult || testResult.status !== "failed") {
+        // Check if test failed from either testInfo or testResult
+        const status = testResult?.status || testInfo?.status;
+        if (status !== "failed") {
             return null;
         }
         const failureInfo = {
@@ -26,8 +28,22 @@ class FailureCapture {
             video: undefined,
             trace: undefined
         };
-        // Extract error from test result
-        if (testResult.error) {
+        // Priority 1: Extract error from testInfo.errors array (real Playwright structure)
+        if (testInfo.errors && testInfo.errors.length > 0) {
+            const firstError = testInfo.errors[0];
+            failureInfo.errorMessage = FailureCapture.cleanErrorMessage(firstError.message);
+            failureInfo.errorStack = firstError.stack;
+            // Extract location from error if available
+            if (firstError.location) {
+                failureInfo.location = {
+                    file: firstError.location.file,
+                    line: firstError.location.line,
+                    column: firstError.location.column
+                };
+            }
+        }
+        // Priority 2: Extract error from test result (fallback)
+        else if (testResult?.error) {
             failureInfo.errorMessage = FailureCapture.cleanErrorMessage(testResult.error.message || testResult.error.toString());
             failureInfo.errorStack = testResult.error.stack;
         }
@@ -36,13 +52,14 @@ class FailureCapture {
             const failedStep = steps.find((step) => step.error);
             if (failedStep) {
                 failureInfo.failedStep = failedStep.title;
-                if (failedStep.error) {
+                // Only override error message if we don't have one from errors array
+                if (failedStep.error && !testInfo.errors?.length) {
                     failureInfo.errorMessage = FailureCapture.cleanErrorMessage(failedStep.error.message);
                 }
             }
         }
-        // Extract location information
-        if (testInfo.location) {
+        // Extract location information (fallback if not from error)
+        if (!failureInfo.location && testInfo.location) {
             failureInfo.location = {
                 file: testInfo.location.file,
                 line: testInfo.location.line,
@@ -66,52 +83,74 @@ class FailureCapture {
         return failureInfo;
     }
     /**
-     * Cleans error messages by removing ANSI escape codes and formatting
+     * Cleans and formats error messages for better readability
      * @param message - Raw error message
-     * @returns Cleaned error message
+     * @returns Cleaned and formatted error message
      */
     static cleanErrorMessage(message) {
         if (!message)
             return "";
-        // Remove ANSI escape codes using string methods to avoid control character regex issues
         let cleaned = message;
-        // Remove common ANSI sequences by character code
-        const escChar = String.fromCharCode(27); // ESC character
-        const patterns = [
-            `${escChar}[0m`,
-            `${escChar}[1m`,
-            `${escChar}[2m`,
-            `${escChar}[3m`,
-            `${escChar}[4m`,
-            `${escChar}[30m`,
-            `${escChar}[31m`,
-            `${escChar}[32m`,
-            `${escChar}[33m`,
-            `${escChar}[34m`,
-            `${escChar}[35m`,
-            `${escChar}[36m`,
-            `${escChar}[37m`,
-            `${escChar}[90m`,
-            `${escChar}[91m`,
-            `${escChar}[92m`,
-            `${escChar}[93m`,
-            `${escChar}[94m`,
-            `${escChar}[95m`,
-            `${escChar}[96m`,
-            `${escChar}[97m`,
-            `${escChar}[2J`,
-            `${escChar}[H`
-        ];
-        for (const pattern of patterns) {
-            cleaned = cleaned.split(pattern).join("");
-        }
-        // Remove excessive whitespace
+        // Remove ANSI escape codes and control characters
+        cleaned = (0, ansi_cleaner_js_1.cleanAnsiCodes)(cleaned);
+        // Parse Playwright error structure and reformat
+        cleaned = FailureCapture.formatPlaywrightError(cleaned);
+        // Normalize whitespace
         cleaned = cleaned.replace(/\s+/g, " ").trim();
         // Truncate very long messages
-        if (cleaned.length > 1000) {
-            cleaned = cleaned.substring(0, 997) + "...";
+        if (cleaned.length > 800) {
+            cleaned = cleaned.substring(0, 797) + "...";
         }
         return cleaned;
+    }
+    /**
+     * Formats Playwright error messages into a more readable structure
+     * @param message - Cleaned error message
+     * @returns Formatted error message
+     */
+    static formatPlaywrightError(message) {
+        // Extract key components from Playwright error
+        const locatorMatch = message.match(/Locator: (.+?)(?:\n|Expected|Received|$)/);
+        const expectedMatch = message.match(/Expected pattern: (.+?)(?:\n|Received|$)/);
+        const receivedMatch = message.match(/Received string: (.+?)(?:\n|Timeout|Call log|$)/);
+        const timeoutMatch = message.match(/Timeout: (\d+)ms/);
+        // If it's a Playwright assertion error, format it nicely
+        if (locatorMatch || expectedMatch || receivedMatch) {
+            const parts = [];
+            // Add main error type
+            if (message.includes("toHaveClass")) {
+                parts.push("Element class assertion failed");
+            }
+            else if (message.includes("toBeVisible")) {
+                parts.push("Element visibility assertion failed");
+            }
+            else if (message.includes("toHaveText")) {
+                parts.push("Element text assertion failed");
+            }
+            else {
+                parts.push("Assertion failed");
+            }
+            // Add locator info
+            if (locatorMatch) {
+                parts.push(`Locator: ${locatorMatch[1].trim()}`);
+            }
+            // Add expected vs received
+            if (expectedMatch && receivedMatch) {
+                parts.push(`Expected: ${expectedMatch[1].trim()}`);
+                parts.push(`Received: ${receivedMatch[1].trim()}`);
+            }
+            // Add timeout info
+            if (timeoutMatch) {
+                parts.push(`Timeout: ${timeoutMatch[1]}ms`);
+            }
+            return parts.join(" | ");
+        }
+        // For other errors, just clean up the format
+        return message
+            .replace(/\n+/g, " | ")
+            .replace(/Call log:.+$/, "")
+            .replace(/\s+\|\s+/g, " | ")
+            .trim();
     }
     /**
      * Formats failure information into a readable comment for TestRail

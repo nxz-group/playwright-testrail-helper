@@ -9,7 +9,12 @@ interface PlaywrightTestInfo {
   endTime?: Date;
   annotations?: Array<{ type: string; description?: string }>;
   project?: { name: string };
-  attachments?: Array<{ name: string; [key: string]: unknown }>;
+  attachments?: Array<{ name: string; path?: string; contentType?: string; [key: string]: unknown }>;
+  errors?: Array<{ message: string; stack?: string; location?: { file: string; line: number; column: number } }>;
+  location?: { file: string; line: number; column: number };
+  retry?: number;
+  workerIndex?: number;
+  parallelIndex?: number;
   [key: string]: unknown;
 }
 
@@ -26,7 +31,7 @@ interface PlaywrightTestResult {
 }
 
 import type { TestCaseInfo, TestStep } from "../types/index.js";
-import { CommentEnhancer, type EnvironmentInfo } from "./comment-enhancer.js";
+import { CommentEnhancer } from "./comment-enhancer.js";
 import { FailureCapture, type FailureInfo } from "./failure-capture.js";
 
 /**
@@ -52,16 +57,6 @@ export class PlaywrightConverter {
     // Extract test steps if available
     const steps = PlaywrightConverter.extractTestSteps(testInfo, testResult);
 
-    // Extract failure information for failed tests
-    let failureInfo: FailureInfo | null = null;
-    if (status === "failed") {
-      failureInfo = FailureCapture.extractFailureInfo(testInfo, testResult, steps);
-    } else if (status === "timeOut") {
-      failureInfo = FailureCapture.extractTimeoutFailure(testInfo, testResult);
-    } else if (status === "interrupted") {
-      failureInfo = FailureCapture.extractInterruptionFailure(testInfo, testResult);
-    }
-
     const testCaseInfo: TestCaseInfo = {
       title: testInfo.title,
       tags,
@@ -70,14 +65,19 @@ export class PlaywrightConverter {
       _steps: steps
     };
 
-    // Add failure information to test case if available
-    if (failureInfo) {
-      (testCaseInfo as TestCaseInfo)._failureInfo = failureInfo;
+    // Only add failure information for failed tests if needed
+    if (status === "failed") {
+      const failureInfo = FailureCapture.extractFailureInfo(testInfo, testResult, steps);
+      if (failureInfo) {
+        // Convert FailureInfo to errors array format
+        (testCaseInfo as TestCaseInfo).errors = [
+          {
+            message: failureInfo.errorMessage,
+            stack: failureInfo.errorStack
+          }
+        ];
+      }
     }
-
-    // Add environment information
-    const environmentInfo = CommentEnhancer.extractEnvironmentInfo(testInfo);
-    (testCaseInfo as TestCaseInfo)._environmentInfo = environmentInfo;
 
     return testCaseInfo;
   }
@@ -213,6 +213,15 @@ export class PlaywrightConverter {
           title: step.title,
           error: step.error ? { message: step.error.message || String(step.error) } : undefined
         });
+      });
+    }
+
+    // If no steps from testResult but we have errors, create a step from the error
+    if (steps.length === 0 && testInfo.errors && testInfo.errors.length > 0) {
+      steps.push({
+        category: "test.step",
+        title: "Test execution failed",
+        error: { message: testInfo.errors[0].message }
       });
     }
 

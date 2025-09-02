@@ -2,12 +2,87 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.4.0] - 2025-09-02
+
+### 🚀 New Features
+
+#### Smart TestRail Comment Enhancement
+- **Intelligent Error Detection**: Auto-detect UI vs API test failures for optimized comment formatting
+- **Enhanced Comment Structure**: All comments now include Status + Duration headers for consistency
+- **Text Truncation**: Automatic truncation of long error messages (Locator: 80 chars, Expected: 50 chars, Received: 100 chars)
+- **Smart Call Log Inclusion**: Call logs included only when they contain useful debugging information
+- **ANSI Code Cleaning**: Automatic removal of terminal color codes from error messages
+
+#### Improved Error Formatting
+- **UI Test Errors**: Enhanced display of Locator, Expected/Received patterns, and Call logs
+- **API Test Errors**: Clean formatting of Expected/Received values with matcher information
+- **Consistent Format**: Standardized comment structure across all test types
+
+### 🔧 Technical Improvements
+- **Complete CommentEnhancer Rewrite**: Replaced legacy comment logic with new smart formatting system
+- **Updated TestCaseInfo Interface**: Changed from `_failureInfo` to `errors` array for better Playwright compatibility
+- **Removed EnvironmentInfo**: Simplified codebase by removing unused environment information features
+- **Fixed TypeScript Compilation**: Resolved all type errors and interface mismatches
+- **Updated TestCaseManager**: Now uses new CommentEnhancer for all test result formatting
+
+### 🐛 Bug Fixes
+- **Fixed Error Message Display**: Resolved issue where error messages weren't appearing in TestRail comments
+- **Interface Synchronization**: Fixed mismatch between TestCaseInfo interface and actual implementation
+- **Build Compilation**: Fixed TypeScript errors in playwright-converter.ts and testinfo-analyzer.ts
+
+### 📊 New Comment Examples
+
+#### Passed Test
+```
+Status: Passed
+Duration: 4.6s
+
+Executed by Playwright
+```
+
+#### Failed UI Test
+```
+Status: Failed
+Duration: 38.6s
+
+Error: expect(locator).toHaveClass(expected) failed
+
+Locator: getByTestId('btn-pagination-number').nth(1)
+Expected: /selected/
+Received: "w-[35px] h-[30px] border-1 border-[#00000033]..."
+
+Call log:
+  - Expect "toHaveClass" with timeout 5000ms
+  - waiting for getByTestId('btn-pagination-number').nth(1)
+```
+
+#### Failed API Test
+```
+Status: Failed
+Duration: 670ms
+
+Error: expect(received).toBe(expected) // Object.is equality
+
+Expected: 400
+Received: 200
+Matcher: toBe
+```
+
+### 🔄 Breaking Changes
+- **TestCaseInfo Interface**: Changed `_failureInfo` property to `errors` array
+- **CommentEnhancer Methods**: Updated method signatures (removed EnvironmentInfo parameters)
+
+### 📦 Updated Exports
+- Enhanced `CommentEnhancer` class with new formatting methods
+- Updated `TestCaseInfo` interface structure
+- Removed `EnvironmentInfo` interface and related exports
+
 ## [1.3.2] - 2025-09-02
 
 ### 🚀 Enhanced Features
 
 #### Failed Test Reporting Improvements
-- **Automatic Error Message Generation**: Added fallback error message generation for failed tests without `_failureInfo`
+- **Automatic Error Message Generation**: Added fallback error message generation for failed tests with smart error detection
 - **Enhanced Comment Formatting**: Improved TestRail comment structure to show failed steps and error details
 - **TestInfoAnalyzer Utility**: New utility for comprehensive Playwright TestInfo processing and analysis
 - **Failed Step Identification**: Automatic detection and highlighting of failed test steps in TestRail comments
@@ -91,45 +166,12 @@ All notable changes to this project will be documented in this file.
 #### PlaywrightConverter Improvements
 - **Automatic failure capture**: Failure information automatically extracted during conversion
 - **Environment detection**: System and browser information automatically captured
-- **Enhanced TestCaseInfo**: Added `_failureInfo` and `_environmentInfo` properties
+- **Enhanced TestCaseInfo**: Added `errors` array for better error handling
 
 #### TestCaseManager Enhancements
 - **Comment enhancement integration**: Uses CommentEnhancer for all test result comments
 - **Configurable comment formatting**: Customizable comment enhancement options
 - **Backward compatibility**: Existing code continues to work without changes
-
-### 📊 New Comment Formats
-
-#### Passed Tests
-```
-🤖 Automated Test
-✅ Executed by Playwright
-Duration: 2.3s
-Executed: 12/15/2023, 10:30:45 AM
-```
-
-#### Failed Tests
-```
-🤖 Automated Test
-❌ **Test Failed**
-**Error:** Expected element to be visible, but it was not found
-**Failed Step:** Click login button
-**Location:** /tests/login.spec.ts:42:10
-**Attachments:** 📸 Screenshot, 🎥 Video, 🔍 Trace
-
-⏱️ **Duration:** 5.2s
-🕐 **Executed:** 12/15/2023, 10:30:45 AM
-
-🖥️ **Environment:**
-• Browser: chromium 119.0.6045.105
-• OS: macOS
-• Node.js: v18.17.0
-• Playwright: 1.40.0
-
-📋 **Test Steps:**
-1. ✅ Navigate to login page
-2. ❌ Click login button
-```
 
 ### 📚 New Examples and Documentation
 - **Enhanced failure capture example**: Complete example showing new features
@@ -144,8 +186,7 @@ Executed: 12/15/2023, 10:30:45 AM
 - `FailureCapture` - Utility for capturing failure information
 - `CommentEnhancer` - Utility for enhancing TestRail comments
 - `CommentEnhancementConfig` - Configuration interface for comment enhancement
-- `FailureInfo` - Interface for failure information
-- `EnvironmentInfo` - Interface for environment information
+- `TestCaseInfo` - Enhanced interface with errors array
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
