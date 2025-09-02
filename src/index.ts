@@ -45,14 +45,20 @@ class TestRailHelper {
       return;
     }
 
-    const testRailHost = process.env.TEST_RAIL_HOST;
+    // Support both new and legacy environment variable names
+    const testRailHost = process.env.TEST_RAIL_HOST || process.env.TEST_RAIL_ENDPOINT;
     const testRailUsername = process.env.TEST_RAIL_USERNAME;
     const testRailPassword = process.env.TEST_RAIL_PASSWORD;
     const projectId = process.env.TEST_RAIL_PROJECT_ID;
 
+    // Warn about legacy environment variable usage
+    if (!process.env.TEST_RAIL_HOST && process.env.TEST_RAIL_ENDPOINT) {
+      console.warn("⚠️  WARNING: TEST_RAIL_ENDPOINT is deprecated. Please use TEST_RAIL_HOST instead.");
+    }
+
     if (!testRailHost || !testRailUsername || !testRailPassword || !projectId) {
       throw new ConfigurationError(
-        "Missing required environment variables: TEST_RAIL_HOST, TEST_RAIL_USERNAME, TEST_RAIL_PASSWORD, TEST_RAIL_PROJECT_ID"
+        "Missing required environment variables: TEST_RAIL_HOST (or legacy TEST_RAIL_ENDPOINT), TEST_RAIL_USERNAME, TEST_RAIL_PASSWORD, TEST_RAIL_PROJECT_ID"
       );
     }
 
@@ -82,14 +88,14 @@ class TestRailHelper {
    * @param isReset - Whether to reset existing test run data (default: false)
    * @throws {TestRailError} When validation fails or TestRail operations fail
    */
-  public async updateTestResultFromPlaywrightSingle(
+  public async updateTestResultSingle(
     runName: string,
     sectionId: number,
     platformId: number,
     testInfo: unknown,
     isReset = false
   ): Promise<void> {
-    return this.updateTestResultFromPlaywright(runName, sectionId, platformId, [testInfo], isReset);
+    return this.updateTestResult(runName, sectionId, platformId, [testInfo], isReset);
   }
 
   /**
@@ -101,7 +107,7 @@ class TestRailHelper {
    * @param isReset - Whether to reset existing test run data (default: false)
    * @throws {TestRailError} When validation fails or TestRail operations fail
    */
-  public async updateTestResultFromPlaywright(
+  public async updateTestResult(
     runName: string,
     sectionId: number,
     platformId: number,
@@ -117,8 +123,8 @@ class TestRailHelper {
       return PlaywrightConverter.convertTestInfo(testInfo as any);
     });
 
-    // Use existing updateTestResult method
-    return this.updateTestResult(runName, sectionId, platformId, testList, isReset);
+    // Use existing updateTestResultAdvanced method
+    return this.updateTestResultAdvanced(runName, sectionId, platformId, testList, isReset);
   }
 
   /**
@@ -130,7 +136,7 @@ class TestRailHelper {
    * @param isReset - Whether to reset existing test run data (default: false)
    * @throws {TestRailError} When validation fails or TestRail operations fail
    */
-  public async updateTestResult(
+  public async updateTestResultAdvanced(
     runName: string,
     sectionId: number,
     platformId: number,
