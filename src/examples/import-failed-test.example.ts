@@ -3,7 +3,7 @@
  * สำหรับ test ที่ failed แล้วต้องการส่งข้อมูลเข้า TestRail ทีหลัง
  */
 
-import { TestInfoAnalyzer, createSimpleFailedTest, createTestCaseFromError, onTestRailHelper } from "../index.js";
+import { TestInfoAnalyzer, createSimpleFailedTest, createTestCaseFromError, onTestRailHelper } from "../index";
 
 /**
  * ตัวอย่างข้อมูล test ที่ failed (จากที่คุณให้มา)

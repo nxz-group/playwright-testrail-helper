@@ -6,7 +6,7 @@
  */
 
 import { test } from "@playwright/test";
-import { PlaywrightConverter } from "../utils/playwright-converter.js";
+import { PlaywrightConverter } from "../utils/playwright-converter";
 
 /**
  * โครงสร้างของ Playwright TestInfo (จริง)

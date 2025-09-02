@@ -1,5 +1,5 @@
-import type { TestCaseInfo } from "../types/index.js";
-import { cleanAnsiCodes } from "./ansi-cleaner.js";
+import type { TestCaseInfo } from "../types/index";
+import { cleanAnsiCodes } from "./ansi-cleaner";
 
 /**
  * Configuration options for comment enhancement

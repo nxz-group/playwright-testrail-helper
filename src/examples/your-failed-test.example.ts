@@ -3,8 +3,8 @@
  * พร้อมรายละเอียดว่า failed ที่ step ไหนและเพราะอะไร
  */
 
-import { onTestRailHelper } from "../index.js";
-import type { TestCaseInfo } from "../types/index.js";
+import { onTestRailHelper } from "../index";
+import type { TestCaseInfo } from "../types/index";
 
 /**
  * สร้าง TestCaseInfo สำหรับ test ที่คุณต้องการส่ง
@@ -112,5 +112,5 @@ export async function quickImportYourTest() {
 }
 
 // ใช้งาน:
-// import { quickImportYourTest } from './src/examples/your-failed-test.example.js';
+// import { quickImportYourTest } from './src/examples/your-failed-test.example';
 // await quickImportYourTest();

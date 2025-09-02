@@ -17,8 +17,10 @@
     "format:check": "npx @biomejs/biome format .",
     "check": "npx @biomejs/biome check .",
     "fix": "npx @biomejs/biome check --write .",
-    "test": "echo \"No tests specified\" && exit 0",
-    "test:features": "npx ts-node scripts/test-enhanced-features.ts",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+
     "dev": "npm run build:watch"
   },
   "dependencies": {
@@ -27,8 +29,12 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^1.4.0",
+    "@types/jest": "^29.5.0",
     "@types/node": "^20.0.0",
+    "jest": "^29.5.0",
     "lefthook": "^1.5.0",
+    "msw": "^2.0.0",
+    "ts-jest": "^29.1.0",
     "ts-node": "^10.9.0",
     "typescript": "^5.0.0"
   },

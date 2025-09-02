@@ -1,6 +1,6 @@
 import type { TestRailClient } from "../api/testrail-client";
-import type { TestCaseInfo, TestResult, TestStep } from "../types/index.js";
-import { type CommentEnhancementConfig, CommentEnhancer } from "../utils/comment-enhancer.js";
+import type { TestCaseInfo, TestResult, TestStep } from "../types/index";
+import { type CommentEnhancementConfig, CommentEnhancer } from "../utils/comment-enhancer";
 import { AutomationType, Priority, TestStatus, TestTemplate, TestType } from "../utils/constants";
 import { TestRailError } from "../utils/errors";
 

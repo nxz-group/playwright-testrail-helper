@@ -12,7 +12,7 @@ import {
   FailureCapture,
   PlaywrightConverter,
   onTestRailHelper
-} from "../index.js";
+} from "../index";
 
 // Configure enhanced comments
 const commentConfig: Partial<CommentEnhancementConfig> = {
