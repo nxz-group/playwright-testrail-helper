@@ -1,6 +1,5 @@
 import type { TestCaseInfo } from "../types/index.js";
-import type { FailureInfo } from "./failure-capture.js";
-import { FailureCapture } from "./failure-capture.js";
+import { cleanAnsiCodes } from "./ansi-cleaner.js";
 
 /**
  * Configuration options for comment enhancement
@@ -9,7 +8,6 @@ export interface CommentEnhancementConfig {
   includeStackTrace: boolean;
   includeDuration: boolean;
   includeTimestamp: boolean;
-  includeEnvironmentInfo: boolean;
   maxCommentLength: number;
   customPrefix?: string;
 }
@@ -20,23 +18,32 @@ export interface CommentEnhancementConfig {
 export const DEFAULT_COMMENT_CONFIG: CommentEnhancementConfig = {
   includeStackTrace: false,
   includeDuration: true,
-  includeTimestamp: true,
-  includeEnvironmentInfo: false,
+  includeTimestamp: false,
   maxCommentLength: 4000, // TestRail comment limit
   customPrefix: undefined
 };
 
 /**
- * Environment information interface
+ * TestRail status mapping
  */
-export interface EnvironmentInfo {
-  browser?: string;
-  browserVersion?: string;
-  os?: string;
-  nodeVersion?: string;
-  playwrightVersion?: string;
-  testWorker?: string;
-}
+export const STATUS_MAPPING = {
+  passed: 1,
+  blocked: 2,
+  untested: 3,
+  retest: 4,
+  failed: 5
+} as const;
+
+/**
+ * Status names for display
+ */
+export const STATUS_NAMES = {
+  1: "Passed",
+  2: "Blocked",
+  3: "Untested",
+  4: "Retest",
+  5: "Failed"
+} as const;
 
 /**
  * Utility class for enhancing TestRail comments with detailed test information
@@ -49,73 +56,144 @@ export class CommentEnhancer {
   }
 
   /**
-   * Enhances a test result comment with detailed information
-   * @param testCase - Test case information
-   * @param failureInfo - Failure information (if test failed)
-   * @param environmentInfo - Environment information
-   * @returns Enhanced comment string
+   * Formats duration from milliseconds to human readable format
    */
-  enhanceComment(testCase: TestCaseInfo, failureInfo?: FailureInfo | null, environmentInfo?: EnvironmentInfo): string {
-    const parts: string[] = [];
+  formatDuration(ms: number): string {
+    if (ms < 1000) return `${ms}ms`;
+    if (ms < 60000) return `${(ms / 1000).toFixed(1)}s`;
+    return `${(ms / 60000).toFixed(1)}m`;
+  }
 
-    // Add custom prefix if provided
-    if (this.config.customPrefix) {
-      parts.push(this.config.customPrefix);
-    }
+  /**
+   * Truncates text to specified length with ellipsis
+   */
+  truncateText(text: string, maxLength = 100): string {
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength) + "...";
+  }
 
-    // Add test status section
-    parts.push(this.formatTestStatus(testCase));
+  /**
+   * Checks if call log contains useful debugging information
+   */
+  hasUsefulCallLog(callLog: string): boolean {
+    return (
+      callLog.includes("locator resolved to") || callLog.includes("unexpected value") || callLog.includes("waiting for")
+    );
+  }
 
-    // Add failure information for failed tests
-    if (testCase.status === "failed" && failureInfo) {
-      parts.push("");
-      parts.push(FailureCapture.formatFailureComment(failureInfo, this.config.includeStackTrace));
+  /**
+   * Formats failed test comment with error details
+   */
+  formatFailedComment(testCase: TestCaseInfo): string {
+    let comment = `Status: Failed\nDuration: ${this.formatDuration(testCase.duration)}\n\n`;
 
-      // เพิ่มข้อมูล failed step จาก failureInfo
-      if (failureInfo.failedStep) {
-        parts.push("");
-        parts.push(`🎯 **Failed at Step:** ${failureInfo.failedStep}`);
+    if (testCase.errors && testCase.errors.length > 0) {
+      const error = testCase.errors[0];
+      const errorMessage = error.message;
+
+      // Clean ANSI codes
+      const cleanMessage = cleanAnsiCodes(errorMessage);
+
+      // Split into sections
+      const sections = cleanMessage.split("\n\n");
+      const mainError = sections[0]; // Error: expect(locator)... or expect(received).toBe(expected)
+
+      comment += mainError;
+
+      // Handle different error types
+      if (error.matcherResult) {
+        // API Test - has matcherResult object
+        comment += `\n\nExpected: ${error.matcherResult.expected}`;
+        comment += `\nReceived: ${error.matcherResult.actual}`;
+        comment += `\nMatcher: ${error.matcherResult.name}`;
+      } else {
+        // UI Test - parse from message
+        const locatorMatch = cleanMessage.match(/Locator: (.+)/);
+        const expectedMatch = cleanMessage.match(/Expected pattern: (.+)/);
+        const receivedMatch = cleanMessage.match(/Received string:\s*(.+)/);
+
+        if (locatorMatch) comment += `\n\nLocator: ${this.truncateText(locatorMatch[1], 80)}`;
+        if (expectedMatch) comment += `\nExpected: ${this.truncateText(expectedMatch[1], 50)}`;
+        if (receivedMatch) comment += `\nReceived: ${this.truncateText(receivedMatch[1], 100)}`;
+
+        // Optional: Add call log only if it has useful info
+        const callLogSection = cleanMessage.match(/Call log:\n([\s\S]*?)(?:\n\nCall Log:|$)/);
+        if (callLogSection && this.hasUsefulCallLog(callLogSection[1])) {
+          comment += `\n\nCall log:\n${callLogSection[1]}`;
+        }
       }
     }
 
-    // Add timeout information for timed out tests
-    if (testCase.status === "timeOut") {
-      parts.push("");
-      parts.push("⏱️ **Test Timed Out**");
-      parts.push("The test exceeded the maximum allowed execution time.");
+    return comment;
+  }
+
+  /**
+   * Formats passed test comment
+   */
+  formatPassedComment(duration: number): string {
+    return `Status: Passed\nDuration: ${this.formatDuration(duration)}\n\nExecuted by Playwright`;
+  }
+
+  /**
+   * Creates TestRail result object from test case
+   */
+  formatTestResult(testCase: TestCaseInfo): {
+    case_id: string;
+    status_id: number;
+    status_name: string;
+    assignedto_id: string;
+    comment: string;
+    elapsed: number;
+    elapsed_readable: string;
+  } {
+    const statusId = testCase.status === "passed" ? STATUS_MAPPING.passed : STATUS_MAPPING.failed;
+
+    return {
+      case_id: "[generated_case_id]",
+      status_id: statusId,
+      status_name: STATUS_NAMES[statusId],
+      assignedto_id: "[user_id]",
+      comment:
+        testCase.status === "passed" ? this.formatPassedComment(testCase.duration) : this.formatFailedComment(testCase),
+      elapsed: testCase.duration,
+      elapsed_readable: this.formatDuration(testCase.duration)
+    };
+  }
+
+  /**
+   * Enhances a test result comment with detailed information
+   * @param testCase - Test case information
+   * @returns Enhanced comment string
+   */
+  enhanceComment(testCase: TestCaseInfo): string {
+    let comment = "";
+
+    // Add status and duration at the top (always included)
+    comment += `Status: ${testCase.status === "passed" ? "Passed" : testCase.status === "failed" ? "Failed" : testCase.status}\n`;
+    comment += `Duration: ${this.formatDuration(testCase.duration)}\n\n`;
+
+    // Add custom prefix if provided
+    if (this.config.customPrefix) {
+      comment += `${this.config.customPrefix}\n\n`;
     }
 
-    // Add interruption information
-    if (testCase.status === "interrupted") {
-      parts.push("");
-      parts.push("🚫 **Test Interrupted**");
-      parts.push("The test was interrupted during execution (browser crash or external interruption).");
+    // Handle different test statuses
+    if (testCase.status === "passed") {
+      comment += "Executed by Playwright";
+    } else if (testCase.status === "failed") {
+      comment += this.formatFailedComment(testCase).split("\n\n").slice(1).join("\n\n"); // Remove duplicate status/duration
+    } else if (testCase.status === "timeOut") {
+      comment += "⏱️ Test Timed Out\nThe test exceeded the maximum allowed execution time.";
+    } else if (testCase.status === "interrupted") {
+      comment += "🚫 Test Interrupted\nThe test was interrupted during execution.";
+    } else if (testCase.status === "skipped") {
+      comment += "⏭️ Test Skipped";
     }
 
-    // Add duration information
-    if (this.config.includeDuration) {
-      parts.push("");
-      parts.push(`⏱️ **Duration:** ${this.formatDuration(testCase.duration)}`);
-    }
-
-    // Add timestamp
+    // Add timestamp if enabled
     if (this.config.includeTimestamp) {
-      parts.push(`🕐 **Executed:** ${new Date().toLocaleString()}`);
+      comment += `\n\nExecuted: ${new Date().toLocaleString()}`;
     }
-
-    // Add environment information
-    if (this.config.includeEnvironmentInfo && environmentInfo) {
-      parts.push("");
-      parts.push(this.formatEnvironmentInfo(environmentInfo));
-    }
-
-    // Add test steps summary if available
-    if (testCase._steps && testCase._steps.length > 0) {
-      parts.push("");
-      parts.push(this.formatTestSteps(testCase._steps));
-    }
-
-    let comment = parts.join("\n");
 
     // Truncate if too long
     if (comment.length > this.config.maxCommentLength) {
@@ -126,141 +204,25 @@ export class CommentEnhancer {
   }
 
   /**
-   * Formats test status with appropriate emoji and styling
-   * @param testCase - Test case information
-   * @returns Formatted status string
-   */
-  private formatTestStatus(testCase: TestCaseInfo): string {
-    const statusEmojis = {
-      passed: "✅",
-      failed: "❌",
-      skipped: "⏭️",
-      interrupted: "🚫",
-      timeOut: "⏱️"
-    };
-
-    const emoji = statusEmojis[testCase.status] || "❓";
-    const statusText = testCase.status.charAt(0).toUpperCase() + testCase.status.slice(1);
-
-    return `${emoji} **Test ${statusText}**`;
-  }
-
-  /**
-   * Formats duration from milliseconds to human readable format
-   * @param ms - Duration in milliseconds
-   * @returns Formatted duration string
-   */
-  private formatDuration(ms: number): string {
-    if (ms < 1000) return `${ms}ms`;
-    if (ms < 60000) return `${(ms / 1000).toFixed(1)}s`;
-    if (ms < 3600000) return `${(ms / 60000).toFixed(1)}m`;
-    return `${(ms / 3600000).toFixed(1)}h`;
-  }
-
-  /**
-   * Formats environment information
-   * @param envInfo - Environment information
-   * @returns Formatted environment string
-   */
-  private formatEnvironmentInfo(envInfo: EnvironmentInfo): string {
-    const parts: string[] = ["🖥️ **Environment:**"];
-
-    if (envInfo.browser) {
-      parts.push(`• Browser: ${envInfo.browser}${envInfo.browserVersion ? ` ${envInfo.browserVersion}` : ""}`);
-    }
-    if (envInfo.os) {
-      parts.push(`• OS: ${envInfo.os}`);
-    }
-    if (envInfo.nodeVersion) {
-      parts.push(`• Node.js: ${envInfo.nodeVersion}`);
-    }
-    if (envInfo.playwrightVersion) {
-      parts.push(`• Playwright: ${envInfo.playwrightVersion}`);
-    }
-    if (envInfo.testWorker) {
-      parts.push(`• Worker: ${envInfo.testWorker}`);
-    }
-
-    return parts.join("\n");
-  }
-
-  /**
-   * Formats test steps summary with detailed failure information
-   * @param steps - Array of test steps
-   * @returns Formatted steps string
-   */
-  private formatTestSteps(steps: any[]): string {
-    const parts: string[] = ["📋 **Test Steps:**"];
-
-    const relevantSteps = steps.filter(
-      (step) =>
-        step.category === "test.step" &&
-        step.title !== 'Expect "toPass"' &&
-        !step.title.includes("Before Hooks") &&
-        !step.title.includes("After Hooks")
-    );
-
-    if (relevantSteps.length === 0) {
-      return "";
-    }
-
-    let hasFailedStep = false;
-    relevantSteps.forEach((step, index) => {
-      const stepNumber = index + 1;
-      const status = step.error ? "❌" : "✅";
-      parts.push(`${stepNumber}. ${status} ${step.title}`);
-
-      // แสดง error message สำหรับ step ที่ failed
-      if (step.error) {
-        hasFailedStep = true;
-        parts.push(`   **❌ Failed:** ${step.error.message}`);
-
-        // แสดง duration ถ้ามี
-        if (step.duration) {
-          parts.push(`   **⏱️ Duration:** ${this.formatDuration(step.duration)}`);
-        }
-
-        // แสดง stack trace ถ้าเปิดใช้งาน
-        if (step.error.stack && this.config.includeStackTrace) {
-          parts.push(`   **Stack:** ${step.error.stack.split("\n")[0]}`);
-        }
-      }
-    });
-
-    // เพิ่มสรุป failed step
-    if (hasFailedStep) {
-      const failedSteps = relevantSteps.filter((step) => step.error);
-      parts.push("");
-      parts.push(`🚨 **Failed Steps Summary:** ${failedSteps.length} out of ${relevantSteps.length} steps failed`);
-
-      failedSteps.forEach((step, index) => {
-        parts.push(`• Step ${relevantSteps.indexOf(step) + 1}: ${step.title} - ${step.error.message}`);
-      });
-    }
-
-    return parts.join("\n");
-  }
-
-  /**
    * Creates a simple comment for passed tests
-   * @param testCase - Test case information
-   * @param executedByText - Custom executed by text
-   * @returns Simple comment string
    */
   createSimplePassedComment(testCase: TestCaseInfo, executedByText = "Executed by Playwright"): string {
     const parts: string[] = [];
 
+    // Always include status and duration at the top
+    parts.push("Status: Passed");
+    parts.push(`Duration: ${this.formatDuration(testCase.duration)}`);
+    parts.push(""); // Empty line separator
+
     if (this.config.customPrefix) {
       parts.push(this.config.customPrefix);
+      parts.push("");
     }
 
-    parts.push(`✅ ${executedByText}`);
-
-    if (this.config.includeDuration) {
-      parts.push(`Duration: ${this.formatDuration(testCase.duration)}`);
-    }
+    parts.push(executedByText);
 
     if (this.config.includeTimestamp) {
+      parts.push("");
       parts.push(`Executed: ${new Date().toLocaleString()}`);
     }
 
@@ -268,55 +230,7 @@ export class CommentEnhancer {
   }
 
   /**
-   * Extracts environment information from test context
-   * @param testInfo - Playwright TestInfo object
-   * @returns Environment information
-   */
-  static extractEnvironmentInfo(testInfo: any): EnvironmentInfo {
-    const envInfo: EnvironmentInfo = {};
-
-    // Extract browser information
-    if (testInfo.project) {
-      envInfo.browser = testInfo.project.name;
-      if (testInfo.project.use?.browserName) {
-        envInfo.browser = testInfo.project.use.browserName;
-      }
-    }
-
-    // Extract OS information
-    if (process.platform) {
-      const osMap: Record<string, string> = {
-        win32: "Windows",
-        darwin: "macOS",
-        linux: "Linux"
-      };
-      envInfo.os = osMap[process.platform] || process.platform;
-    }
-
-    // Extract Node.js version
-    if (process.version) {
-      envInfo.nodeVersion = process.version;
-    }
-
-    // Extract test worker information
-    if (process.env.TEST_WORKER_INDEX) {
-      envInfo.testWorker = `Worker ${process.env.TEST_WORKER_INDEX}`;
-    }
-
-    // Try to extract Playwright version (this might not always be available)
-    try {
-      const playwrightPackage = require("@playwright/test/package.json");
-      envInfo.playwrightVersion = playwrightPackage.version;
-    } catch {
-      // Playwright version not available
-    }
-
-    return envInfo;
-  }
-
-  /**
    * Updates the configuration
-   * @param newConfig - New configuration options
    */
   updateConfig(newConfig: Partial<CommentEnhancementConfig>): void {
     this.config = { ...this.config, ...newConfig };
@@ -324,7 +238,6 @@ export class CommentEnhancer {
 
   /**
    * Gets the current configuration
-   * @returns Current configuration
    */
   getConfig(): CommentEnhancementConfig {
     return { ...this.config };

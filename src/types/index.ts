@@ -7,8 +7,17 @@ export interface TestCaseInfo {
   status: "passed" | "failed" | "skipped" | "interrupted" | "timeOut";
   duration: number;
   _steps?: TestStep[];
-  _failureInfo?: import("../utils/failure-capture.js").FailureInfo;
-  _environmentInfo?: import("../utils/comment-enhancer.js").EnvironmentInfo;
+  errors?: Array<{
+    message: string;
+    stack?: string;
+    matcherResult?: {
+      actual: any;
+      expected: any;
+      message: string;
+      name: string;
+      pass: boolean;
+    };
+  }>;
 }
 
 /**

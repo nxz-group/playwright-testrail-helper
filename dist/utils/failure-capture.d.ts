@@ -40,11 +40,17 @@ export declare class FailureCapture {
      */
     static extractFailureInfo(testInfo: any, testResult?: any, steps?: TestStep[]): FailureInfo | null;
     /**
-     * Cleans error messages by removing ANSI escape codes and formatting
+     * Cleans and formats error messages for better readability
      * @param message - Raw error message
-     * @returns Cleaned error message
+     * @returns Cleaned and formatted error message
      */
     static cleanErrorMessage(message: string): string;
+    /**
+     * Formats Playwright error messages into a more readable structure
+     * @param message - Cleaned error message
+     * @returns Formatted error message
+     */
+    static formatPlaywrightError(message: string): string;
     /**
      * Formats failure information into a readable comment for TestRail
      * @param failureInfo - Failure information object

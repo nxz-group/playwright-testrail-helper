@@ -35,12 +35,6 @@ export declare class TestCaseManager {
      */
     getStatusId(status: string): TestStatus | null;
     /**
-     * Formats test duration from milliseconds to human readable format
-     * @param ms - Duration in milliseconds
-     * @returns Formatted duration string
-     */
-    formatDuration(ms: number): string;
-    /**
      * Validates test case data structure
      * @param testCase - Test case to validate
      * @throws {TestRailError} When validation fails

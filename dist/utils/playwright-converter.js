@@ -1,7 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PlaywrightConverter = void 0;
-const comment_enhancer_js_1 = require("./comment-enhancer.js");
 const failure_capture_js_1 = require("./failure-capture.js");
 /**
  * Utility functions for converting Playwright test objects to TestRail format
@@ -22,17 +21,6 @@ class PlaywrightConverter {
         const duration = PlaywrightConverter.getTestDuration(testInfo, testResult);
         // Extract test steps if available
         const steps = PlaywrightConverter.extractTestSteps(testInfo, testResult);
-        // Extract failure information for failed tests
-        let failureInfo = null;
-        if (status === "failed") {
-            failureInfo = failure_capture_js_1.FailureCapture.extractFailureInfo(testInfo, testResult, steps);
-        }
-        else if (status === "timeOut") {
-            failureInfo = failure_capture_js_1.FailureCapture.extractTimeoutFailure(testInfo, testResult);
-        }
-        else if (status === "interrupted") {
-            failureInfo = failure_capture_js_1.FailureCapture.extractInterruptionFailure(testInfo, testResult);
-        }
         const testCaseInfo = {
             title: testInfo.title,
             tags,
@@ -40,13 +28,17 @@ class PlaywrightConverter {
             duration,
             _steps: steps
         };
-        // Add failure information to test case if available
-        if (failureInfo) {
-            testCaseInfo._failureInfo = failureInfo;
+        // Only add failure information for failed tests if needed
+        if (status === "failed") {
+            const failureInfo = failure_capture_js_1.FailureCapture.extractFailureInfo(testInfo, testResult, steps);
+            if (failureInfo) {
+                // Convert FailureInfo to errors array format
+                testCaseInfo.errors = [{
+                        message: failureInfo.errorMessage,
+                        stack: failureInfo.errorStack
+                    }];
+            }
         }
-        // Add environment information
-        const environmentInfo = comment_enhancer_js_1.CommentEnhancer.extractEnvironmentInfo(testInfo);
-        testCaseInfo._environmentInfo = environmentInfo;
         return testCaseInfo;
     }
     /**
@@ -160,6 +152,14 @@ class PlaywrightConverter {
                     title: step.title,
                     error: step.error ? { message: step.error.message || String(step.error) } : undefined
                 });
+            });
+        }
+        // If no steps from testResult but we have errors, create a step from the error
+        if (steps.length === 0 && testInfo.errors && testInfo.errors.length > 0) {
+            steps.push({
+                category: "test.step",
+                title: "Test execution failed",
+                error: { message: testInfo.errors[0].message }
             });
         }
         // Extract from test info attachments or other sources
