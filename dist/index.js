@@ -180,3 +180,4 @@ __exportStar(require("./utils/errors"), exports);
 __exportStar(require("./utils/playwright-converter"), exports);
 __exportStar(require("./utils/failure-capture"), exports);
 __exportStar(require("./utils/comment-enhancer"), exports);
+__exportStar(require("./utils/testinfo-analyzer"), exports);

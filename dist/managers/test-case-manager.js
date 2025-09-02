@@ -197,7 +197,30 @@ class TestCaseManager {
             // For failed/timeout/interrupted tests, use enhanced comment with failure info
             const failureInfo = testCase._failureInfo;
             const environmentInfo = testCase._environmentInfo;
-            comment = this.commentEnhancer.enhanceComment(testCase, failureInfo, environmentInfo);
+            // If no failure info is provided for failed tests, create a default one
+            if (testCase.status === "failed" && !failureInfo) {
+                // Extract error message from steps if available
+                let errorMessage = "Test failed without specific error message";
+                if (testCase._steps) {
+                    const failedStep = testCase._steps.find((step) => step.error);
+                    if (failedStep?.error?.message) {
+                        errorMessage = failedStep.error.message;
+                    }
+                }
+                const defaultFailureInfo = {
+                    errorMessage,
+                    errorStack: undefined,
+                    failedStep: undefined,
+                    location: undefined,
+                    screenshot: undefined,
+                    video: undefined,
+                    trace: undefined
+                };
+                comment = this.commentEnhancer.enhanceComment(testCase, defaultFailureInfo, environmentInfo);
+            }
+            else {
+                comment = this.commentEnhancer.enhanceComment(testCase, failureInfo, environmentInfo);
+            }
         }
         return {
             case_id: testCaseId,

@@ -59,7 +59,7 @@ export declare class CommentEnhancer {
      */
     private formatEnvironmentInfo;
     /**
-     * Formats test steps summary
+     * Formats test steps summary with detailed failure information
      * @param steps - Array of test steps
      * @returns Formatted steps string
      */
