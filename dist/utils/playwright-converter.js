@@ -33,10 +33,12 @@ class PlaywrightConverter {
             const failureInfo = failure_capture_js_1.FailureCapture.extractFailureInfo(testInfo, testResult, steps);
             if (failureInfo) {
                 // Convert FailureInfo to errors array format
-                testCaseInfo.errors = [{
+                testCaseInfo.errors = [
+                    {
                         message: failureInfo.errorMessage,
                         stack: failureInfo.errorStack
-                    }];
+                    }
+                ];
             }
         }
         return testCaseInfo;

@@ -20,10 +20,10 @@ A comprehensive TestRail integration library designed primarily for **Playwright
 
 ```bash
 # SSH (Recommended)
-npm install git+ssh://git@github.com/nxz-group/playwright-testrail-helper.git#v1.2.2
+npm install git+ssh://git@github.com/nxz-group/playwright-testrail-helper.git#v1.4.0
 
 # HTTPS (Alternative)
-npm install git+https://github.com/nxz-group/playwright-testrail-helper.git#v1.2.2
+npm install git+https://github.com/nxz-group/playwright-testrail-helper.git#v1.4.0
 ```
 
 ### Local Development
@@ -286,9 +286,8 @@ interface TestCaseInfo {
   tags: string[];
   status: "passed" | "failed" | "skipped" | "interrupted" | "timeOut";
   duration: number;
-  _steps?: TestStep[];
-  _failureInfo?: FailureInfo;
-  _environmentInfo?: EnvironmentInfo;
+  errors?: Array<{ message: string; stack?: string }>;
+  comment?: string;
 }
 ```
 

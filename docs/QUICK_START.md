@@ -2,19 +2,18 @@
 
 > 📚 **Navigation:** [← Back to README](../README.md) | [API Reference →](API.md) | [Examples →](EXAMPLES.md)
 
-## ✨ What's New in v1.2.0
+## ✨ What's New in v1.4.0
 
-**One-line automatic failure capture and enhanced comments!**
+**Smart error detection and enhanced comment formatting!**
 
 ```typescript
-// Before v1.2.0 (manual work)
+// Before v1.4.0 (manual work)
 const testCaseInfo = PlaywrightConverter.convertTestInfo(testInfo);
-const failureInfo = FailureCapture.extractFailureInfo(...);
-const environmentInfo = CommentEnhancer.extractEnvironmentInfo(...);
+const errorInfo = ErrorCapture.extractErrorInfo(...);
 await onTestRailHelper.updateTestResult(..., [testCaseInfo]);
 
-// After v1.2.0 (automatic!)
-await onTestRailHelper.updateTestResultFromPlaywrightSingle(..., testInfo);
+// After v1.4.0 (automatic!)
+await onTestRailHelper.updateTestResultSingle(..., testInfo);
 // Done! Everything else is automatic 🎉
 ```
 
@@ -52,7 +51,7 @@ test("@smoke @login @high User can login", async ({ page }) => {
 // Enhanced afterEach hook - everything automatic!
 test.afterEach(async ({ }, testInfo) => {
   // 🎉 One line does it all! No conversion needed!
-  await onTestRailHelper.updateTestResultFromPlaywrightSingle(
+  await onTestRailHelper.updateTestResultSingle(
     "My Test Run",
     123, // Section ID
     456, // Platform ID
@@ -63,45 +62,37 @@ test.afterEach(async ({ }, testInfo) => {
 
 ## 🎊 What You Get Automatically
 
+**New in v1.4.0:** Smart error detection and standardized comment formatting!
+
 ### ✅ **Passed Test Comments**
 ```
-🤖 Automated Test
-✅ Executed by Playwright
-Duration: 2.3s
-Executed: 15/12/2024, 10:30:45
+Status: ✅ PASSED | Duration: 2.3s
+
+🤖 Automated Test - Executed by Playwright
 ```
 
 ### ❌ **Failed Test Comments**
 ```
-🤖 Automated Test
-❌ **Test Failed**
-**Error:** Expected element to be visible, but it was not found
-**Failed Step:** Click login button
-**Location:** /tests/login.spec.ts:42:10
-**Attachments:** 📸 Screenshot, 🎥 Video, 🔍 Trace
+Status: ❌ FAILED | Duration: 5.2s
 
-⏱️ **Duration:** 5.2s
-🕐 **Executed:** 15/12/2024, 10:30:45
+🤖 Automated Test - Executed by Playwright
 
-🖥️ **Environment:**
-• Browser: chromium 119.0.6045.105
-• OS: macOS
-• Node.js: v18.17.0
-• Playwright: 1.40.0
+❌ Error Details:
+Expected element to be visible, but it was not found
 
-📋 **Test Steps:**
-1. ✅ Navigate to login page
-2. ❌ Click login button
+Stack Trace:
+Error: Expected element to be visible
+    at /tests/login.spec.ts:42:10
+    at TestCase.run (/node_modules/@playwright/test/lib/testCase.js:123:45)
 ```
 
 ### ⏱️ **Timeout Test Comments**
 ```
-🤖 Automated Test
-⏱️ **Test Timed Out**
-The test exceeded the maximum allowed execution time.
+Status: ⏱️ TIMEOUT | Duration: 30.0s
 
-⏱️ **Duration:** 30.0s
-🕐 **Executed:** 15/12/2024, 10:30:45
+🤖 Automated Test - Executed by Playwright
+
+⏱️ Test timed out after 30 seconds
 ```
 
 ## 🔧 Advanced Usage (Optional)
@@ -109,21 +100,17 @@ The test exceeded the maximum allowed execution time.
 ### Custom Comment Configuration
 
 ```typescript
-import { TestCaseManager, CommentEnhancer } from "playwright-testrail-helper";
+import { CommentEnhancer } from "playwright-testrail-helper";
 
 // Custom comment configuration
 const commentConfig = {
   includeStackTrace: true,
-  includeEnvironmentInfo: true,
   customPrefix: "🤖 Custom Automated Test"
 };
 
-// Apply to TestCaseManager
-const testCaseManager = new TestCaseManager(
-  client,
-  "Executed by Playwright",
-  commentConfig
-);
+// Use with CommentEnhancer
+const enhancer = new CommentEnhancer();
+const comment = enhancer.enhanceComment(testInfo, commentConfig);
 ```
 
 ### Environment-Specific Configuration
@@ -134,13 +121,11 @@ function getCommentConfig(env: "dev" | "staging" | "prod") {
     case "dev":
       return {
         includeStackTrace: true,
-        includeEnvironmentInfo: true,
         customPrefix: "🔧 Development Test"
       };
     case "prod":
       return {
         includeStackTrace: false,
-        includeEnvironmentInfo: false,
         customPrefix: "🚀 Production Test"
       };
   }
@@ -158,20 +143,20 @@ Your existing code continues to work exactly the same, but now you get enhanced 
 const testCaseInfo = PlaywrightConverter.convertTestInfo(testInfo);
 
 // But now testCaseInfo automatically includes:
-// ✅ _failureInfo (if test failed)
-// ✅ _environmentInfo (browser, OS, etc.)
+// ✅ errors array (if test failed)
 // ✅ Enhanced comments in TestRail
+// ✅ Smart error detection and formatting
 ```
 
 ## 🎯 Key Benefits
 
-| Feature | Before v1.2.0 | After v1.2.0 |
+| Feature | Before v1.4.0 | After v1.4.0 |
 |---------|----------------|---------------|
-| **Failure Capture** | Manual extraction | ✅ Automatic |
-| **Environment Info** | Manual detection | ✅ Automatic |
-| **Enhanced Comments** | Basic text | ✅ Rich formatting |
-| **Error Cleaning** | Raw error messages | ✅ Clean, formatted |
-| **Attachment Linking** | Not supported | ✅ Automatic |
+| **Error Detection** | Manual extraction | ✅ Smart Auto-Detection |
+| **Comment Format** | Inconsistent | ✅ Standardized Headers |
+| **Error Messages** | Raw error text | ✅ Clean, formatted |
+| **Text Truncation** | No limit | ✅ Smart truncation |
+| **UI vs API Detection** | Manual | ✅ Automatic detection |
 | **Setup Complexity** | Multiple steps | ✅ One line |
 
 ## 🚀 Next Steps

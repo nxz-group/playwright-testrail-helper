@@ -34,7 +34,6 @@ export const environments = {
   development: {
     testRail: {
       includeStackTrace: true,
-      includeEnvironmentInfo: true,
       maxRetries: 3,
       retryDelay: 1000,
       commentPrefix: "🔧 Dev Test"
@@ -43,7 +42,6 @@ export const environments = {
   staging: {
     testRail: {
       includeStackTrace: true,
-      includeEnvironmentInfo: true,
       maxRetries: 5,
       retryDelay: 2000,
       commentPrefix: "🧪 Staging Test"
@@ -52,7 +50,6 @@ export const environments = {
   production: {
     testRail: {
       includeStackTrace: false,
-      includeEnvironmentInfo: false,
       maxRetries: 10,
       retryDelay: 5000,
       commentPrefix: "🚀 Production Test"
