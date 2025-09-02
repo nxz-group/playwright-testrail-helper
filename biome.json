@@ -26,22 +26,22 @@
     "rules": {
       "recommended": true,
       "suspicious": {
-        "noExplicitAny": "warn",
+        "noExplicitAny": "off",
         "noExportsInTest": "off"
       },
       "correctness": {
-        "noUnusedVariables": "warn",
+        "noUnusedVariables": "off",
         "noEmptyPattern": "off"
       },
       "style": {
         "useConst": "error",
-        "useTemplate": "warn",
+        "useTemplate": "off",
         "noNonNullAssertion": "off",
-        "noUselessElse": "warn",
+        "noUselessElse": "off",
         "noUnusedTemplateLiteral": "off"
       },
       "complexity": {
-        "noForEach": "warn",
+        "noForEach": "off",
         "noStaticOnlyClass": "off",
         "noUselessConstructor": "off"
       }

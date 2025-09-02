@@ -1,5 +1,7 @@
 # Technical Details & Advanced Configuration
 
+> 📚 **Navigation:** [← Back to README](../README.md) | [API Reference →](API.md) | [Setup Guide →](SETUP.md)
+
 ## Architecture Overview
 
 ### Core Components
@@ -557,4 +559,14 @@ export const secureAxiosConfig = {
   maxRedirects: 3,
   validateStatus: (status: number) => status < 500
 };
-```
+```---
+
+
+## 📚 Related Documentation
+
+- **[← Back to README](../README.md)** - Main documentation
+- **[API Reference](API.md)** - Complete API documentation
+- **[Setup Guide](SETUP.md)** - Development setup instructions
+- **[Environment Variables](ENVIRONMENT_VARIABLES.md)** - Configuration guide
+- **[Examples](EXAMPLES.md)** - Comprehensive usage examples
+- **[Integration Examples](INTEGRATION_EXAMPLES.md)** - CI/CD & framework examples

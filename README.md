@@ -1,190 +1,389 @@
-# playwright-testrail-helper
+# TestRail Helper
 
-A TypeScript library for seamless TestRail integration with Playwright test automation, designed for parallel execution and enterprise use.
+A comprehensive TestRail integration library designed primarily for **Playwright** with advanced support for any testing framework.
 
-## Features
+## 🎯 Primary Framework: Playwright
+- **Automatic conversion** from Playwright TestInfo to TestRail format
+- **Parallel worker support** for Playwright's parallel execution
+- **Built-in error handling** and retry logic
 
-- 🚀 **Parallel Execution** - Supports up to 10 concurrent workers
-- 🔒 **Race Condition Safe** - Atomic file operations and intelligent locking
-- 🔄 **Network Resilient** - Automatic retry logic for API failures
-- 📊 **Smart Coordination** - Adaptive worker synchronization
-- 🛡️ **Production Ready** - Comprehensive error handling and validation
-- 📝 **Full TypeScript** - Complete type safety and IntelliSense support
+## 🔧 Advanced Framework Support
+- **Jest, Mocha, Cypress** and any custom testing framework
+- **Full control** over test data transformation
+- **Custom field mapping** and metadata enhancement
 
-## Installation
+---
 
-This is an internal library. Install it using one of these methods:
+## 📦 Installation
+
+### Git Installation (Recommended)
 
 ```bash
-# From internal repository (SSH - Recommended)
-npm install git+ssh://git@github.com/nxz-group/playwright-testrail-helper.git#v1.3.0
+# SSH (Recommended)
+npm install git+ssh://git@github.com/nxz-group/playwright-testrail-helper.git#v1.2.2
 
-# From internal repository (HTTPS)
-npm install git+https://github.com/nxz-group/playwright-testrail-helper.git#v1.3.0
+# HTTPS (Alternative)
+npm install git+https://github.com/nxz-group/playwright-testrail-helper.git#v1.2.2
+```
 
-# Or clone and link locally for development
-git clone git@github.com/nxz-group/playwright-testrail-helper.git
+### Local Development
+
+```bash
+# Clone and link locally
+git clone git@github.com:nxz-group/playwright-testrail-helper.git
 cd playwright-testrail-helper
 npm install
-npm run build
 npm link
 
 # In your project
 npm link playwright-testrail-helper
 ```
 
-> 🔑 **SSH**: Requires SSH keys configured for GitHub access  
-> 🌐 **HTTPS**: May require GitHub personal access token for private repos  
-> 🔗 **Local Link**: Best for active development and testing
-> 📌 **Version**: Update the version tag as needed (e.g., #v1.2.3, #main)
+## ⚙️ Environment Setup
 
-## Quick Start
+Required environment variables:
 
-### 1. Environment Setup
 ```bash
-# Required
-TEST_RAIL_HOST=https://your-domain.testrail.io
-TEST_RAIL_USERNAME=your-email@domain.com
-TEST_RAIL_PASSWORD=your-api-key-here
-TEST_RAIL_PROJECT_ID=4
+TEST_RAIL_HOST=https://your-company.testrail.io
+TEST_RAIL_USERNAME=your-email@company.com
+TEST_RAIL_PASSWORD=your-api-key
+TEST_RAIL_PROJECT_ID=123
+
+# Optional
+TEST_RAIL_DIR=testRail                    # Default: "testRail"
+TEST_RAIL_EXECUTED_BY="Executed by CI"   # Default: "Executed by Playwright"
 ```
 
-> 🚀 **Need help fast? Check our [Quick Reference Guide](./docs/QUICK_REFERENCE.md)**
+### 🔄 Migration from Old Library
 
-### 2. Basic Usage (One Line Integration!)
+If you're migrating from an older TestRail library:
+
+```bash
+# OLD library (still supported for backward compatibility)
+TEST_RAIL_ENDPOINT=https://your-company.testrail.io  # ⚠️ Deprecated
+
+# NEW library (recommended)
+TEST_RAIL_HOST=https://your-company.testrail.io      # ✅ Use this
+```
+
+**Note:** `TEST_RAIL_ENDPOINT` is still supported but deprecated. You'll see a warning message. Please migrate to `TEST_RAIL_HOST` when convenient.
+
+---
+
+## 🚀 Quick Start
+
+### Standard Usage (Playwright - Recommended)
+
 ```typescript
 import { onTestRailHelper } from 'playwright-testrail-helper';
 
-// Define your section IDs
-const SECTION_IDS = {
-  login: 100,
-  dashboard: 101,
-  payments: 102
-};
+// Collect test results
+const testResults: TestInfo[] = [];
 
-// 🎉 One-line integration with automatic failure capture!
 test.afterEach(async ({ }, testInfo) => {
-  await onTestRailHelper.updateTestResultFromPlaywrightSingle(
-    "Login Tests",                           // Run name
-    SECTION_IDS.login,                      // Section ID
-    onTestRailHelper.platform.WEB_DESKTOP, // Platform
-    testInfo                                // Playwright testInfo - automatic!
+  testResults.push(testInfo);
+});
+
+test.afterAll(async () => {
+  await onTestRailHelper.updateTestResult(
+    "My Test Run",     // Run name
+    123,               // Section ID
+    1,                 // Platform ID
+    testResults        // Playwright TestInfo array
   );
 });
 ```
 
-### 3. Test Tagging
+### Single Test Usage (Playwright)
+
 ```typescript
-// Proper test tagging for better organization
-test("@smoke @functional @critical @login User can login successfully", async ({ page }) => {
-  await page.goto('/login');
-  await page.fill('#username', 'testuser@example.com');
-  await page.fill('#password', 'validpassword');
-  await page.click('#login-button');
-  
-  await expect(page.locator('.welcome-message')).toBeVisible();
+test.afterEach(async ({ }, testInfo) => {
+  await onTestRailHelper.updateTestResultSingle(
+    "My Test Run",
+    123,        // Section ID
+    1,          // Platform ID
+    testInfo    // Single Playwright TestInfo
+  );
 });
 ```
 
-> 📋 **For detailed tagging guidelines, see [Test Tags Guide](./docs/TEST_TAGS.md)**
+---
 
-## Platform Types
+## 🔧 Advanced Usage
 
-Access platform constants directly from the helper:
+### Custom Framework Integration
+
+For **Jest, Mocha, Cypress** or when you need **full control**:
 
 ```typescript
-// Recommended approach
-onTestRailHelper.platform.API              // 1 - API testing
-onTestRailHelper.platform.WEB_DESKTOP      // 2 - Desktop web
-onTestRailHelper.platform.MOBILE_APPLICATION // 5 - Mobile app
+import { onTestRailHelper, TestStatus, type TestCaseInfo } from 'playwright-testrail-helper';
 
-// Alternative approach
-import { Platform } from 'playwright-testrail-helper';
-Platform.WEB_DESKTOP
+// Manual conversion approach (current project pattern)
+const testList: TestCaseInfo[] = [];
+
+test.afterEach(async ({ }, testInfo) => {
+  const customTestCase: TestCaseInfo = {
+    title: testInfo.title,
+    status: customStatusMapping(testInfo.status),
+    comment: enhanceErrorMessage(testInfo.error),
+    duration: testInfo.duration,
+    // Add custom fields
+    customField1: "additional data",
+    retryCount: testInfo.retry
+  };
+  testList.push(customTestCase);
+});
+
+test.afterAll(async () => {
+  await onTestRailHelper.updateTestResultAdvanced(
+    "My Test Run",
+    123,        // Section ID  
+    1,          // Platform ID
+    testList    // Custom TestCaseInfo array
+  );
+});
 ```
 
-> 📊 **For complete platform guide, see [Platform Types](./docs/PLATFORM_TYPES.md)**
+### Jest Integration Example
 
-## Advanced Usage
-
-### Section Organization
 ```typescript
-export const TEST_SECTIONS = {
-  authentication: { login: 100, logout: 101 },
-  ecommerce: { cart: 200, checkout: 201 }
-} as const;
+const jestResults: TestCaseInfo[] = jestTestResults.map(result => ({
+  title: result.fullName,
+  status: result.status === 'passed' ? TestStatus.PASSED : TestStatus.FAILED,
+  comment: result.failureMessage || '',
+  duration: result.duration
+}));
+
+await onTestRailHelper.updateTestResultAdvanced(runName, sectionId, platformId, jestResults);
 ```
 
-### Batch Updates
+---
+
+## 📚 API Reference
+
+### Primary API (Playwright)
+
+#### `updateTestResult(runName, sectionId, platformId, testInfos, isReset?)`
+**Recommended for most Playwright users**
+- **Input:** Array of Playwright `TestInfo` objects
+- **Features:** Automatic conversion, parallel worker support
+- **Use Case:** Batch test execution in `afterAll` hook
+
+#### `updateTestResultSingle(runName, sectionId, platformId, testInfo, isReset?)`
+**For single test updates**
+- **Input:** Single Playwright `TestInfo` object  
+- **Use Case:** Individual test execution in `afterEach` hook
+
+### Advanced API (Any Framework)
+
+#### `updateTestResultAdvanced(runName, sectionId, platformId, testList, isReset?)`
+**For power users and custom frameworks**
+- **Input:** Array of `TestCaseInfo` objects (your custom format)
+- **Features:** Full control over test data, custom field mapping
+- **Use Case:** Non-Playwright frameworks, advanced customization
+
+---
+
+## 🏗️ Advanced Customizations
+
+When using `updateTestResultAdvanced()`, you have full control over:
+
+- ✅ **Custom test status mapping**
+- ✅ **Custom error message formatting**  
+- ✅ **Custom test metadata and fields**
+- ✅ **Manual test case creation/updates**
+- ✅ **Custom retry logic and failure handling**
+- ✅ **Integration with non-Playwright test runners**
+- ✅ **Custom test execution timing and duration**
+- ✅ **Advanced filtering and test selection**
+
+---
+
+## 🛠️ Constants & Types
+
 ```typescript
-await onTestRailHelper.updateTestResult(
-  "Batch Tests",
-  SECTION_IDS.login,
-  onTestRailHelper.platform.WEB_DESKTOP,
-  testResults // Array of test results
-);
+import { 
+  TestStatus, 
+  Platform, 
+  Priority, 
+  TestTemplate, 
+  TestType,
+  AutomationType,
+  type TestCaseInfo,
+  type TestResult,
+  type TestStep,
+  type TestRailConfig,
+  type TestRunInfo,
+  type TestCaseData
+} from 'playwright-testrail-helper';
 ```
 
-### Error Handling
+### Test Status
 ```typescript
-import { TestRailError, APIError, ConfigurationError } from 'playwright-testrail-helper';
+TestStatus.PASSED = 1
+TestStatus.BLOCKED = 2  
+TestStatus.RETEST = 4
+TestStatus.FAILED = 5
+```
 
-try {
-  await onTestRailHelper.updateTestResult(runName, sectionId, platform, results);
-} catch (error) {
-  if (error instanceof ConfigurationError) {
-    console.error('Configuration issue:', error.message);
-  } else if (error instanceof APIError) {
-    console.error('TestRail API error:', error.statusCode, error.message);
-  }
+### Platform Types
+```typescript
+Platform.API = 1
+Platform.WEB_DESKTOP = 2
+Platform.WEB_RESPONSIVE = 3
+Platform.WEB_DESKTOP_AND_RESPONSIVE = 4
+Platform.MOBILE_APPLICATION = 5
+Platform.MIGRATION = 6
+Platform.OTHER = 7
+```
+
+### Test Types
+```typescript
+TestType.ACCEPTANCE = 1
+TestType.ACCESSIBILITY = 2
+TestType.AUTOMATED = 3
+TestType.COMPATIBILITY = 4
+TestType.DESTRUCTIVE = 5
+TestType.FUNCTIONAL = 6
+TestType.OTHER = 7
+TestType.PERFORMANCE = 8
+TestType.REGRESSION = 9
+TestType.SECURITY = 10
+TestType.SMOKE_AND_SANITY = 11
+TestType.USABILITY = 12
+TestType.EXPLORATORY = 13
+```
+
+### Test Templates
+```typescript
+TestTemplate.TEST_CASE_TEXT = 1
+TestTemplate.TEST_CASE_STEP = 2
+TestTemplate.EXPLORATORY = 3
+TestTemplate.BDD = 4
+```
+
+### Automation Types
+```typescript
+AutomationType.MANUAL = 1
+AutomationType.AUTOMATABLE = 2
+AutomationType.AUTOMATED = 3
+```
+
+### Priority Levels
+```typescript
+Priority.LOW = 1
+Priority.MEDIUM = 2
+Priority.HIGH = 3
+Priority.CRITICAL = 4
+```
+
+### Key Interfaces
+
+#### TestCaseInfo
+```typescript
+interface TestCaseInfo {
+  title: string;
+  tags: string[];
+  status: "passed" | "failed" | "skipped" | "interrupted" | "timeOut";
+  duration: number;
+  _steps?: TestStep[];
+  _failureInfo?: FailureInfo;
+  _environmentInfo?: EnvironmentInfo;
 }
 ```
 
-## Configuration
+#### TestResult
+```typescript
+interface TestResult {
+  case_id: number;
+  status_id: number;
+  assignedto_id: number;
+  comment: string;
+  elapsed: number;
+}
+```
 
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `TEST_RAIL_HOST` | ✅ | - | TestRail instance URL |
-| `TEST_RAIL_USERNAME` | ✅ | - | TestRail username/email |
-| `TEST_RAIL_PASSWORD` | ✅ | - | TestRail password or API key |
-| `TEST_RAIL_PROJECT_ID` | ✅ | - | TestRail project ID |
-| `TEST_RAIL_DIR` | ❌ | `testRail` | Directory for coordination files |
+#### TestStep
+```typescript
+interface TestStep {
+  category: string;
+  title: string;
+  error?: { message: string };
+}
+```
 
-> ⚙️ **For complete configuration reference, see [Environment Variables](./docs/ENVIRONMENT_VARIABLES.md)**
+---
 
-## Troubleshooting
-
-### Common Issues
-
-**Missing environment variables**
-- Ensure all required variables are set
-
-**File lock timeout**
-- Check for stale `.lock` files in TestRail directory
-
-**API rate limiting**
-- Reduce concurrent workers or add delays
-
-> 🔍 **For detailed troubleshooting, see [Technical Details](./docs/TECHNICAL_DETAILS.md)**
+---
 
 ## 📚 Documentation
 
-| Document | Description |
-|----------|-------------|
-| **[Quick Reference](./docs/QUICK_REFERENCE.md)** | 🚀 2-minute setup guide & cheat sheet |
-| **[Test Tags](./docs/TEST_TAGS.md)** | 🏷️ Test tagging system & best practices |
-| **[Platform Types](./docs/PLATFORM_TYPES.md)** | 📊 Platform constants & usage examples |
-| **[Visual Guide](./docs/VISUAL_GUIDE.md)** | 📈 Flowcharts, diagrams & decision trees |
-| **[Technical Details](./docs/TECHNICAL_DETAILS.md)** | 🔧 Advanced configuration & architecture |
-| **[Integration Examples](./docs/INTEGRATION_EXAMPLES.md)** | 🔗 CI/CD, Docker, Kubernetes examples |
-| **[Development Setup](./docs/SETUP.md)** | 🛠️ Local development & contribution guide |
-| **[Changelog](./docs/CHANGELOG.md)** | 📋 Version history & feature details |
-| **[Environment Variables](./docs/ENVIRONMENT_VARIABLES.md)** | ⚙️ Configuration reference |
+### 🚀 Getting Started
+- **[Quick Start Guide](docs/QUICK_START.md)** - Get started in minutes
+- **[Setup Guide](docs/SETUP.md)** - Development setup instructions
+- **[Environment Variables](docs/ENVIRONMENT_VARIABLES.md)** - Configuration guide
 
-## License
+### 📖 Reference
+- **[API Documentation](docs/API.md)** - Complete API reference
+- **[Examples](docs/EXAMPLES.md)** - Comprehensive usage examples
+- **[Quick Reference](docs/QUICK_REFERENCE.md)** - Cheat sheet for common tasks
 
-Internal use only - proprietary to the organization.
+### 🔧 Advanced
+- **[Integration Examples](docs/INTEGRATION_EXAMPLES.md)** - CI/CD & framework examples
+- **[Technical Details](docs/TECHNICAL_DETAILS.md)** - Advanced configuration
+- **[Platform Types](docs/PLATFORM_TYPES.md)** - Platform configuration guide
 
-## Support
+---
 
-For issues and questions, please contact your internal development team or create an issue in the company repository.
+## 🚨 Troubleshooting
+
+### Common Issues
+
+#### Environment Variables Not Found
+```bash
+# Make sure all required variables are set
+echo $TEST_RAIL_HOST
+echo $TEST_RAIL_USERNAME
+echo $TEST_RAIL_PROJECT_ID
+```
+
+#### TestRail API Connection Issues
+```typescript
+// Test your connection
+try {
+  await onTestRailHelper.updateTestResult(runName, sectionId, platformId, []);
+} catch (error) {
+  console.error('TestRail connection failed:', error.message);
+}
+```
+
+#### Parallel Worker Issues
+```bash
+# Check worker coordination
+TEST_WORKER_INDEX=0 npm test  # Manual worker index
+```
+
+---
+
+## 🔗 Quick Links
+
+- **[GitHub Repository](https://github.com/nxz-group/playwright-testrail-helper)**
+- **[Latest Release](https://github.com/nxz-group/playwright-testrail-helper/releases)**
+- **[Changelog](docs/CHANGELOG.md)**
+
+---
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+### Development Guidelines
+
+- Follow conventional commit messages (`feat:`, `fix:`, `docs:`, etc.)
+- Update documentation for new features
+- Ensure all tests pass
+- Add examples for new functionality
