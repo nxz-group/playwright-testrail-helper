@@ -1,5 +1,5 @@
 import axios, { type AxiosInstance } from "axios";
-import type { TestCaseData, TestResult, TestRunInfo } from "../types/index.js";
+import type { TestCaseData, TestResult, TestRunInfo } from "../types/index";
 import { APIError } from "../utils/errors";
 
 /**

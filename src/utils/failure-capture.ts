@@ -1,5 +1,5 @@
-import type { TestStep } from "../types/index.js";
-import { cleanAnsiCodes } from "./ansi-cleaner.js";
+import type { TestStep } from "../types/index";
+import { cleanAnsiCodes } from "./ansi-cleaner";
 
 /**
  * Interface for Playwright error information

@@ -2,8 +2,8 @@
  * TestInfo Analyzer - วิเคราะห์และดึงข้อมูล error จาก Playwright TestInfo
  */
 
-import type { TestCaseInfo } from "../types/index.js";
-import type { FailureInfo } from "./failure-capture.js";
+import type { TestCaseInfo } from "../types/index";
+import type { FailureInfo } from "./failure-capture";
 
 /**
  * Interface สำหรับ Playwright TestInfo (simplified)

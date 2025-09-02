@@ -1,5 +1,5 @@
 import fs from "node:fs";
-import type { TestCaseInfo } from "../types/index.js";
+import type { TestCaseInfo } from "../types/index";
 
 /**
  * Manages worker coordination, file locking, and result aggregation for parallel test execution

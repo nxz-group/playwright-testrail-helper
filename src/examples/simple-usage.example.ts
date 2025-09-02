@@ -6,7 +6,7 @@
  */
 
 import { expect, test } from "@playwright/test";
-import { onTestRailHelper } from "../index.js";
+import { onTestRailHelper } from "../index";
 
 test.describe("Simple TestRail Integration", () => {
   test("@smoke @login @high Login test", async ({ page }) => {

@@ -30,9 +30,9 @@ interface PlaywrightTestResult {
   [key: string]: unknown;
 }
 
-import type { TestCaseInfo, TestStep } from "../types/index.js";
-import { CommentEnhancer } from "./comment-enhancer.js";
-import { FailureCapture, type FailureInfo } from "./failure-capture.js";
+import type { TestCaseInfo, TestStep } from "../types/index";
+import { CommentEnhancer } from "./comment-enhancer";
+import { FailureCapture, type FailureInfo } from "./failure-capture";
 
 /**
  * Utility functions for converting Playwright test objects to TestRail format

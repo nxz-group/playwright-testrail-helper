@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import dayjs from "dayjs";
 import type { TestRailClient } from "../api/testrail-client";
-import type { TestResult } from "../types/index.js";
+import type { TestResult } from "../types/index";
 import { TestRailError } from "../utils/errors";
 
 /**
