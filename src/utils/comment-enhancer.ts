@@ -70,6 +70,12 @@ export class CommentEnhancer {
     if (testCase.status === "failed" && failureInfo) {
       parts.push("");
       parts.push(FailureCapture.formatFailureComment(failureInfo, this.config.includeStackTrace));
+
+      // เพิ่มข้อมูล failed step จาก failureInfo
+      if (failureInfo.failedStep) {
+        parts.push("");
+        parts.push(`🎯 **Failed at Step:** ${failureInfo.failedStep}`);
+      }
     }
 
     // Add timeout information for timed out tests
@@ -179,7 +185,7 @@ export class CommentEnhancer {
   }
 
   /**
-   * Formats test steps summary
+   * Formats test steps summary with detailed failure information
    * @param steps - Array of test steps
    * @returns Formatted steps string
    */
@@ -198,15 +204,39 @@ export class CommentEnhancer {
       return "";
     }
 
+    let hasFailedStep = false;
     relevantSteps.forEach((step, index) => {
       const stepNumber = index + 1;
       const status = step.error ? "❌" : "✅";
       parts.push(`${stepNumber}. ${status} ${step.title}`);
 
-      if (step.error && this.config.includeStackTrace) {
-        parts.push(`   Error: ${step.error.message}`);
+      // แสดง error message สำหรับ step ที่ failed
+      if (step.error) {
+        hasFailedStep = true;
+        parts.push(`   **❌ Failed:** ${step.error.message}`);
+
+        // แสดง duration ถ้ามี
+        if (step.duration) {
+          parts.push(`   **⏱️ Duration:** ${this.formatDuration(step.duration)}`);
+        }
+
+        // แสดง stack trace ถ้าเปิดใช้งาน
+        if (step.error.stack && this.config.includeStackTrace) {
+          parts.push(`   **Stack:** ${step.error.stack.split("\n")[0]}`);
+        }
       }
     });
+
+    // เพิ่มสรุป failed step
+    if (hasFailedStep) {
+      const failedSteps = relevantSteps.filter((step) => step.error);
+      parts.push("");
+      parts.push(`🚨 **Failed Steps Summary:** ${failedSteps.length} out of ${relevantSteps.length} steps failed`);
+
+      failedSteps.forEach((step, index) => {
+        parts.push(`• Step ${relevantSteps.indexOf(step) + 1}: ${step.title} - ${step.error.message}`);
+      });
+    }
 
     return parts.join("\n");
   }

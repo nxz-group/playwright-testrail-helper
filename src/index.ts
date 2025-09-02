@@ -226,3 +226,4 @@ export * from "./utils/errors";
 export * from "./utils/playwright-converter";
 export * from "./utils/failure-capture";
 export * from "./utils/comment-enhancer";
+export * from "./utils/testinfo-analyzer";
