@@ -2,6 +2,34 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.3.2] - 2025-09-02
+
+### 🚀 Enhanced Features
+
+#### Failed Test Reporting Improvements
+- **Automatic Error Message Generation**: Added fallback error message generation for failed tests without `_failureInfo`
+- **Enhanced Comment Formatting**: Improved TestRail comment structure to show failed steps and error details
+- **TestInfoAnalyzer Utility**: New utility for comprehensive Playwright TestInfo processing and analysis
+- **Failed Step Identification**: Automatic detection and highlighting of failed test steps in TestRail comments
+- **Error Message Extraction**: Enhanced error extraction from multiple sources (test errors, step errors, timeout messages)
+
+#### New Helper Functions
+- **Easy Failed Test Import**: Simplified functions for importing failed tests to TestRail
+- **Step-by-Step Breakdown**: Enhanced step analysis with status icons (✅ ❌ ⏭️)
+- **Failed Steps Summary**: Dedicated section showing only failed steps for quick debugging
+- **Timeout & Interruption Support**: Special handling for timeout and interruption scenarios
+
+#### New Examples Added
+- `detailed-failed-steps.example.ts` - Comprehensive failed step analysis examples
+- `import-failed-test.example.ts` - Helper functions for failed test imports
+- `playwright-testinfo-analysis.example.ts` - TestInfo processing examples
+- `your-failed-test.example.ts` - Quick start for failed test debugging
+
+### 🔧 Technical Improvements
+- **Enhanced TestCaseManager**: Improved comment generation logic for failed tests
+- **CommentEnhancer Updates**: Better formatting for failed step information
+- **New Export**: Added `TestInfoAnalyzer` to main exports
+
 ## [1.3.0] - 2025-01-09
 
 ### 🔄 Major Refactoring
