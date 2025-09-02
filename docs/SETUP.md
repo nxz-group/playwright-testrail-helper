@@ -1,5 +1,7 @@
 # Development Setup Instructions
 
+> 📚 **Navigation:** [← Back to README](../README.md) | [Environment Variables →](ENVIRONMENT_VARIABLES.md) | [Quick Start →](QUICK_START.md)
+
 ## Prerequisites
 
 - Node.js 16+ 
@@ -150,3 +152,13 @@ npm run build
 - Update CHANGELOG.md with new features
 - Review and update README.md if needed
 - Ensure all documentation is current
+---
+
+## 📚 Related Documentation
+
+- **[← Back to README](../README.md)** - Main documentation
+- **[Environment Variables](ENVIRONMENT_VARIABLES.md)** - Configuration guide
+- **[Quick Start Guide](QUICK_START.md)** - Get started in minutes
+- **[API Reference](API.md)** - Complete API documentation
+- **[Examples](EXAMPLES.md)** - Comprehensive usage examples
+- **[Integration Examples](INTEGRATION_EXAMPLES.md)** - CI/CD & framework examples

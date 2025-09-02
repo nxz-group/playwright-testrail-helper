@@ -1,5 +1,7 @@
 # Integration Examples
 
+> 📚 **Navigation:** [← Back to README](../README.md) | [Examples →](EXAMPLES.md) | [Setup Guide →](SETUP.md)
+
 ## CI/CD Pipeline Integration
 
 ### GitHub Actions
@@ -859,4 +861,14 @@ export class MetricsCollector {
     this.statsd.gauge('tests.success_rate', successRate, tags);
   }
 }
-```
+```--
+-
+
+## 📚 Related Documentation
+
+- **[← Back to README](../README.md)** - Main documentation
+- **[Examples](EXAMPLES.md)** - Comprehensive usage examples
+- **[Setup Guide](SETUP.md)** - Development setup instructions
+- **[Environment Variables](ENVIRONMENT_VARIABLES.md)** - Configuration guide
+- **[API Reference](API.md)** - Complete API documentation
+- **[Quick Reference](QUICK_REFERENCE.md)** - Cheat sheet for common tasks

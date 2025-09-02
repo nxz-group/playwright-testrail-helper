@@ -1,5 +1,7 @@
 # Environment Variables
 
+> 📚 **Navigation:** [← Back to README](../README.md) | [Quick Start →](QUICK_START.md) | [Setup Guide →](SETUP.md)
+
 This document describes all environment variables used by `playwright-testrail-helper`.
 
 ## Required Environment Variables
@@ -10,6 +12,7 @@ These variables **must** be set for the library to function:
 - **Description**: Your TestRail instance URL
 - **Example**: `https://your-company.testrail.io`
 - **Required**: ✅ Yes
+- **Legacy Support**: Also accepts `TEST_RAIL_ENDPOINT` (deprecated with warning)
 
 ### `TEST_RAIL_USERNAME`
 - **Description**: Your TestRail username (email address)
@@ -118,12 +121,41 @@ env:
   RUN_NAME: "CI Build ${{ github.run_number }}"
 ```
 
+## Migration from Legacy Variables
+
+### Backward Compatibility
+
+This library supports legacy environment variable names for smooth migration:
+
+```bash
+# ✅ NEW (Recommended)
+TEST_RAIL_HOST=https://your-company.testrail.io
+
+# ⚠️ LEGACY (Still works but shows warning)
+TEST_RAIL_ENDPOINT=https://your-company.testrail.io
+```
+
+### Migration Steps
+
+1. **Immediate**: Both variables work, no code changes needed
+2. **Warning**: You'll see a deprecation warning when using `TEST_RAIL_ENDPOINT`
+3. **Migration**: Update your environment configuration when convenient
+4. **Future**: `TEST_RAIL_ENDPOINT` support may be removed in future versions
+
+### Warning Message
+
+When using the legacy variable, you'll see:
+
+```
+⚠️  WARNING: TEST_RAIL_ENDPOINT is deprecated. Please use TEST_RAIL_HOST instead.
+```
+
 ## Error Messages
 
 If required environment variables are missing, you'll see:
 
 ```
-ConfigurationError: Missing required environment variables: TEST_RAIL_HOST, TEST_RAIL_USERNAME, TEST_RAIL_PASSWORD, TEST_RAIL_PROJECT_ID
+ConfigurationError: Missing required environment variables: TEST_RAIL_HOST (or legacy TEST_RAIL_ENDPOINT), TEST_RAIL_USERNAME, TEST_RAIL_PASSWORD, TEST_RAIL_PROJECT_ID
 ```
 
 Make sure all required variables are set before running your tests.
@@ -134,3 +166,14 @@ Make sure all required variables are set before running your tests.
 - Use `.env` files and add them to `.gitignore`
 - In CI/CD, use encrypted secrets
 - TestRail API keys can be regenerated if compromised
+---
+
+##
+ 📚 Related Documentation
+
+- **[← Back to README](../README.md)** - Main documentation
+- **[Quick Start Guide](QUICK_START.md)** - Get started in minutes
+- **[Setup Guide](SETUP.md)** - Development setup instructions
+- **[API Reference](API.md)** - Complete API documentation
+- **[Examples](EXAMPLES.md)** - Comprehensive usage examples
+- **[Integration Examples](INTEGRATION_EXAMPLES.md)** - CI/CD & framework examples

@@ -1,5 +1,7 @@
 # 🚀 Quick Start: Enhanced TestRail Integration
 
+> 📚 **Navigation:** [← Back to README](../README.md) | [API Reference →](API.md) | [Examples →](EXAMPLES.md)
+
 ## ✨ What's New in v1.2.0
 
 **One-line automatic failure capture and enhanced comments!**
@@ -185,10 +187,20 @@ const testCaseInfo = PlaywrightConverter.convertTestInfo(testInfo);
 - [Enhanced Features Example](src/examples/enhanced-failure-capture.example.ts) - Advanced usage & customization
 - [Playwright Integration Example](src/examples/playwright-integration.example.ts) - Basic Playwright setup
 - [Section IDs Example](src/examples/section-ids.example.ts) - TestRail section reference
-- [Full Documentation](ENHANCED_FEATURES.md) - Complete feature guide
+- [Full Documentation](../README.md) - Complete feature guide
 
 ---
 
 **Happy Testing! 🎉**
 
-The enhanced TestRail integration makes debugging faster and test reporting more comprehensive than ever before.
+The enhanced TestRail integration makes debugging faster and test reporting more comprehensive than ever before.---
+
+
+## 📚 Related Documentation
+
+- **[← Back to README](../README.md)** - Main documentation
+- **[API Reference](API.md)** - Complete API documentation
+- **[Examples](EXAMPLES.md)** - Comprehensive usage examples
+- **[Environment Variables](ENVIRONMENT_VARIABLES.md)** - Configuration guide
+- **[Setup Guide](SETUP.md)** - Development setup instructions
+- **[Quick Reference](QUICK_REFERENCE.md)** - Cheat sheet for common tasks

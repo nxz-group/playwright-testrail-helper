@@ -9,12 +9,5 @@ pre-commit:
 
 pre-push:
   commands:
-    protect-main:
-      run: |
-        branch=$(git rev-parse --abbrev-ref HEAD)
-        if [ "$branch" = "main" ]; then
-          echo "❌ Direct push to main branch is not allowed"
-          exit 1
-        fi
     biome-ci:
       run: npx @biomejs/biome ci

@@ -24,7 +24,7 @@ export TEST_RAIL_PROJECT_ID="123"
 import { onTestRailHelper, Platform } from 'playwright-testrail-helper';
 
 test.afterEach(async ({ }, testInfo) => {
-  await onTestRailHelper.updateTestResultFromPlaywrightSingle(
+  await onTestRailHelper.updateTestResultSingle(
     "My Test Run", 100, Platform.WEB_DESKTOP, testInfo
   );
 });
@@ -74,7 +74,7 @@ Platform.OTHER                         // 7
 ### Single Test Update
 ```typescript
 // Simplest approach - automatic everything
-await onTestRailHelper.updateTestResultFromPlaywrightSingle(
+await onTestRailHelper.updateTestResultSingle(
   "Login Tests", 100, Platform.WEB_DESKTOP, testInfo
 );
 ```
@@ -83,10 +83,9 @@ await onTestRailHelper.updateTestResultFromPlaywrightSingle(
 ```typescript
 // Multiple tests at once
 const testResults = [testInfo1, testInfo2, testInfo3];
-const converted = PlaywrightConverter.convertMultipleTests(testResults);
 
 await onTestRailHelper.updateTestResult(
-  "Batch Tests", 100, Platform.WEB_DESKTOP, converted
+  "Batch Tests", 100, Platform.WEB_DESKTOP, testResults
 );
 ```
 
@@ -99,7 +98,7 @@ const SECTIONS = {
 } as const;
 
 // Use in tests
-await onTestRailHelper.updateTestResultFromPlaywrightSingle(
+await onTestRailHelper.updateTestResultSingle(
   "E2E Tests", SECTIONS.checkout, Platform.WEB_DESKTOP, testInfo
 );
 ```
@@ -111,7 +110,7 @@ await onTestRailHelper.updateTestResultFromPlaywrightSingle(
 
 test.afterEach(async ({ }, testInfo) => {
   // Works automatically with parallel workers
-  await onTestRailHelper.updateTestResultFromPlaywrightSingle(
+  await onTestRailHelper.updateTestResultSingle(
     "Parallel Tests", 100, Platform.WEB_DESKTOP, testInfo
   );
 });
@@ -280,7 +279,7 @@ test("@smoke @login @high User can login with valid credentials", async ({ page 
 
 // Use afterEach for automatic reporting
 test.afterEach(async ({ }, testInfo) => {
-  await onTestRailHelper.updateTestResultFromPlaywrightSingle(
+  await onTestRailHelper.updateTestResultSingle(
     "Login Tests", SECTIONS.authentication.login, Platform.WEB_DESKTOP, testInfo
   );
 });
@@ -304,11 +303,14 @@ const converted = PlaywrightConverter.convertTestInfo(testInfo);
 
 ## 🔗 Quick Links
 
-- **[Full Documentation](README.md)** - Complete feature guide
+- **[Full Documentation](../README.md)** - Complete feature guide
+- **[API Documentation](API.md)** - Complete API reference
+- **[Examples](EXAMPLES.md)** - Comprehensive usage examples
 - **[Technical Details](TECHNICAL_DETAILS.md)** - Advanced configuration
 - **[Integration Examples](INTEGRATION_EXAMPLES.md)** - CI/CD & framework examples
-- **[Enhanced Features](ENHANCED_FEATURES.md)** - New v1.2 features
 - **[Environment Variables](ENVIRONMENT_VARIABLES.md)** - Configuration reference
+- **[Quick Start Guide](QUICK_START.md)** - Get started in minutes
+- **[Setup Guide](SETUP.md)** - Development setup instructions
 
 ---
 
