@@ -50,7 +50,7 @@ interface PlaywrightTestResult {
     }>;
     [key: string]: unknown;
 }
-import type { TestCaseInfo } from "../types/index.js";
+import type { TestCaseInfo } from "../types/index";
 /**
  * Utility functions for converting Playwright test objects to TestRail format
  */

@@ -43,5 +43,6 @@
   },
   "engines": {
     "node": ">=16.0.0"
-  }
+  },
+  "files": ["dist/", "README.md"]
 }

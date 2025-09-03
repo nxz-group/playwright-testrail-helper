@@ -1,5 +1,5 @@
 import type { TestRailClient } from "../api/testrail-client";
-import type { TestResult } from "../types/index.js";
+import type { TestResult } from "../types/index";
 /**
  * Manages TestRail test run operations and file persistence
  */

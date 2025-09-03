@@ -1,4 +1,4 @@
-import type { TestStep } from "../types/index.js";
+import type { TestStep } from "../types/index";
 /**
  * Interface for Playwright error information
  */

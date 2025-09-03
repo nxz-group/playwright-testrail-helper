@@ -1,6 +1,6 @@
 import type { TestRailClient } from "../api/testrail-client";
-import type { TestCaseInfo, TestResult } from "../types/index.js";
-import { type CommentEnhancementConfig } from "../utils/comment-enhancer.js";
+import type { TestCaseInfo, TestResult } from "../types/index";
+import { type CommentEnhancementConfig } from "../utils/comment-enhancer";
 import { TestStatus } from "../utils/constants";
 /**
  * Manages test case synchronization and creation logic

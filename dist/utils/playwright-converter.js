@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PlaywrightConverter = void 0;
-const failure_capture_js_1 = require("./failure-capture.js");
+const failure_capture_1 = require("./failure-capture");
 /**
  * Utility functions for converting Playwright test objects to TestRail format
  */
@@ -30,7 +30,7 @@ class PlaywrightConverter {
         };
         // Only add failure information for failed tests if needed
         if (status === "failed") {
-            const failureInfo = failure_capture_js_1.FailureCapture.extractFailureInfo(testInfo, testResult, steps);
+            const failureInfo = failure_capture_1.FailureCapture.extractFailureInfo(testInfo, testResult, steps);
             if (failureInfo) {
                 // Convert FailureInfo to errors array format
                 testCaseInfo.errors = [

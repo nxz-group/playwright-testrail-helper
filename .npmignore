@@ -1,0 +1,24 @@
+# Source files (only ship compiled dist)
+src/
+
+# Tests
+tests/
+coverage/
+jest.config.js
+
+# Documentation (keep README.md only)
+docs/
+
+# Development files
+.vscode/
+.kiro/
+biome.json
+lefthook.yml
+tsconfig.json
+.nvmrc
+
+# Examples (users can see them on GitHub)
+src/examples/
+
+# Lock files
+package-lock.json
