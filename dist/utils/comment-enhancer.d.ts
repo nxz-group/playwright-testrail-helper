@@ -1,4 +1,4 @@
-import type { TestCaseInfo } from "../types/index.js";
+import type { TestCaseInfo } from "../types/index";
 /**
  * Configuration options for comment enhancement
  */

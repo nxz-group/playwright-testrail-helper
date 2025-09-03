@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.FailureCapture = void 0;
-const ansi_cleaner_js_1 = require("./ansi-cleaner.js");
+const ansi_cleaner_1 = require("./ansi-cleaner");
 /**
  * Utility class for capturing and processing test failure information from Playwright
  */
@@ -92,7 +92,7 @@ class FailureCapture {
             return "";
         let cleaned = message;
         // Remove ANSI escape codes and control characters
-        cleaned = (0, ansi_cleaner_js_1.cleanAnsiCodes)(cleaned);
+        cleaned = (0, ansi_cleaner_1.cleanAnsiCodes)(cleaned);
         // Parse Playwright error structure and reformat
         cleaned = FailureCapture.formatPlaywrightError(cleaned);
         // Normalize whitespace

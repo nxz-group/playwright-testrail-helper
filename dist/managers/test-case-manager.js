@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.TestCaseManager = void 0;
-const comment_enhancer_js_1 = require("../utils/comment-enhancer.js");
+const comment_enhancer_1 = require("../utils/comment-enhancer");
 const constants_1 = require("../utils/constants");
 const errors_1 = require("../utils/errors");
 /**
@@ -11,7 +11,7 @@ class TestCaseManager {
     constructor(client, executedByText = "Executed by Playwright", commentConfig) {
         this.client = client;
         this.playwrightExecuted = executedByText;
-        this.commentEnhancer = new comment_enhancer_js_1.CommentEnhancer({
+        this.commentEnhancer = new comment_enhancer_1.CommentEnhancer({
             customPrefix: executedByText,
             ...commentConfig
         });

@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CommentEnhancer = exports.STATUS_NAMES = exports.STATUS_MAPPING = exports.DEFAULT_COMMENT_CONFIG = void 0;
-const ansi_cleaner_js_1 = require("./ansi-cleaner.js");
+const ansi_cleaner_1 = require("./ansi-cleaner");
 /**
  * Default configuration for comment enhancement
  */
@@ -72,7 +72,7 @@ class CommentEnhancer {
             const error = testCase.errors[0];
             const errorMessage = error.message;
             // Clean ANSI codes
-            const cleanMessage = (0, ansi_cleaner_js_1.cleanAnsiCodes)(errorMessage);
+            const cleanMessage = (0, ansi_cleaner_1.cleanAnsiCodes)(errorMessage);
             // Split into sections
             const sections = cleanMessage.split("\n\n");
             const mainError = sections[0]; // Error: expect(locator)... or expect(received).toBe(expected)

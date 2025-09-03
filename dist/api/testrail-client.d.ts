@@ -1,4 +1,4 @@
-import type { TestCaseData, TestResult, TestRunInfo } from "../types/index.js";
+import type { TestCaseData, TestResult, TestRunInfo } from "../types/index";
 /**
  * HTTP client for TestRail API operations
  */
