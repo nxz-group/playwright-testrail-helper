@@ -10,8 +10,8 @@ import {
   type CommentEnhancementConfig,
   CommentEnhancer,
   FailureCapture,
-  PlaywrightConverter,
-  onTestRailHelper
+  onTestRailHelper,
+  PlaywrightConverter
 } from "../index";
 
 // Configure enhanced comments

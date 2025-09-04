@@ -31,8 +31,7 @@ interface PlaywrightTestResult {
 }
 
 import type { TestCaseInfo, TestStep } from "../types/index";
-import { CommentEnhancer } from "./comment-enhancer";
-import { FailureCapture, type FailureInfo } from "./failure-capture";
+import { FailureCapture } from "./failure-capture";
 
 /**
  * Utility functions for converting Playwright test objects to TestRail format
