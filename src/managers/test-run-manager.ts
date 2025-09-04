@@ -11,6 +11,7 @@ const formatDate = (date: Date): string => {
   const seconds = date.getSeconds().toString().padStart(2, "0");
   return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
 };
+
 import { TestRailError } from "../utils/errors";
 
 /**

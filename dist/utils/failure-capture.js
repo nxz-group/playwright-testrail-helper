@@ -14,17 +14,14 @@ class FailureCapture {
             return null;
         }
         // Simple error extraction
-        const errorMessage = testInfo.errors?.[0]?.message ||
-            testResult?.error?.message ||
-            testInfo.result?.error?.message ||
-            'Test failed';
+        const errorMessage = testInfo.errors?.[0]?.message || testResult?.error?.message || testInfo.result?.error?.message || "Test failed";
         const failedStep = testInfo.steps?.find((s) => s.error)?.title;
         return {
             errorMessage: FailureCapture.cleanErrorMessage(errorMessage),
             errorStack: testInfo.errors?.[0]?.stack,
             failedStep,
             location: undefined, // Simplified - no complex location parsing
-            screenshot: undefined, // Simplified - no attachment parsing  
+            screenshot: undefined, // Simplified - no attachment parsing
             video: undefined,
             trace: undefined
         };
@@ -48,7 +45,7 @@ class FailureCapture {
             parts.push(`Failed Step: ${failureInfo.failedStep}`);
         }
         // Add duration if available (basic implementation)
-        return parts.join('\n');
+        return parts.join("\n");
     }
     /**
      * Simple timeout failure extraction

@@ -1,6 +1,6 @@
 import { TestRailClient } from "./api/testrail-client";
 import type { TestCaseData, TestCaseInfo } from "./types";
-import { AutomationType, Platform, Priority, TestStatus, TestTemplate, TestType } from "./utils/constants";
+import { AutomationType, Priority, TestStatus, TestTemplate, TestType } from "./utils/constants";
 import { ConfigurationError } from "./utils/errors";
 
 /**

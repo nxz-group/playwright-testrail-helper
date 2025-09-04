@@ -3,7 +3,7 @@
  * สำหรับการส่งเข้า TestRail พร้อมข้อมูลว่า failed ที่ step ไหนและเพราะอะไร
  */
 
-import { TestInfoAnalyzer, createTestCaseFromError, onTestRailHelper } from "../index";
+import { onTestRailHelper, TestInfoAnalyzer } from "../index";
 import type { TestCaseInfo } from "../types/index";
 
 /**

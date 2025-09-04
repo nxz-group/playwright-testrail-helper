@@ -106,7 +106,7 @@ class TestRailClient {
     async addCase(sectionId, testCase) {
         const url = `${this.baseURL}/api/v2/add_case/${sectionId}`;
         const response = await this.fetchWithTimeout(url, {
-            method: 'POST',
+            method: "POST",
             headers: this.headers,
             body: JSON.stringify(testCase)
         });
@@ -122,7 +122,7 @@ class TestRailClient {
     async updateCase(caseId, sectionId, testCase) {
         const url = `${this.baseURL}/api/v2/update_case/${caseId}&section_id=${sectionId}`;
         const response = await this.fetchWithTimeout(url, {
-            method: 'POST',
+            method: "POST",
             headers: this.headers,
             body: JSON.stringify(testCase)
         });
@@ -136,7 +136,7 @@ class TestRailClient {
     async addRun(projectId, runInfo) {
         const url = `${this.baseURL}/api/v2/add_run/${projectId}`;
         const response = await this.fetchWithTimeout(url, {
-            method: 'POST',
+            method: "POST",
             headers: this.headers,
             body: JSON.stringify(runInfo)
         });
@@ -166,7 +166,7 @@ class TestRailClient {
     async updateRun(runId, caseIds) {
         const url = `${this.baseURL}/api/v2/update_run/${runId}`;
         const response = await this.fetchWithTimeout(url, {
-            method: 'POST',
+            method: "POST",
             headers: this.headers,
             body: JSON.stringify({ case_ids: caseIds })
         });
@@ -180,7 +180,7 @@ class TestRailClient {
     async addResultsForCases(runId, testResults) {
         const url = `${this.baseURL}/api/v2/add_results_for_cases/${runId}`;
         const response = await this.fetchWithTimeout(url, {
-            method: 'POST',
+            method: "POST",
             headers: this.headers,
             body: JSON.stringify({ results: testResults })
         });
@@ -194,7 +194,7 @@ class TestRailClient {
     async closeRun(runId) {
         const url = `${this.baseURL}/api/v2/close_run/${runId}`;
         const response = await this.fetchWithTimeout(url, {
-            method: 'POST',
+            method: "POST",
             headers: this.headers
         });
         if (!response.ok) {
