@@ -7,8 +7,15 @@
   },
   "files": {
     "ignoreUnknown": false,
-    "include": ["src/**/*", "*.ts", "*.js", "*.json"],
-    "ignore": ["dist/**/*", "node_modules/**/*", "testRail/**/*", "*.d.ts", "coverage/**/*", "build/**/*"]
+    "includes": ["src/**/*", "*.ts", "*.js", "*.json"],
+    "experimentalScannerIgnores": [
+      "dist/**/*",
+      "node_modules/**/*",
+      "testRail/**/*",
+      "*.d.ts",
+      "coverage/**/*",
+      "build/**/*"
+    ]
   },
   "formatter": {
     "enabled": true,
