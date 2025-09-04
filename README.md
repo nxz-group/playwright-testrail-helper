@@ -14,16 +14,18 @@ A comprehensive TestRail integration library designed primarily for **Playwright
 
 ---
 
+
+
 ## 📦 Installation
 
 ### Git Installation (Recommended)
 
 ```bash
 # SSH (Recommended)
-npm install git+ssh://git@github.com/nxz-group/playwright-testrail-helper.git#v1.4.1
+npm install git+ssh://git@github.com/nxz-group/playwright-testrail-helper.git#v1.4.2
 
 # HTTPS (Alternative)
-npm install git+https://github.com/nxz-group/playwright-testrail-helper.git#v1.4.1
+npm install git+https://github.com/nxz-group/playwright-testrail-helper.git#v1.4.2
 ```
 
 ### Local Development
