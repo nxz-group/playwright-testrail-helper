@@ -72,6 +72,24 @@ TEST_RAIL_HOST=https://your-company.testrail.io      # ✅ Use this
 
 ## 🚀 Quick Start
 
+### 📦 **Bundle Size Optimization**
+
+**For Serial Execution (77% smaller bundle):**
+```typescript
+// 19.5k bundle (77% reduction)
+import { onTestRailHelper } from 'playwright-testrail-helper/core';
+```
+
+**For Parallel Execution (full features):**
+```typescript
+// 85.3k bundle (all features)
+import { onTestRailHelper } from 'playwright-testrail-helper';
+```
+
+**→ [See Core Module Guide](docs/CORE_MODULE.md) for detailed comparison**
+
+---
+
 ### Standard Usage (Playwright - Recommended)
 
 ```typescript
@@ -319,6 +337,7 @@ interface TestStep {
 
 ### 🚀 Getting Started
 - **[Quick Start Guide](docs/QUICK_START.md)** - Get started in minutes
+- **[Core Module Guide](docs/CORE_MODULE.md)** - 77% smaller bundle for serial execution
 - **[Setup Guide](docs/SETUP.md)** - Development setup instructions
 - **[Environment Variables](docs/ENVIRONMENT_VARIABLES.md)** - Configuration guide
 

@@ -5,7 +5,15 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.TestRunManager = void 0;
 const node_fs_1 = __importDefault(require("node:fs"));
-const dayjs_1 = __importDefault(require("dayjs"));
+const formatDate = (date) => {
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    const seconds = date.getSeconds().toString().padStart(2, '0');
+    return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+};
 const errors_1 = require("../utils/errors");
 /**
  * Manages TestRail test run operations and file persistence
@@ -209,7 +217,7 @@ class TestRunManager {
                 // Create new test run
                 const testRunName = process.env.RUN_NAME ?? runName;
                 const newRun = await this.client.addRun(this.projectId, {
-                    name: `${testRunName.trim()} - ${(0, dayjs_1.default)().format("DD/MM/YYYY HH:mm:ss")}`,
+                    name: `${testRunName.trim()} - ${formatDate(new Date())}`,
                     assignedto_id: userId,
                     include_all: false
                 });
@@ -223,7 +231,7 @@ class TestRunManager {
                     // Existing run is invalid or completed, create new one
                     const testRunName = process.env.RUN_NAME ?? runName;
                     const newRun = await this.client.addRun(this.projectId, {
-                        name: `${testRunName.trim()} - ${(0, dayjs_1.default)().format("DD/MM/YYYY HH:mm:ss")}`,
+                        name: `${testRunName.trim()} - ${formatDate(new Date())}`,
                         assignedto_id: userId,
                         include_all: false
                     });
