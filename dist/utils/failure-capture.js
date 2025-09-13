@@ -8,7 +8,7 @@ class FailureCapture {
     /**
      * Extracts basic failure information (simplified from complex version)
      */
-    static extractFailureInfo(testInfo, testResult, steps) {
+    static extractFailureInfo(testInfo, testResult, _steps) {
         const status = testResult?.status || testInfo?.status;
         if (status !== "failed") {
             return null;
@@ -38,7 +38,7 @@ class FailureCapture {
     /**
      * Simple failure comment formatting with newlines
      */
-    static formatFailureComment(failureInfo, includeStackTrace = false) {
+    static formatFailureComment(failureInfo, _includeStackTrace = false) {
         const parts = [];
         parts.push(`Error: ${failureInfo.errorMessage}`);
         if (failureInfo.failedStep) {
@@ -64,7 +64,7 @@ class FailureCapture {
     /**
      * Simple interruption failure extraction
      */
-    static extractInterruptionFailure(testInfo, testResult) {
+    static extractInterruptionFailure(_testInfo, testResult) {
         if (!testResult || testResult.status !== "interrupted") {
             return null;
         }

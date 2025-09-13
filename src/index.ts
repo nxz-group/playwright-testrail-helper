@@ -95,6 +95,11 @@ class TestRailHelper {
     testInfo: unknown,
     isReset = false
   ): Promise<void> {
+    // Validate that testInfo is not an array
+    if (Array.isArray(testInfo)) {
+      throw new Error("testInfo cannot be an array. Use updateTestResult() for arrays of test objects.");
+    }
+
     return this.updateTestResult(runName, sectionId, platformId, [testInfo], isReset);
   }
 
@@ -114,13 +119,23 @@ class TestRailHelper {
     testInfos: unknown[],
     isReset = false
   ): Promise<void> {
+    // Validate that testInfos is an array
+    if (!Array.isArray(testInfos)) {
+      throw new Error("testInfos must be an array. Use updateTestResultSingle() for single test objects.");
+    }
+
     // Convert Playwright TestInfo objects to TestCaseInfo with automatic enhancement
-    const testList = testInfos.map((testInfo) => {
-      // Handle both single testInfo and { testInfo, testResult } objects
-      if ((testInfo as any).testInfo && (testInfo as any).testResult) {
-        return PlaywrightConverter.convertTestInfo((testInfo as any).testInfo, (testInfo as any).testResult);
+    const testList = testInfos.map((testInfo, index) => {
+      try {
+        // Handle both single testInfo and { testInfo, testResult } objects
+        if (testInfo && typeof testInfo === "object" && (testInfo as any).testInfo && (testInfo as any).testResult) {
+          return PlaywrightConverter.convertTestInfo((testInfo as any).testInfo, (testInfo as any).testResult);
+        }
+        return PlaywrightConverter.convertTestInfo(testInfo as any);
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        throw new Error(`Invalid testInfo at index ${index}: ${errorMessage}`);
       }
-      return PlaywrightConverter.convertTestInfo(testInfo as any);
     });
 
     // Use existing updateTestResultAdvanced method

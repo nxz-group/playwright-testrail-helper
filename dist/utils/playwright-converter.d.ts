@@ -1,6 +1,6 @@
 interface PlaywrightTestInfo {
     title: string;
-    file: string;
+    file?: string;
     status?: "passed" | "failed" | "timedOut" | "skipped" | "interrupted";
     duration?: number;
     startTime?: Date;
@@ -60,6 +60,7 @@ export declare class PlaywrightConverter {
      * @param testInfo - Playwright TestInfo object
      * @param testResult - Playwright TestResult object (optional)
      * @returns TestCaseInfo object for TestRail integration
+     * @throws {Error} When testInfo is null, undefined, or missing required properties
      */
     static convertTestInfo(testInfo: PlaywrightTestInfo, testResult?: PlaywrightTestResult): TestCaseInfo;
     /**

@@ -11,8 +11,19 @@ class PlaywrightConverter {
      * @param testInfo - Playwright TestInfo object
      * @param testResult - Playwright TestResult object (optional)
      * @returns TestCaseInfo object for TestRail integration
+     * @throws {Error} When testInfo is null, undefined, or missing required properties
      */
     static convertTestInfo(testInfo, testResult) {
+        // Validate input
+        if (!testInfo) {
+            throw new Error("testInfo cannot be null or undefined");
+        }
+        if (typeof testInfo !== 'object' || Array.isArray(testInfo)) {
+            throw new Error("testInfo must be an object");
+        }
+        if (!testInfo.title || typeof testInfo.title !== 'string' || testInfo.title.trim().length === 0) {
+            throw new Error("testInfo must have a valid non-empty title property");
+        }
         // Extract tags from test title or annotations
         const tags = PlaywrightConverter.extractTags(testInfo);
         // Determine test status
@@ -51,28 +62,34 @@ class PlaywrightConverter {
     static extractTags(testInfo) {
         const tags = [];
         // Extract tags from title (e.g., "@smoke @login User can login")
-        const titleTags = testInfo.title.match(/@\w+/g);
-        if (titleTags) {
-            tags.push(...titleTags);
+        if (testInfo.title && typeof testInfo.title === 'string') {
+            const titleTags = testInfo.title.match(/@\w+/g);
+            if (titleTags) {
+                tags.push(...titleTags);
+            }
         }
         // Extract tags from annotations
-        if (testInfo.annotations) {
+        if (testInfo.annotations && Array.isArray(testInfo.annotations)) {
             for (const annotation of testInfo.annotations) {
-                if (annotation.type === "tag") {
+                if (annotation && annotation.type === "tag" && annotation.description) {
                     tags.push(`@${annotation.description}`);
                 }
             }
         }
         // Add project name as tag if available
-        if (testInfo.project?.name) {
+        if (testInfo.project?.name && typeof testInfo.project.name === 'string') {
             tags.push(`@${testInfo.project.name.toLowerCase()}`);
         }
         // If no tags found, add default based on file path
-        if (tags.length === 0) {
+        if (tags.length === 0 && testInfo.file && typeof testInfo.file === 'string') {
             const fileName = testInfo.file.split("/").pop()?.replace(".spec.ts", "").replace(".test.ts", "");
             if (fileName) {
                 tags.push(`@${fileName}`);
             }
+        }
+        // If still no tags, add a default tag
+        if (tags.length === 0) {
+            tags.push("@test");
         }
         return tags;
     }

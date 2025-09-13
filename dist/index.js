@@ -85,6 +85,10 @@ class TestRailHelper {
      * @throws {TestRailError} When validation fails or TestRail operations fail
      */
     async updateTestResultSingle(runName, sectionId, platformId, testInfo, isReset = false) {
+        // Validate that testInfo is not an array
+        if (Array.isArray(testInfo)) {
+            throw new Error("testInfo cannot be an array. Use updateTestResult() for arrays of test objects.");
+        }
         return this.updateTestResult(runName, sectionId, platformId, [testInfo], isReset);
     }
     /**
@@ -97,13 +101,23 @@ class TestRailHelper {
      * @throws {TestRailError} When validation fails or TestRail operations fail
      */
     async updateTestResult(runName, sectionId, platformId, testInfos, isReset = false) {
+        // Validate that testInfos is an array
+        if (!Array.isArray(testInfos)) {
+            throw new Error("testInfos must be an array. Use updateTestResultSingle() for single test objects.");
+        }
         // Convert Playwright TestInfo objects to TestCaseInfo with automatic enhancement
-        const testList = testInfos.map((testInfo) => {
-            // Handle both single testInfo and { testInfo, testResult } objects
-            if (testInfo.testInfo && testInfo.testResult) {
-                return playwright_converter_1.PlaywrightConverter.convertTestInfo(testInfo.testInfo, testInfo.testResult);
+        const testList = testInfos.map((testInfo, index) => {
+            try {
+                // Handle both single testInfo and { testInfo, testResult } objects
+                if (testInfo && typeof testInfo === 'object' && testInfo.testInfo && testInfo.testResult) {
+                    return playwright_converter_1.PlaywrightConverter.convertTestInfo(testInfo.testInfo, testInfo.testResult);
+                }
+                return playwright_converter_1.PlaywrightConverter.convertTestInfo(testInfo);
             }
-            return playwright_converter_1.PlaywrightConverter.convertTestInfo(testInfo);
+            catch (error) {
+                const errorMessage = error instanceof Error ? error.message : String(error);
+                throw new Error(`Invalid testInfo at index ${index}: ${errorMessage}`);
+            }
         });
         // Use existing updateTestResultAdvanced method
         return this.updateTestResultAdvanced(runName, sectionId, platformId, testList, isReset);
@@ -175,9 +189,9 @@ exports.onTestRailHelper = new TestRailHelper();
 exports.default = TestRailHelper;
 // Export types and constants for library users
 __exportStar(require("./types"), exports);
+__exportStar(require("./utils/comment-enhancer"), exports);
 __exportStar(require("./utils/constants"), exports);
 __exportStar(require("./utils/errors"), exports);
-__exportStar(require("./utils/playwright-converter"), exports);
 __exportStar(require("./utils/failure-capture"), exports);
-__exportStar(require("./utils/comment-enhancer"), exports);
+__exportStar(require("./utils/playwright-converter"), exports);
 __exportStar(require("./utils/testinfo-analyzer"), exports);

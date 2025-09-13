@@ -1,6 +1,6 @@
 {
   "name": "playwright-testrail-helper",
-  "version": "1.4.2",
+  "version": "1.4.3",
   "description": "Internal TypeScript library for TestRail integration with Playwright test automation",
   "private": true,
   "type": "commonjs",

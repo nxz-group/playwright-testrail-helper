@@ -22,7 +22,7 @@ export declare class FailureCapture {
     /**
      * Extracts basic failure information (simplified from complex version)
      */
-    static extractFailureInfo(testInfo: any, testResult?: any, steps?: TestStep[]): FailureInfo | null;
+    static extractFailureInfo(testInfo: any, testResult?: any, _steps?: TestStep[]): FailureInfo | null;
     /**
      * Simple error message cleaning (simplified from complex ANSI handling)
      */
@@ -30,7 +30,7 @@ export declare class FailureCapture {
     /**
      * Simple failure comment formatting with newlines
      */
-    static formatFailureComment(failureInfo: FailureInfo, includeStackTrace?: boolean): string;
+    static formatFailureComment(failureInfo: FailureInfo, _includeStackTrace?: boolean): string;
     /**
      * Simple timeout failure extraction
      */
@@ -38,5 +38,5 @@ export declare class FailureCapture {
     /**
      * Simple interruption failure extraction
      */
-    static extractInterruptionFailure(testInfo: any, testResult?: any): FailureInfo | null;
+    static extractInterruptionFailure(_testInfo: any, testResult?: any): FailureInfo | null;
 }
